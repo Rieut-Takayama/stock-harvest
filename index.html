@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Harvest AI - AIダッシュボード</title>
+    <link rel="stylesheet" href="src/css/base.css">
+    <link rel="stylesheet" href="src/css/dashboard.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h1>Stock Harvest AI</h1>
+                </div>
+                <nav class="nav">
+                    <a href="index.html" class="nav-link active">
+                        <span class="material-icons">dashboard</span>
+                        ダッシュボード
+                    </a>
+                    <a href="mockups/stock-detail.html" class="nav-link">
+                        <span class="material-icons">analytics</span>
+                        銘柄分析
+                    </a>
+                    <a href="mockups/portfolio.html" class="nav-link">
+                        <span class="material-icons">account_balance_wallet</span>
+                        ポートフォリオ
+                    </a>
+                    <a href="mockups/alerts.html" class="nav-link">
+                        <span class="material-icons">notifications</span>
+                        アラート
+                    </a>
+                    <a href="mockups/backtest.html" class="nav-link">
+                        <span class="material-icons">history</span>
+                        バックテスト
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+        <div class="container">
+            <!-- スキャンコントロール -->
+            <div class="scan-control card">
+                <div class="scan-header">
+                    <div>
+                        <h2>AIスキャン</h2>
+                        <p class="scan-info">東証全3,842銘柄を監視中</p>
+                    </div>
+                    <button class="btn btn-primary btn-lg" onclick="startScan()">
+                        <span class="material-icons">radar</span>
+                        今すぐスキャン
+                    </button>
+                </div>
+                <div class="scan-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">強い買い</span>
+                        <span class="stat-value strong-buy">156</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">買い</span>
+                        <span class="stat-value buy">342</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">中立</span>
+                        <span class="stat-value neutral">2,890</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">売り</span>
+                        <span class="stat-value sell">298</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">強い売り</span>
+                        <span class="stat-value strong-sell">156</span>
+                    </div>
+                </div>
+                <div class="last-update">最終更新: <span id="lastUpdate">--:--:--</span></div>
+            </div>
+
+            <!-- セクター別パフォーマンス -->
+            <div class="sector-performance card mt-lg">
+                <h3>セクター別パフォーマンス</h3>
+                <div class="sector-grid">
+                    <div class="sector-item positive">
+                        <span class="sector-name">自動車</span>
+                        <span class="sector-change">+4.2%</span>
+                        <span class="sector-count">89銘柄</span>
+                    </div>
+                    <div class="sector-item positive">
+                        <span class="sector-name">銀行</span>
+                        <span class="sector-change">+3.1%</span>
+                        <span class="sector-count">45銘柄</span>
+                    </div>
+                    <div class="sector-item positive">
+                        <span class="sector-name">電気機器</span>
+                        <span class="sector-change">+2.8%</span>
+                        <span class="sector-count">156銘柄</span>
+                    </div>
+                    <div class="sector-item positive">
+                        <span class="sector-name">サービス</span>
+                        <span class="sector-change">+1.9%</span>
+                        <span class="sector-count">234銘柄</span>
+                    </div>
+                    <div class="sector-item negative">
+                        <span class="sector-name">通信</span>
+                        <span class="sector-change">-0.5%</span>
+                        <span class="sector-count">23銘柄</span>
+                    </div>
+                    <div class="sector-item negative">
+                        <span class="sector-name">小売</span>
+                        <span class="sector-change">-1.2%</span>
+                        <span class="sector-count">178銘柄</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 注目銘柄リスト -->
+            <div class="stock-list card mt-lg">
+                <div class="list-header">
+                    <h3>AIが選んだ注目銘柄 TOP10</h3>
+                    <div class="filter-buttons">
+                        <button class="filter-btn active" onclick="filterStocks('all')">すべて</button>
+                        <button class="filter-btn" onclick="filterStocks('buy')">買い推奨</button>
+                        <button class="filter-btn" onclick="filterStocks('sell')">売り推奨</button>
+                    </div>
+                </div>
+                
+                <div class="stock-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>コード</th>
+                                <th>銘柄名</th>
+                                <th>現在値</th>
+                                <th>前日比</th>
+                                <th>出来高</th>
+                                <th>AIスコア</th>
+                                <th>シグナル</th>
+                                <th>推奨価格</th>
+                                <th>アクション</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockTableBody">
+                            <!-- モックデータはJSで挿入 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- スクリプト -->
+    <script src="src/data/mockData.js"></script>
+    <script src="src/js/dashboard.js"></script>
+</body>
+</html>

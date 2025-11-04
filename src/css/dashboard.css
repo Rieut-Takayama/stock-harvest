@@ -1,0 +1,403 @@
+/* ダッシュボード専用スタイル */
+@import url('variables.css');
+
+/* ヘッダー */
+.header {
+  background: linear-gradient(135deg, var(--primary-main) 0%, var(--primary-dark) 100%);
+  color: white;
+  padding: var(--spacing-md) 0;
+  box-shadow: var(--shadow-md);
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.logo-icon {
+  font-size: 2rem;
+}
+
+.logo h1 {
+  font-size: var(--font-2xl);
+  font-weight: 700;
+}
+
+/* ナビゲーション */
+.nav {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.nav-link {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-sm) var(--spacing-md);
+  color: white;
+  text-decoration: none;
+  border-radius: var(--radius-md);
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.nav-link .material-icons {
+  font-size: 20px;
+}
+
+/* メインコンテンツ */
+.main {
+  padding: var(--spacing-lg) 0;
+  background-color: var(--bg-paper);
+  min-height: calc(100vh - 100px);
+}
+
+/* スキャンコントロール */
+.scan-control {
+  background: white;
+}
+
+.scan-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.scan-header h2 {
+  font-size: var(--font-xl);
+  margin-bottom: var(--spacing-xs);
+}
+
+.scan-info {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+.btn-lg {
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-lg);
+}
+
+.btn-lg .material-icons {
+  font-size: 24px;
+}
+
+/* スキャン統計 */
+.scan-stats {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg) 0;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-label {
+  display: block;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  margin-bottom: var(--spacing-xs);
+}
+
+.stat-value {
+  display: block;
+  font-size: var(--font-2xl);
+  font-weight: 700;
+}
+
+.stat-value.strong-buy {
+  color: #2e7d32;
+}
+
+.stat-value.buy {
+  color: var(--positive);
+}
+
+.stat-value.neutral {
+  color: var(--neutral);
+}
+
+.stat-value.sell {
+  color: #ff9800;
+}
+
+.stat-value.strong-sell {
+  color: var(--negative);
+}
+
+.last-update {
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  margin-top: var(--spacing-md);
+}
+
+/* セクターパフォーマンス */
+.sector-performance h3 {
+  margin-bottom: var(--spacing-lg);
+  font-size: var(--font-lg);
+}
+
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.sector-item {
+  background: var(--bg-paper);
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  border: 1px solid #e0e0e0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  transition: all 0.3s ease;
+}
+
+.sector-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+}
+
+.sector-item.positive {
+  border-left: 4px solid var(--positive);
+}
+
+.sector-item.negative {
+  border-left: 4px solid var(--negative);
+}
+
+.sector-name {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.sector-change {
+  font-size: var(--font-lg);
+  font-weight: 700;
+}
+
+.sector-item.positive .sector-change {
+  color: var(--positive);
+}
+
+.sector-item.negative .sector-change {
+  color: var(--negative);
+}
+
+.sector-count {
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+}
+
+/* 株式リスト */
+.stock-list {
+  overflow: hidden;
+}
+
+.list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.list-header h3 {
+  font-size: var(--font-lg);
+}
+
+.filter-buttons {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.filter-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: transparent;
+  border: 1px solid var(--primary-main);
+  color: var(--primary-main);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.filter-btn:hover,
+.filter-btn.active {
+  background: var(--primary-main);
+  color: white;
+}
+
+/* テーブル */
+.stock-table {
+  overflow-x: auto;
+}
+
+.stock-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.stock-table th,
+.stock-table td {
+  padding: var(--spacing-md);
+  text-align: left;
+  border-bottom: 1px solid #eee;
+}
+
+.stock-table th {
+  background: var(--bg-paper);
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: var(--font-sm);
+  text-transform: uppercase;
+}
+
+.stock-table tr:hover {
+  background: var(--bg-hover);
+}
+
+/* 株価表示 */
+.stock-code {
+  font-weight: 600;
+  color: var(--primary-dark);
+}
+
+.stock-name {
+  font-weight: 500;
+}
+
+.ai-score {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.score-bar {
+  width: 60px;
+  height: 8px;
+  background: #e0e0e0;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  position: relative;
+}
+
+.score-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--negative) 0%, #ff9800 25%, var(--positive) 100%);
+  transition: width 0.5s ease;
+}
+
+.signal-badge {
+  display: inline-block;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--radius-full);
+  font-size: var(--font-xs);
+  font-weight: 600;
+}
+
+.signal-badge.strong-buy {
+  background: #e8f5e9;
+  color: #2e7d32;
+}
+
+.signal-badge.buy {
+  background: var(--secondary-50);
+  color: var(--secondary-dark);
+}
+
+.signal-badge.neutral {
+  background: #f5f5f5;
+  color: var(--text-secondary);
+}
+
+.signal-badge.sell {
+  background: #fff3e0;
+  color: #ef6c00;
+}
+
+/* 推奨価格 */
+.price-info {
+  font-size: var(--font-sm);
+  line-height: 1.4;
+}
+
+.price-info .entry {
+  color: var(--primary-main);
+}
+
+.price-info .stop-loss {
+  color: var(--negative);
+}
+
+.price-info .target {
+  color: var(--positive);
+}
+
+/* アクションボタン */
+.action-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-sm);
+  border: none;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--primary-main);
+  color: white;
+  transition: all 0.3s ease;
+}
+
+.action-btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-1px);
+}
+
+/* レスポンシブ */
+@media (max-width: 768px) {
+  .header-content {
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+  
+  .nav {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .scan-header {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    text-align: center;
+  }
+  
+  .scan-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .stock-table {
+    font-size: var(--font-sm);
+  }
+  
+  .stock-table th,
+  .stock-table td {
+    padding: var(--spacing-sm);
+  }
+}

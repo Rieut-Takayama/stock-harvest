@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>トヨタ自動車(7203) - Stock Harvest AI</title>
+    <link rel="stylesheet" href="../src/css/base.css">
+    <link rel="stylesheet" href="../src/css/stock-detail.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h1>Stock Harvest AI</h1>
+                </div>
+                <nav class="nav">
+                    <a href="../index.html" class="nav-link">
+                        <span class="material-icons">dashboard</span>
+                        ダッシュボード
+                    </a>
+                    <a href="stock-detail.html" class="nav-link active">
+                        <span class="material-icons">analytics</span>
+                        銘柄分析
+                    </a>
+                    <a href="portfolio.html" class="nav-link">
+                        <span class="material-icons">account_balance_wallet</span>
+                        ポートフォリオ
+                    </a>
+                    <a href="alerts.html" class="nav-link">
+                        <span class="material-icons">notifications</span>
+                        アラート
+                    </a>
+                    <a href="backtest.html" class="nav-link">
+                        <span class="material-icons">history</span>
+                        バックテスト
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+        <div class="container">
+            <!-- 銘柄ヘッダー -->
+            <div class="stock-header card">
+                <div class="stock-title">
+                    <h2>トヨタ自動車 <span class="stock-code">7203</span></h2>
+                    <span class="sector-badge">自動車</span>
+                </div>
+                <div class="current-price">
+                    <div class="price-main">
+                        ¥2,845
+                        <span class="price-change positive">+125 (+4.6%)</span>
+                    </div>
+                    <div class="update-time">更新: 15:00</div>
+                </div>
+            </div>
+
+            <!-- AI判断サマリー -->
+            <div class="ai-summary card">
+                <h3><span class="material-icons">psychology</span> AI判断</h3>
+                <div class="ai-verdict">
+                    <div class="signal-large strong-buy">強い買い</div>
+                    <div class="score-large">
+                        AIスコア: <span class="score-value">92</span>/100
+                    </div>
+                </div>
+                <p class="ai-comment">
+                    移動平均線がゴールデンクロスを形成し、出来高も増加傾向。
+                    業績も好調で、中期的な上昇トレンドが期待できます。
+                </p>
+            </div>
+
+            <!-- 推奨価格 -->
+            <div class="price-targets card">
+                <h3><span class="material-icons">trending_up</span> 推奨価格</h3>
+                <div class="price-grid">
+                    <div class="price-box entry">
+                        <div class="price-label">エントリー</div>
+                        <div class="price-value">¥2,850</div>
+                        <div class="price-diff">現在値 +5円</div>
+                    </div>
+                    <div class="price-box stop-loss">
+                        <div class="price-label">損切り</div>
+                        <div class="price-value">¥2,750</div>
+                        <div class="price-diff">-3.3%</div>
+                    </div>
+                    <div class="price-box target">
+                        <div class="price-label">利確目標</div>
+                        <div class="price-value">¥3,050</div>
+                        <div class="price-diff">+7.2%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- チャート（シンプル） -->
+            <div class="chart-section card">
+                <h3><span class="material-icons">show_chart</span> 価格チャート</h3>
+                <div class="chart-placeholder">
+                    <img src="../src/assets/chart-placeholder.svg" alt="チャート" style="width: 100%; height: 400px; background: #f5f5f5; border-radius: 8px;">
+                </div>
+            </div>
+
+            <!-- テクニカル指標（シンプル） -->
+            <div class="indicators card">
+                <h3><span class="material-icons">analytics</span> 主要指標</h3>
+                <div class="indicator-grid">
+                    <div class="indicator-item">
+                        <span class="indicator-name">RSI(14)</span>
+                        <span class="indicator-value">68.5</span>
+                        <span class="indicator-signal buy">買い</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">MACD</span>
+                        <span class="indicator-value">+12.3</span>
+                        <span class="indicator-signal buy">買い</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">移動平均(25)</span>
+                        <span class="indicator-value">¥2,780</span>
+                        <span class="indicator-signal buy">上抜け</span>
+                    </div>
+                    <div class="indicator-item">
+                        <span class="indicator-name">ボリンジャー</span>
+                        <span class="indicator-value">中央付近</span>
+                        <span class="indicator-signal neutral">中立</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- アクションボタン -->
+            <div class="action-section">
+                <button class="btn btn-primary btn-lg" onclick="addToPortfolio()">
+                    <span class="material-icons">add</span>
+                    ポートフォリオに追加
+                </button>
+                <button class="btn btn-outline btn-lg" onclick="setAlert()">
+                    <span class="material-icons">notifications</span>
+                    アラート設定
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function addToPortfolio() {
+            showNotification('トヨタ自動車(7203)をポートフォリオに追加しました');
+        }
+        
+        function setAlert() {
+            showNotification('価格アラートを設定しました');
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #1976d2;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
