@@ -1,7 +1,8 @@
 // ページ読み込み時の初期化
 document.addEventListener('DOMContentLoaded', function() {
     updateLastUpdateTime();
-    renderStockTable();
+    renderLogicResults();
+    renderManualSignals();
 });
 
 // 最終更新時刻を更新
@@ -11,152 +12,271 @@ function updateLastUpdateTime() {
     document.getElementById('lastUpdate').textContent = timeString;
 }
 
-// 株式テーブルをレンダリング
-function renderStockTable() {
-    const tbody = document.getElementById('stockTableBody');
-    tbody.innerHTML = '';
+// ロジックA・Bの結果をレンダリング
+function renderLogicResults() {
+    // ロジックA
+    const logicAContainer = document.getElementById('logicA-results');
+    logicAContainer.innerHTML = '';
     
-    mockStocks.forEach(stock => {
-        const row = createStockRow(stock);
-        tbody.appendChild(row);
+    logicAStocks.forEach(stock => {
+        const card = createLogicACard(stock);
+        logicAContainer.appendChild(card);
+    });
+    
+    // ロジックB
+    const logicBContainer = document.getElementById('logicB-results');
+    logicBContainer.innerHTML = '';
+    
+    logicBStocks.forEach(stock => {
+        const card = createLogicBCard(stock);
+        logicBContainer.appendChild(card);
     });
 }
 
-// 株式の行を作成
-function createStockRow(stock) {
-    const tr = document.createElement('tr');
+// ロジックAカードを作成
+function createLogicACard(stock) {
+    const div = document.createElement('div');
+    div.className = 'stock-card logic-a';
     
-    // 価格変動のクラスを決定
-    const priceClass = stock.changeRate > 0 ? 'price-up' : 'price-down';
-    const changeSymbol = stock.changeRate > 0 ? '+' : '';
+    const statusClass = stock.currentReturn < 0 ? 'negative' : 'positive';
+    const returnSymbol = stock.currentReturn >= 0 ? '+' : '';
     
-    // シグナルのクラスを決定
-    let signalClass = 'neutral';
-    if (stock.signal === '強い買い') signalClass = 'strong-buy';
-    else if (stock.signal === '買い') signalClass = 'buy';
-    else if (stock.signal === '売り') signalClass = 'sell';
-    
-    tr.innerHTML = `
-        <td class="stock-code">${stock.code}</td>
-        <td class="stock-name">${stock.name}</td>
-        <td>¥${stock.price.toLocaleString()}</td>
-        <td class="${priceClass}">
-            ${changeSymbol}${stock.change} 
-            (${changeSymbol}${stock.changeRate}%)
-        </td>
-        <td>${stock.volume.toLocaleString()}</td>
-        <td>
-            <div class="ai-score">
-                <div class="score-bar">
-                    <div class="score-fill" style="width: ${stock.score}%"></div>
+    div.innerHTML = `
+        <div class="stock-card-header">
+            <div class="stock-info">
+                <span class="stock-code">${stock.code}</span>
+                <span class="stock-name">${stock.name}</span>
+            </div>
+            <span class="badge badge-primary">${stock.status}</span>
+        </div>
+        <div class="stock-card-body">
+            <div class="trigger-info">
+                <small>トリガー: ${stock.triggerEvent} (${stock.triggerDate})</small>
+            </div>
+            <div class="price-grid">
+                <div class="price-item">
+                    <span class="label">ストップ高</span>
+                    <span class="value">¥${stock.limitPrice.toLocaleString()}</span>
                 </div>
-                <span>${stock.score}</span>
+                <div class="price-item">
+                    <span class="label">推奨買値</span>
+                    <span class="value accent">¥${stock.recommendedEntry.toLocaleString()}</span>
+                    <small class="hint">前日終値+5%</small>
+                </div>
+                <div class="price-item">
+                    <span class="label">現在値</span>
+                    <span class="value">¥${stock.currentPrice.toLocaleString()}</span>
+                </div>
+                <div class="price-item">
+                    <span class="label">目標価格</span>
+                    <span class="value positive">¥${stock.target.toLocaleString()}</span>
+                    <small class="hint">+25%</small>
+                </div>
             </div>
-        </td>
-        <td>
-            <span class="signal-badge ${signalClass}">${stock.signal}</span>
-        </td>
-        <td>
-            <div class="price-info">
-                <div class="entry">IN: ¥${stock.entry.toLocaleString()}</div>
-                <div class="stop-loss">SL: ¥${stock.stopLoss.toLocaleString()}</div>
-                <div class="target">TP: ¥${stock.target.toLocaleString()}</div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="label">保有日数</span>
+                    <span class="value">${stock.daysHeld}日</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">現在リターン</span>
+                    <span class="value ${statusClass}">${returnSymbol}${stock.currentReturn}%</span>
+                </div>
             </div>
-        </td>
-        <td>
-            <button class="action-btn" onclick="viewDetail('${stock.code}')">
-                詳細
+            ${stock.currentReturn < -5 ? '<div class="warning-message"><span class="material-icons">warning</span> 3営業日連続下落を監視中</div>' : ''}
+        </div>
+        <div class="stock-card-footer">
+            <button class="btn btn-sm btn-secondary" onclick="viewChart('${stock.code}')">
+                <span class="material-icons">show_chart</span>
+                チャート
             </button>
-        </td>
+            <button class="btn btn-sm btn-primary" onclick="viewDetail('${stock.code}')">
+                詳細を見る
+            </button>
+        </div>
     `;
     
-    return tr;
+    return div;
 }
 
-// スキャン開始
-function startScan() {
+// ロジックBカードを作成
+function createLogicBCard(stock) {
+    const div = document.createElement('div');
+    div.className = 'stock-card logic-b';
+    
+    const statusClass = stock.currentReturn > 0 ? 'positive' : stock.currentReturn < 0 ? 'negative' : 'neutral';
+    const returnSymbol = stock.currentReturn > 0 ? '+' : '';
+    
+    div.innerHTML = `
+        <div class="stock-card-header">
+            <div class="stock-info">
+                <span class="stock-code">${stock.code}</span>
+                <span class="stock-name">${stock.name}</span>
+            </div>
+            <span class="badge badge-success">${stock.status}</span>
+        </div>
+        <div class="stock-card-body">
+            <div class="trigger-info">
+                <small>${stock.previousStatus} → ${stock.currentQuarter}</small>
+            </div>
+            <div class="price-grid">
+                <div class="price-item">
+                    <span class="label">5日移動平均</span>
+                    <span class="value">¥${stock.ma5.toLocaleString()}</span>
+                </div>
+                <div class="price-item">
+                    <span class="label">推奨買値</span>
+                    <span class="value accent">¥${stock.recommendedEntry.toLocaleString()}</span>
+                    <small class="hint">5日線付近</small>
+                </div>
+                <div class="price-item">
+                    <span class="label">損切り</span>
+                    <span class="value negative">¥${stock.stopLoss.toLocaleString()}</span>
+                    <small class="hint">-10%</small>
+                </div>
+                <div class="price-item">
+                    <span class="label">利確目標</span>
+                    <span class="value positive">¥${stock.target.toLocaleString()}</span>
+                    <small class="hint">+25%</small>
+                </div>
+            </div>
+            <div class="status-bar">
+                <div class="status-item">
+                    <span class="label">現在値</span>
+                    <span class="value">¥${stock.currentPrice.toLocaleString()}</span>
+                </div>
+                <div class="status-item">
+                    <span class="label">現在リターン</span>
+                    <span class="value ${statusClass}">${returnSymbol}${stock.currentReturn}%</span>
+                </div>
+            </div>
+            ${stock.status === '利益確定済' ? '<div class="success-message"><span class="material-icons">check_circle</span> 目標達成！利益確定済み</div>' : ''}
+        </div>
+        <div class="stock-card-footer">
+            <button class="btn btn-sm btn-secondary" onclick="viewChart('${stock.code}')">
+                <span class="material-icons">show_chart</span>
+                チャート
+            </button>
+            <button class="btn btn-sm btn-primary" onclick="viewDetail('${stock.code}')">
+                詳細を見る
+            </button>
+        </div>
+    `;
+    
+    return div;
+}
+
+// 手動決済シグナルをレンダリング
+function renderManualSignals() {
+    const container = document.querySelector('.signals-list');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    manualSignals.forEach(signal => {
+        const item = createSignalItem(signal);
+        container.appendChild(item);
+    });
+}
+
+// シグナルアイテムを作成
+function createSignalItem(signal) {
+    const div = document.createElement('div');
+    div.className = `signal-item ${signal.urgency === 'high' ? 'urgent' : ''}`;
+    
+    const returnValue = signal.loss || signal.profit || 0;
+    const returnClass = returnValue < 0 ? 'loss' : 'profit';
+    const returnSymbol = returnValue >= 0 ? '+' : '';
+    
+    div.innerHTML = `
+        <div class="signal-icon">
+            <span class="material-icons">${signal.urgency === 'high' ? 'warning' : 'schedule'}</span>
+        </div>
+        <div class="signal-content">
+            <div class="signal-stock">
+                <span class="stock-code">${signal.code}</span>
+                <span class="stock-name">${signal.name}</span>
+                <span class="badge badge-${signal.logic === 'A' ? 'danger' : 'success'}">ロジック${signal.logic}</span>
+            </div>
+            <div class="signal-message">
+                <strong>${signal.signalType}</strong>
+                <p>${signal.reason}。${signal.action}</p>
+            </div>
+            <div class="signal-prices">
+                <span class="price-item">買付: ¥${signal.entryPrice.toLocaleString()}</span>
+                <span class="price-item">現在: ¥${signal.currentPrice.toLocaleString()}</span>
+                <span class="price-item ${returnClass}">${signal.loss ? '損失' : '利益'}: ${returnSymbol}${Math.abs(returnValue)}%</span>
+            </div>
+        </div>
+        <button class="btn btn-sm btn-${signal.urgency === 'high' ? 'danger' : 'warning'}" 
+                onclick="${signal.urgency === 'high' ? 'executeSignal' : 'reviewSignal'}('${signal.code}')">
+            ${signal.urgency === 'high' ? '決済実行' : '詳細確認'}
+        </button>
+    `;
+    
+    return div;
+}
+
+// ロジックAスキャン
+function scanLogicA() {
     const button = event.target.closest('button');
     const originalContent = button.innerHTML;
     
-    // ローディング表示
     button.innerHTML = '<span class="loading"></span> スキャン中...';
     button.disabled = true;
     
-    // 3秒後にスキャン完了をシミュレート
     setTimeout(() => {
         button.innerHTML = originalContent;
         button.disabled = false;
-        
-        // データを更新
         updateLastUpdateTime();
-        
-        // アニメーション付きで統計を更新
-        animateStats();
-        
-        // テーブルを再描画
-        renderStockTable();
-        
-        // 完了通知
-        showNotification('スキャン完了！新しい注目銘柄が見つかりました。');
-    }, 3000);
+        showNotification('ロジックAスキャン完了！3銘柄が条件に合致しました。');
+        renderLogicResults();
+    }, 2000);
 }
 
-// 統計のアニメーション
-function animateStats() {
-    const stats = document.querySelectorAll('.stat-value');
-    stats.forEach(stat => {
-        stat.style.transform = 'scale(1.2)';
-        stat.style.transition = 'transform 0.3s ease';
-        setTimeout(() => {
-            stat.style.transform = 'scale(1)';
-        }, 300);
-    });
+// ロジックBスキャン
+function scanLogicB() {
+    const button = event.target.closest('button');
+    const originalContent = button.innerHTML;
+    
+    button.innerHTML = '<span class="loading"></span> スキャン中...';
+    button.disabled = true;
+    
+    setTimeout(() => {
+        button.innerHTML = originalContent;
+        button.disabled = false;
+        updateLastUpdateTime();
+        showNotification('ロジックBスキャン完了！4銘柄が条件に合致しました。');
+        renderLogicResults();
+    }, 2000);
 }
 
-// フィルター機能
-function filterStocks(filter) {
-    // ボタンのアクティブ状態を更新
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    event.target.classList.add('active');
-    
-    // フィルタリング
-    let filteredStocks = mockStocks;
-    
-    if (filter === 'buy') {
-        filteredStocks = mockStocks.filter(s => 
-            s.signal === '強い買い' || s.signal === '買い'
-        );
-    } else if (filter === 'sell') {
-        filteredStocks = mockStocks.filter(s => 
-            s.signal === '売り' || s.signal === '強い売り'
-        );
+// シグナル実行
+function executeSignal(code) {
+    if (confirm(`${code}の決済を実行しますか？`)) {
+        showNotification(`${code}の決済注文を送信しました。`);
+        // 実際の実装では決済APIを呼ぶ
     }
-    
-    // テーブルを再描画
-    const tbody = document.getElementById('stockTableBody');
-    tbody.innerHTML = '';
-    
-    filteredStocks.forEach(stock => {
-        const row = createStockRow(stock);
-        tbody.appendChild(row);
-    });
+}
+
+// シグナル確認
+function reviewSignal(code) {
+    const signal = manualSignals.find(s => s.code === code);
+    showNotification(`${signal.name}（${code}）の詳細を確認します。`);
+}
+
+// チャート表示
+function viewChart(code) {
+    showNotification(`${code}のチャートを表示します。`);
 }
 
 // 詳細画面へ遷移
 function viewDetail(code) {
-    // モックアップなので、アラートで表示
-    const stock = mockStocks.find(s => s.code === code);
-    showNotification(`${stock.name}（${code}）の詳細画面へ遷移します`);
-    
-    // 実際の実装では以下のようにページ遷移
-    // window.location.href = `mockups/stock-detail.html?code=${code}`;
+    window.location.href = `mockups/stock-detail.html?code=${code}`;
 }
 
 // 通知表示
 function showNotification(message) {
-    // 通知要素を作成
     const notification = document.createElement('div');
     notification.className = 'notification';
     notification.textContent = message;
@@ -175,7 +295,6 @@ function showNotification(message) {
     
     document.body.appendChild(notification);
     
-    // 3秒後に削除
     setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => {
@@ -207,6 +326,20 @@ style.textContent = `
             transform: translateX(100%);
             opacity: 0;
         }
+    }
+    
+    .loading {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        border-top-color: white;
+        animation: spin 0.6s linear infinite;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
     }
 `;
 document.head.appendChild(style);

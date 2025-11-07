@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Harvest AI - Ultra Premium</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700;900&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --neon-blue: #00d4ff;
+            --neon-purple: #ff00ff;
+            --neon-green: #00ff88;
+            --dark-bg: #0a0a0a;
+            --card-bg: rgba(255, 255, 255, 0.05);
+        }
+        
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+        
+        /* 背景アニメーション */
+        .bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(0, 212, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(255, 0, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 20%, rgba(0, 255, 136, 0.1) 0%, transparent 50%);
+            animation: bgMove 20s ease-in-out infinite;
+        }
+        
+        @keyframes bgMove {
+            0%, 100% { transform: scale(1) rotate(0deg); }
+            33% { transform: scale(1.1) rotate(120deg); }
+            66% { transform: scale(0.9) rotate(240deg); }
+        }
+        
+        /* パーティクル */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--neon-blue);
+            box-shadow: 0 0 10px var(--neon-blue);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+        
+        @keyframes float {
+            0% {
+                transform: translateY(100vh) translateX(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-100vh) translateX(100px);
+                opacity: 0;
+            }
+        }
+        
+        /* メインコンテナ */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* ヒーロー */
+        .hero {
+            text-align: center;
+            margin-bottom: 80px;
+            position: relative;
+        }
+        
+        .hero h1 {
+            font-size: clamp(48px, 8vw, 120px);
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            animation: glow 2s ease-in-out infinite alternate;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+            }
+            to {
+                text-shadow: 0 0 30px rgba(255, 0, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.5);
+            }
+        }
+        
+        .hero p {
+            font-size: 24px;
+            opacity: 0.8;
+            margin-bottom: 40px;
+        }
+        
+        /* メガボタン */
+        .mega-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+        
+        .mega-btn {
+            position: relative;
+            background: var(--card-bg);
+            border: 2px solid transparent;
+            border-radius: 30px;
+            padding: 60px 40px;
+            cursor: pointer;
+            overflow: hidden;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+        }
+        
+        .mega-btn::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple), var(--neon-green), var(--neon-blue));
+            border-radius: 30px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.5s;
+            animation: borderRotate 3s linear infinite;
+        }
+        
+        @keyframes borderRotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .mega-btn:hover::before {
+            opacity: 1;
+        }
+        
+        .mega-btn:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0, 212, 255, 0.3);
+        }
+        
+        .btn-icon {
+            font-size: 72px;
+            margin-bottom: 20px;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .btn-title {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .btn-desc {
+            font-size: 18px;
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+        
+        .btn-stats {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 42px;
+            font-weight: 900;
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+        
+        /* ストックカード */
+        .stocks-section {
+            margin-bottom: 80px;
+        }
+        
+        .section-header {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .section-icon {
+            font-size: 48px;
+            animation: spin 10s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .stock-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 30px;
+        }
+        
+        .stock-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .stock-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, var(--neon-blue), transparent 30%);
+            animation: rotate 4s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .stock-card:hover::after {
+            opacity: 0.3;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .stock-card:hover {
+            transform: translateY(-5px);
+            border-color: var(--neon-blue);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.2);
+        }
+        
+        .stock-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 25px;
+        }
+        
+        .stock-code {
+            font-size: 42px;
+            font-weight: 900;
+            background: linear-gradient(45deg, #fff, rgba(255, 255, 255, 0.7));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .stock-name {
+            font-size: 16px;
+            opacity: 0.7;
+        }
+        
+        .stock-badge {
+            background: linear-gradient(45deg, var(--neon-blue), var(--neon-purple));
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .price-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .price-box {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .price-box:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        .price-label {
+            font-size: 12px;
+            opacity: 0.6;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .price-value {
+            font-size: 28px;
+            font-weight: 900;
+        }
+        
+        .buy { color: var(--neon-blue); }
+        .target { color: var(--neon-green); }
+        .stop { color: var(--neon-purple); }
+        
+        /* アラートセクション */
+        .alert-section {
+            background: linear-gradient(135deg, rgba(255, 0, 255, 0.1), rgba(255, 0, 0, 0.1));
+            border: 2px solid rgba(255, 0, 255, 0.3);
+            border-radius: 30px;
+            padding: 40px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 80px;
+        }
+        
+        .alert-section::before {
+            content: '!';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            font-size: 300px;
+            opacity: 0.05;
+            font-weight: 900;
+        }
+        
+        .alert-header {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .alert-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(45deg, var(--neon-purple), #ff0000);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 30px;
+            animation: alertPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes alertPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 0 20px rgba(255, 0, 255, 0.5);
+            }
+            50% {
+                transform: scale(1.1);
+                box-shadow: 0 0 40px rgba(255, 0, 255, 0.8);
+            }
+        }
+        
+        .alert-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+        
+        .alert-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(10px);
+            border-left: 3px solid var(--neon-purple);
+        }
+        
+        /* マウスカーソルエフェクト */
+        .cursor {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--neon-blue);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            transition: all 0.1s ease;
+            z-index: 9999;
+        }
+        
+        .cursor-follower {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 212, 255, 0.1);
+            border-radius: 50%;
+            position: fixed;
+            pointer-events: none;
+            transition: all 0.3s ease;
+            z-index: 9998;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 48px; }
+            .mega-buttons { grid-template-columns: 1fr; }
+            .stock-grid { grid-template-columns: 1fr; }
+            .price-grid { grid-template-columns: 1fr; gap: 15px; }
+            .cursor, .cursor-follower { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-canvas"></div>
+    <div class="particles" id="particles"></div>
+    <div class="cursor"></div>
+    <div class="cursor-follower"></div>
+    
+    <div class="container">
+        <div class="hero">
+            <h1>Stock Harvest AI</h1>
+            <p>次世代AIが導く、究極の投資体験</p>
+        </div>
+        
+        <div class="mega-buttons">
+            <div class="mega-btn" onclick="scanLogic('A')">
+                <div class="btn-icon">⚡</div>
+                <h3 class="btn-title">LOGIC A</h3>
+                <p class="btn-desc">ストップ高張り付き銘柄を瞬時に捕捉</p>
+                <div class="btn-stats">
+                    <div class="stat">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">65.2%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="mega-btn" onclick="scanLogic('B')">
+                <div class="btn-icon">💎</div>
+                <h3 class="btn-title">LOGIC B</h3>
+                <p class="btn-desc">V字回復銘柄を高精度で発掘</p>
+                <div class="btn-stats">
+                    <div class="stat">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">Active</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">72.3%</div>
+                        <div class="stat-label">Win Rate</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="stocks-section">
+            <h2 class="section-header">
+                <span class="section-icon">⚡</span>
+                LOGIC A - HOT PICKS
+            </h2>
+            <div class="stock-grid">
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <div>
+                            <div class="stock-code">4180</div>
+                            <div class="stock-name">Appier Group</div>
+                        </div>
+                        <span class="stock-badge">WATCHING</span>
+                    </div>
+                    <div class="price-grid">
+                        <div class="price-box">
+                            <div class="price-label">Entry</div>
+                            <div class="price-value buy">¥2,264</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">Target</div>
+                            <div class="price-value target">¥2,830</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">Stop</div>
+                            <div class="price-value stop">3Days↓</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stock-card">
+                    <div class="stock-header">
+                        <div>
+                            <div class="stock-code">7342</div>
+                            <div class="stock-name">WealthNavi</div>
+                        </div>
+                        <span class="stock-badge">ACTIVE</span>
+                    </div>
+                    <div class="price-grid">
+                        <div class="price-box">
+                            <div class="price-label">Entry</div>
+                            <div class="price-value buy">¥1,029</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">Target</div>
+                            <div class="price-value target">¥1,286</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">Stop</div>
+                            <div class="price-value stop">3Days↓</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert-section">
+            <h2 class="alert-header">
+                <div class="alert-icon">!</div>
+                URGENT ACTION REQUIRED
+            </h2>
+            <div class="alert-item">
+                <div>
+                    <div style="font-size: 24px; font-weight: 700;">7342 WealthNavi</div>
+                    <div style="margin-top: 5px; opacity: 0.8;">3営業日連続下落検出 - 損切り推奨</div>
+                </div>
+                <button style="background: linear-gradient(45deg, var(--neon-purple), #ff0000); border: none; padding: 12px 30px; border-radius: 25px; color: white; font-weight: 600; cursor: pointer;">
+                    ACTION
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // パーティクル生成
+        function createParticles() {
+            const particlesContainer = document.getElementById('particles');
+            for (let i = 0; i < 50; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = (15 + Math.random() * 10) + 's';
+                particlesContainer.appendChild(particle);
+            }
+        }
+        
+        // マウスカーソル追従
+        const cursor = document.querySelector('.cursor');
+        const follower = document.querySelector('.cursor-follower');
+        
+        document.addEventListener('mousemove', (e) => {
+            cursor.style.left = e.clientX - 10 + 'px';
+            cursor.style.top = e.clientY - 10 + 'px';
+            
+            setTimeout(() => {
+                follower.style.left = e.clientX - 20 + 'px';
+                follower.style.top = e.clientY - 20 + 'px';
+            }, 100);
+        });
+        
+        // クリックエフェクト
+        document.addEventListener('click', (e) => {
+            const ripple = document.createElement('div');
+            ripple.style.position = 'fixed';
+            ripple.style.left = e.clientX + 'px';
+            ripple.style.top = e.clientY + 'px';
+            ripple.style.width = '0px';
+            ripple.style.height = '0px';
+            ripple.style.border = '2px solid var(--neon-blue)';
+            ripple.style.borderRadius = '50%';
+            ripple.style.transform = 'translate(-50%, -50%)';
+            ripple.style.animation = 'rippleEffect 1s ease-out';
+            ripple.style.pointerEvents = 'none';
+            document.body.appendChild(ripple);
+            
+            setTimeout(() => ripple.remove(), 1000);
+        });
+        
+        // アニメーション定義
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes rippleEffect {
+                to {
+                    width: 200px;
+                    height: 200px;
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // 初期化
+        createParticles();
+        
+        // スキャン関数
+        function scanLogic(type) {
+            alert(`Logic ${type} スキャンを開始します`);
+        }
+    </script>
+</body>
+</html>

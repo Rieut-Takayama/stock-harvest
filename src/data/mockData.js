@@ -1,4 +1,141 @@
-// モックデータ
+// ロジックA - ストップ高張り付き銘柄
+const logicAStocks = [
+  {
+    code: "4180",
+    name: "Appier Group",
+    type: "新規上場銘柄",
+    triggerDate: "2025-11-01",
+    triggerEvent: "四半期決算発表",
+    currentPrice: 1856,
+    limitPrice: 2156,
+    recommendedEntry: 2264, // +5% from limit
+    stopLoss: null, // 3日連続下落後に設定
+    target: 2830, // +25%
+    status: "監視中",
+    daysHeld: 2,
+    currentReturn: -2.1
+  },
+  {
+    code: "7342",
+    name: "ウェルスナビ",
+    type: "新規上場銘柄",
+    triggerDate: "2025-10-28",
+    triggerEvent: "業績修正発表",
+    currentPrice: 945,
+    limitPrice: 980,
+    recommendedEntry: 1029,
+    stopLoss: null,
+    target: 1286,
+    status: "エントリー済",
+    daysHeld: 5,
+    currentReturn: -8.2
+  },
+  {
+    code: "5032",
+    name: "ANYCOLOR",
+    type: "新規上場銘柄",
+    triggerDate: "2025-10-31",
+    triggerEvent: "四半期決算発表",
+    currentPrice: 3240,
+    limitPrice: 3450,
+    recommendedEntry: 3623,
+    stopLoss: null,
+    target: 4529,
+    status: "エントリー待機",
+    daysHeld: 0,
+    currentReturn: 0
+  }
+];
+
+// ロジックB - 赤字→黒字転換銘柄
+const logicBStocks = [
+  {
+    code: "3681",
+    name: "ブイキューブ",
+    previousStatus: "前年度赤字",
+    currentQuarter: "Q2黒字転換",
+    ma5: 892,
+    currentPrice: 905,
+    recommendedEntry: 892,
+    stopLoss: 803, // -10%
+    target: 1115, // +25%
+    status: "エントリー済",
+    entryDate: "2025-10-15",
+    currentReturn: 1.5
+  },
+  {
+    code: "3932",
+    name: "アカツキ",
+    previousStatus: "前年度赤字",
+    currentQuarter: "Q3黒字転換",
+    ma5: 2156,
+    currentPrice: 2189,
+    recommendedEntry: 2156,
+    stopLoss: 1940,
+    target: 2695,
+    status: "監視中",
+    entryDate: null,
+    currentReturn: 0
+  },
+  {
+    code: "7037",
+    name: "テノ.ホールディングス",
+    previousStatus: "前年度赤字",
+    currentQuarter: "Q1黒字転換",
+    ma5: 456,
+    currentPrice: 478,
+    recommendedEntry: 456,
+    stopLoss: 410,
+    target: 570,
+    status: "利益確定済",
+    entryDate: "2025-09-20",
+    currentReturn: 26.3
+  },
+  {
+    code: "9467",
+    name: "アルファポリス",
+    previousStatus: "前年度赤字",
+    currentQuarter: "Q2黒字転換",
+    ma5: 1234,
+    currentPrice: 1289,
+    recommendedEntry: 1234,
+    stopLoss: 1111,
+    target: 1543,
+    status: "エントリー済",
+    entryDate: "2025-10-25",
+    currentReturn: 4.5
+  }
+];
+
+// 手動決済シグナル
+const manualSignals = [
+  {
+    code: "7342",
+    name: "ウェルスナビ",
+    logic: "A",
+    signalType: "損切りシグナル",
+    reason: "3営業日連続下落",
+    urgency: "high",
+    entryPrice: 1029,
+    currentPrice: 945,
+    loss: -8.2,
+    action: "翌営業日寄り値で決済推奨"
+  },
+  {
+    code: "3681",
+    name: "ブイキューブ",
+    logic: "B",
+    signalType: "中途撤退期限",
+    reason: "決算日から1ヶ月半経過まで残り3日",
+    urgency: "medium",
+    entryPrice: 892,
+    currentPrice: 905,
+    profit: 1.5,
+    action: "利益10%未達のため撤退検討"
+  }
+];
+
+// 元のモックデータ（互換性のため残す）
 const mockStocks = [
   {
     code: "7203",
@@ -162,3 +299,15 @@ const sectorPerformance = [
   { sector: "サービス", performance: 1.9, count: 234 },
   { sector: "小売", performance: -1.2, count: 178 }
 ];
+
+// エクスポート
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    logicAStocks,
+    logicBStocks,
+    manualSignals,
+    mockStocks,
+    scanStats,
+    sectorPerformance
+  };
+}

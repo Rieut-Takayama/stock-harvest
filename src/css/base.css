@@ -10,11 +10,15 @@
 body {
   font-family: 'Noto Sans JP', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   font-size: var(--font-md);
-  line-height: 1.6;
+  line-height: 1.7;
   color: var(--text-primary);
   background-color: var(--bg-default);
+  background-image: 
+    radial-gradient(ellipse at top left, rgba(232, 168, 124, 0.05) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom right, rgba(127, 168, 123, 0.05) 0%, transparent 50%);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
 }
 
 /* Container */
@@ -24,17 +28,21 @@ body {
   padding: 0 var(--spacing-lg);
 }
 
-/* Card Component */
+/* Card Component - 温かみのあるカード */
 .card {
-  background: var(--bg-default);
+  background: var(--bg-card);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(250, 248, 245, 0.6) 100%);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-sm);
   padding: var(--spacing-lg);
-  transition: box-shadow 0.3s ease;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(232, 168, 124, 0.1);
 }
 
 .card:hover {
   box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(250, 248, 245, 0.7) 100%);
 }
 
 /* Button Styles */
@@ -51,36 +59,62 @@ body {
   cursor: pointer;
   transition: all 0.3s ease;
   text-decoration: none;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn-primary {
-  background-color: var(--primary-main);
+  background: linear-gradient(135deg, var(--primary-main) 0%, var(--primary-dark) 100%);
   color: white;
 }
 
 .btn-primary:hover {
-  background-color: var(--primary-dark);
+  background: linear-gradient(135deg, var(--primary-light) 0%, var(--primary-main) 100%);
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
 
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.btn-primary:active::before {
+  width: 300px;
+  height: 300px;
+}
+
 .btn-secondary {
-  background-color: var(--secondary-main);
+  background: linear-gradient(135deg, var(--secondary-main) 0%, var(--secondary-dark) 100%);
   color: white;
 }
 
 .btn-secondary:hover {
-  background-color: var(--secondary-dark);
+  background: linear-gradient(135deg, var(--secondary-light) 0%, var(--secondary-main) 100%);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-outline {
   background-color: transparent;
   border: 2px solid var(--primary-main);
   color: var(--primary-main);
+  position: relative;
 }
 
 .btn-outline:hover {
   background-color: var(--primary-50);
+  border-color: var(--primary-dark);
+  color: var(--primary-dark);
+  transform: translateY(-1px);
 }
 
 /* Stock Price Display */
@@ -98,7 +132,7 @@ body {
   color: var(--neutral);
 }
 
-/* Badge */
+/* Badge - 柔らかいバッジデザイン */
 .badge {
   display: inline-flex;
   align-items: center;
@@ -107,6 +141,7 @@ body {
   font-weight: 500;
   border-radius: var(--radius-full);
   text-transform: uppercase;
+  background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.2) 0%, rgba(255, 255, 255, 0) 100%);
 }
 
 .badge-success {
@@ -115,8 +150,8 @@ body {
 }
 
 .badge-danger {
-  background-color: #ffebee;
-  color: #c62828;
+  background-color: #FFF0ED;
+  color: #D4756A;
 }
 
 .badge-info {
@@ -124,7 +159,7 @@ body {
   color: var(--primary-dark);
 }
 
-/* Loading Animation */
+/* Loading Animation - 優しい回転アニメーション */
 .loading {
   display: inline-block;
   width: 20px;
@@ -132,7 +167,7 @@ body {
   border: 3px solid var(--primary-50);
   border-radius: 50%;
   border-top-color: var(--primary-main);
-  animation: spin 1s ease-in-out infinite;
+  animation: spin 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @keyframes spin {
@@ -148,3 +183,47 @@ body {
 .mb-sm { margin-bottom: var(--spacing-sm); }
 .mb-md { margin-bottom: var(--spacing-md); }
 .mb-lg { margin-bottom: var(--spacing-lg); }
+
+/* 温かみのある追加スタイル */
+a {
+  transition: all 0.3s ease;
+  color: var(--primary-main);
+}
+
+a:hover {
+  color: var(--primary-dark);
+}
+
+/* フォーカス時の温かいスタイル */
+:focus-visible {
+  outline: 2px solid var(--accent-orange);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* 選択時の温かい色 */
+::selection {
+  background-color: rgba(232, 168, 124, 0.3);
+  color: var(--text-primary);
+}
+
+/* スクロールバーのカスタマイズ */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-paper);
+  border-radius: var(--radius-sm);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--primary-light);
+  border-radius: var(--radius-sm);
+  border: 2px solid var(--bg-paper);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-main);
+}

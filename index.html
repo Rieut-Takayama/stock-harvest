@@ -22,21 +22,13 @@
                         <span class="material-icons">dashboard</span>
                         ダッシュボード
                     </a>
-                    <a href="mockups/stock-detail.html" class="nav-link">
-                        <span class="material-icons">analytics</span>
-                        銘柄分析
-                    </a>
-                    <a href="mockups/portfolio.html" class="nav-link">
-                        <span class="material-icons">account_balance_wallet</span>
-                        ポートフォリオ
-                    </a>
                     <a href="mockups/alerts.html" class="nav-link">
                         <span class="material-icons">notifications</span>
                         アラート
                     </a>
-                    <a href="mockups/backtest.html" class="nav-link">
-                        <span class="material-icons">history</span>
-                        バックテスト
+                    <a href="mockups/contact.html" class="nav-link">
+                        <span class="material-icons">contact_support</span>
+                        問合せ
                     </a>
                 </nav>
             </div>
@@ -46,110 +38,140 @@
     <!-- メインコンテンツ -->
     <main class="main">
         <div class="container">
-            <!-- スキャンコントロール -->
+            <!-- ロジックスキャンコントロール -->
             <div class="scan-control card">
                 <div class="scan-header">
                     <div>
-                        <h2>AIスキャン</h2>
-                        <p class="scan-info">東証全3,842銘柄を監視中</p>
+                        <h2>Stock Harvest AI ロジックスキャナー</h2>
+                        <p class="scan-info">東証全3,842銘柄から投資機会を24時間監視</p>
                     </div>
-                    <button class="btn btn-primary btn-lg" onclick="startScan()">
-                        <span class="material-icons">radar</span>
-                        今すぐスキャン
+                </div>
+                <div class="logic-buttons-container">
+                    <button class="btn btn-primary btn-xl logic-btn" onclick="scanLogicA()">
+                        <div class="logic-btn-content">
+                            <span class="material-icons">rocket_launch</span>
+                            <div class="logic-btn-text">
+                                <h3>ロジックA</h3>
+                                <p>ストップ高張り付き銘柄検出</p>
+                                <small>決算・業績修正後の急騰銘柄を狙い撃ち</small>
+                            </div>
+                        </div>
+                        <div class="logic-stats">
+                            <span class="badge badge-warm">本日5銘柄検出</span>
+                        </div>
+                    </button>
+                    <button class="btn btn-secondary btn-xl logic-btn" onclick="scanLogicB()">
+                        <div class="logic-btn-content">
+                            <span class="material-icons">trending_up</span>
+                            <div class="logic-btn-text">
+                                <h3>ロジックB</h3>
+                                <p>赤字→黒字転換銘柄検出</p>
+                                <small>業績回復の成長株をキャッチ</small>
+                            </div>
+                        </div>
+                        <div class="logic-stats">
+                            <span class="badge badge-success">本日12銘柄検出</span>
+                        </div>
                     </button>
                 </div>
-                <div class="scan-stats">
-                    <div class="stat-item">
-                        <span class="stat-label">強い買い</span>
-                        <span class="stat-value strong-buy">156</span>
+                <div class="scan-summary">
+                    <div class="summary-item">
+                        <span class="material-icons">notifications_active</span>
+                        <span class="summary-label">アクティブシグナル</span>
+                        <span class="summary-value">3件</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">買い</span>
-                        <span class="stat-value buy">342</span>
+                    <div class="summary-item">
+                        <span class="material-icons">check_circle</span>
+                        <span class="summary-label">本日の約定</span>
+                        <span class="summary-value">2件</span>
                     </div>
-                    <div class="stat-item">
-                        <span class="stat-label">中立</span>
-                        <span class="stat-value neutral">2,890</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">売り</span>
-                        <span class="stat-value sell">298</span>
-                    </div>
-                    <div class="stat-item">
-                        <span class="stat-label">強い売り</span>
-                        <span class="stat-value strong-sell">156</span>
+                    <div class="summary-item">
+                        <span class="material-icons">trending_up</span>
+                        <span class="summary-label">平均リターン</span>
+                        <span class="summary-value">+18.5%</span>
                     </div>
                 </div>
-                <div class="last-update">最終更新: <span id="lastUpdate">--:--:--</span></div>
+                <div class="last-update">最終スキャン: <span id="lastUpdate">--:--:--</span></div>
             </div>
 
-            <!-- セクター別パフォーマンス -->
-            <div class="sector-performance card mt-lg">
-                <h3>セクター別パフォーマンス</h3>
-                <div class="sector-grid">
-                    <div class="sector-item positive">
-                        <span class="sector-name">自動車</span>
-                        <span class="sector-change">+4.2%</span>
-                        <span class="sector-count">89銘柄</span>
-                    </div>
-                    <div class="sector-item positive">
-                        <span class="sector-name">銀行</span>
-                        <span class="sector-change">+3.1%</span>
-                        <span class="sector-count">45銘柄</span>
-                    </div>
-                    <div class="sector-item positive">
-                        <span class="sector-name">電気機器</span>
-                        <span class="sector-change">+2.8%</span>
-                        <span class="sector-count">156銘柄</span>
-                    </div>
-                    <div class="sector-item positive">
-                        <span class="sector-name">サービス</span>
-                        <span class="sector-change">+1.9%</span>
-                        <span class="sector-count">234銘柄</span>
-                    </div>
-                    <div class="sector-item negative">
-                        <span class="sector-name">通信</span>
-                        <span class="sector-change">-0.5%</span>
-                        <span class="sector-count">23銘柄</span>
-                    </div>
-                    <div class="sector-item negative">
-                        <span class="sector-name">小売</span>
-                        <span class="sector-change">-1.2%</span>
-                        <span class="sector-count">178銘柄</span>
-                    </div>
+            <!-- ロジックA検出結果 -->
+            <div class="logic-results-section card mt-lg">
+                <div class="results-header">
+                    <h3><span class="material-icons">rocket_launch</span> ロジックA - ストップ高張り付き銘柄</h3>
+                    <span class="badge badge-primary">リアルタイム更新</span>
+                </div>
+                <div class="results-grid" id="logicA-results">
+                    <!-- ロジックA銘柄がここに表示されます -->
                 </div>
             </div>
 
-            <!-- 注目銘柄リスト -->
-            <div class="stock-list card mt-lg">
-                <div class="list-header">
-                    <h3>AIが選んだ注目銘柄 TOP10</h3>
-                    <div class="filter-buttons">
-                        <button class="filter-btn active" onclick="filterStocks('all')">すべて</button>
-                        <button class="filter-btn" onclick="filterStocks('buy')">買い推奨</button>
-                        <button class="filter-btn" onclick="filterStocks('sell')">売り推奨</button>
-                    </div>
+            <!-- ロジックB検出結果 -->
+            <div class="logic-results-section card mt-lg">
+                <div class="results-header">
+                    <h3><span class="material-icons">trending_up</span> ロジックB - 赤字→黒字転換銘柄</h3>
+                    <span class="badge badge-success">リアルタイム更新</span>
                 </div>
-                
-                <div class="stock-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>コード</th>
-                                <th>銘柄名</th>
-                                <th>現在値</th>
-                                <th>前日比</th>
-                                <th>出来高</th>
-                                <th>AIスコア</th>
-                                <th>シグナル</th>
-                                <th>推奨価格</th>
-                                <th>アクション</th>
-                            </tr>
-                        </thead>
-                        <tbody id="stockTableBody">
-                            <!-- モックデータはJSで挿入 -->
-                        </tbody>
-                    </table>
+                <div class="results-grid" id="logicB-results">
+                    <!-- ロジックB銘柄がここに表示されます -->
+                </div>
+            </div>
+
+            <!-- 手動決済シグナル -->
+            <div class="manual-signals card mt-lg">
+                <div class="signals-header">
+                    <h3><span class="material-icons">pan_tool</span> 手動決済シグナル</h3>
+                    <span class="badge badge-warning">要アクション</span>
+                </div>
+                <div class="signals-list">
+                    <div class="signal-item urgent">
+                        <div class="signal-icon">
+                            <span class="material-icons">warning</span>
+                        </div>
+                        <div class="signal-content">
+                            <div class="signal-stock">
+                                <span class="stock-code">7203</span>
+                                <span class="stock-name">トヨタ自動車</span>
+                                <span class="badge badge-danger">ロジックA</span>
+                            </div>
+                            <div class="signal-message">
+                                <strong>損切りシグナル発生</strong>
+                                <p>3営業日連続で終値が下落。翌営業日寄り値で決済推奨</p>
+                            </div>
+                            <div class="signal-prices">
+                                <span class="price-item">買付: ¥2,850</span>
+                                <span class="price-item">現在: ¥2,680</span>
+                                <span class="price-item loss">損失: -5.96%</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-danger" onclick="executeSignal('7203')">
+                            決済実行
+                        </button>
+                    </div>
+                    
+                    <div class="signal-item">
+                        <div class="signal-icon">
+                            <span class="material-icons">schedule</span>
+                        </div>
+                        <div class="signal-content">
+                            <div class="signal-stock">
+                                <span class="stock-code">9984</span>
+                                <span class="stock-name">ソフトバンクグループ</span>
+                                <span class="badge badge-success">ロジックB</span>
+                            </div>
+                            <div class="signal-message">
+                                <strong>中途撤退期限接近</strong>
+                                <p>決算日から1ヶ月半経過まで残り3日。利益+8.2%で推移中</p>
+                            </div>
+                            <div class="signal-prices">
+                                <span class="price-item">買付: ¥6,120</span>
+                                <span class="price-item">現在: ¥6,622</span>
+                                <span class="price-item profit">利益: +8.2%</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-warning" onclick="executeSignal('9984')">
+                            決済実行
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

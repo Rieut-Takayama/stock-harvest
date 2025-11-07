@@ -1,37 +1,44 @@
 :root {
-  /* Primary Colors - 青系 (信頼性・安定性) */
-  --primary-main: #1976d2;
-  --primary-light: #42a5f5;
-  --primary-dark: #0d47a1;
-  --primary-50: #e3f2fd;
-  --primary-100: #bbdefb;
+  /* Primary Colors - 温かい青系 (信頼性・安定性) */
+  --primary-main: #5B9FB6;  /* Warm teal blue */
+  --primary-light: #7FB3C8;  /* Light sky blue */
+  --primary-dark: #4A8397;  /* Deep warm teal */
+  --primary-50: #E8F3F7;  /* Very light warm blue */
+  --primary-100: #C8E2EC;  /* Light warm blue */
   
-  /* Secondary Colors - 緑系 (成長・利益) */
-  --secondary-main: #4caf50;
-  --secondary-light: #81c784;
-  --secondary-dark: #388e3c;
-  --secondary-50: #e8f5e9;
-  --secondary-100: #c8e6c9;
+  /* Secondary Colors - 温かい緑系 (成長・利益) */
+  --secondary-main: #7FA87B;  /* Sage green */
+  --secondary-light: #9FBC9C;  /* Light sage green */
+  --secondary-dark: #628E5E;  /* Deep sage green */
+  --secondary-50: #F0F5EF;  /* Very light sage */
+  --secondary-100: #D8E5D6;  /* Light sage */
   
-  /* Background Colors - 白系 (クリーンさ) */
-  --bg-default: #ffffff;
-  --bg-paper: #f5f5f5;
-  --bg-hover: #f0f7ff;
+  /* Accent Colors - 暖色系アクセント */
+  --accent-orange: #E8A87C;  /* Soft peach orange */
+  --accent-yellow: #F4D47C;  /* Warm sunny yellow */
+  --accent-pink: #E8B7C7;  /* Soft blush pink */
+  --accent-lavender: #C8B7DB;  /* Soft lavender */
   
-  /* Text Colors */
-  --text-primary: #212121;
-  --text-secondary: #757575;
-  --text-disabled: #bdbdbd;
+  /* Background Colors - 温かい白系 (クリーンさ) */
+  --bg-default: #FEFDFB;  /* Warm white */
+  --bg-paper: #FAF8F5;  /* Soft cream */
+  --bg-hover: #F5F0E8;  /* Light warm beige */
+  --bg-card: #FFFFFF;  /* Pure white for cards */
   
-  /* Stock Colors */
-  --positive: #4caf50;
-  --negative: #f44336;
-  --neutral: #757575;
+  /* Text Colors - 柔らかい色調 */
+  --text-primary: #3D3D3D;  /* Softer black */
+  --text-secondary: #6B6B6B;  /* Warm gray */
+  --text-disabled: #A8A8A8;  /* Light warm gray */
   
-  /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
-  --shadow-md: 0 3px 6px rgba(0,0,0,0.15), 0 2px 4px rgba(0,0,0,0.12);
-  --shadow-lg: 0 10px 20px rgba(0,0,0,0.15), 0 3px 6px rgba(0,0,0,0.10);
+  /* Stock Colors - 柔らかい表示色 */
+  --positive: #7FA87B;  /* Sage green for profits */
+  --negative: #E8897C;  /* Soft coral for losses */
+  --neutral: #8B8B8B;  /* Warm neutral gray */
+  
+  /* Shadows - 柔らかい影 */
+  --shadow-sm: 0 2px 4px rgba(139, 107, 75, 0.08), 0 1px 2px rgba(139, 107, 75, 0.06);
+  --shadow-md: 0 4px 8px rgba(139, 107, 75, 0.10), 0 2px 4px rgba(139, 107, 75, 0.08);
+  --shadow-lg: 0 10px 20px rgba(139, 107, 75, 0.12), 0 4px 8px rgba(139, 107, 75, 0.10);
   
   /* Spacing */
   --spacing-xs: 4px;
@@ -40,10 +47,10 @@
   --spacing-lg: 24px;
   --spacing-xl: 32px;
   
-  /* Border Radius */
-  --radius-sm: 4px;
-  --radius-md: 8px;
-  --radius-lg: 16px;
+  /* Border Radius - より丸みを帯びたデザイン */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
   --radius-full: 9999px;
   
   /* Font Sizes */

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Harvest AI - 過去実績</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="history.css">
+</head>
+<body>
+    <div class="decoration decoration-1"></div>
+    <div class="decoration decoration-2"></div>
+    
+    <header class="header">
+        <h1>Stock Harvest AI - 過去実績</h1>
+        <nav class="nav">
+            <a href="index.html" class="nav-link">現在の銘柄</a>
+            <a href="history.html" class="nav-link active">過去実績</a>
+        </nav>
+    </header>
+
+    <div class="container">
+        <!-- サマリー統計 -->
+        <div class="summary-section">
+            <h2 class="section-title">実績サマリー (2024年1月〜現在)</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">総取引数</div>
+                    <div class="summary-value">142</div>
+                </div>
+                <div class="summary-card success">
+                    <div class="summary-label">勝ち</div>
+                    <div class="summary-value">98</div>
+                    <div class="summary-percent">69.0%</div>
+                </div>
+                <div class="summary-card danger">
+                    <div class="summary-label">負け</div>
+                    <div class="summary-value">44</div>
+                    <div class="summary-percent">31.0%</div>
+                </div>
+                <div class="summary-card primary">
+                    <div class="summary-label">平均リターン</div>
+                    <div class="summary-value">+8.7%</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ロジックA実績 -->
+        <div class="history-section">
+            <div class="history-header">
+                <h2 class="history-title">
+                    <div class="logic-icon">📈</div>
+                    ロジックA 過去実績
+                </h2>
+                <div class="filter-buttons">
+                    <button class="filter-btn active">全て</button>
+                    <button class="filter-btn success">利確</button>
+                    <button class="filter-btn danger">損切り</button>
+                </div>
+            </div>
+            
+            <div class="history-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>銘柄</th>
+                            <th>エントリー日</th>
+                            <th>決済日</th>
+                            <th>買値</th>
+                            <th>売値</th>
+                            <th>リターン</th>
+                            <th>結果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="success-row">
+                            <td>
+                                <div class="stock-info-cell">
+                                    <span class="code">3994</span>
+                                    <span class="name">マネーフォワード</span>
+                                </div>
+                            </td>
+                            <td>2024/10/15</td>
+                            <td>2024/10/22</td>
+                            <td>¥4,850</td>
+                            <td>¥6,063</td>
+                            <td class="return-positive">+25.0%</td>
+                            <td><span class="result-badge success">利確</span></td>
+                        </tr>
+                        <tr class="danger-row">
+                            <td>
+                                <div class="stock-info-cell">
+                                    <span class="code">4385</span>
+                                    <span class="name">メルカリ</span>
+                                </div>
+                            </td>
+                            <td>2024/10/02</td>
+                            <td>2024/10/05</td>
+                            <td>¥2,156</td>
+                            <td>¥1,985</td>
+                            <td class="return-negative">-7.9%</td>
+                            <td><span class="result-badge danger">損切り</span></td>
+                        </tr>
+                        <tr class="success-row">
+                            <td>
+                                <div class="stock-info-cell">
+                                    <span class="code">7037</span>
+                                    <span class="name">テノ.HD</span>
+                                </div>
+                            </td>
+                            <td>2024/09/20</td>
+                            <td>2024/09/30</td>
+                            <td>¥456</td>
+                            <td>¥570</td>
+                            <td class="return-positive">+25.0%</td>
+                            <td><span class="result-badge success">利確</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ロジックB実績 -->
+        <div class="history-section">
+            <div class="history-header">
+                <h2 class="history-title">
+                    <div class="logic-icon">🔄</div>
+                    ロジックB 過去実績
+                </h2>
+                <div class="stats-row">
+                    <span class="stat-item">勝率: <strong>72.3%</strong></span>
+                    <span class="stat-item">平均保有: <strong>18日</strong></span>
+                    <span class="stat-item">最大利益: <strong>+38.5%</strong></span>
+                </div>
+            </div>
+            
+            <div class="history-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>銘柄</th>
+                            <th>エントリー日</th>
+                            <th>決済日</th>
+                            <th>買値</th>
+                            <th>売値</th>
+                            <th>リターン</th>
+                            <th>結果</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="success-row">
+                            <td>
+                                <div class="stock-info-cell">
+                                    <span class="code">2150</span>
+                                    <span class="name">ケアネット</span>
+                                </div>
+                            </td>
+                            <td>2024/09/01</td>
+                            <td>2024/09/15</td>
+                            <td>¥680</td>
+                            <td>¥850</td>
+                            <td class="return-positive">+25.0%</td>
+                            <td><span class="result-badge success">利確</span></td>
+                        </tr>
+                        <tr class="warning-row">
+                            <td>
+                                <div class="stock-info-cell">
+                                    <span class="code">3825</span>
+                                    <span class="name">リミックスポイント</span>
+                                </div>
+                            </td>
+                            <td>2024/08/20</td>
+                            <td>2024/10/05</td>
+                            <td>¥234</td>
+                            <td>¥251</td>
+                            <td class="return-moderate">+7.3%</td>
+                            <td><span class="result-badge warning">撤退</span></td>
+                        </tr>
+                        <tr class="danger-row">
+                            <td>
+                                <div class="stock-info-cell">
+                                    <span class="code">6573</span>
+                                    <span class="name">アジャイルメディア</span>
+                                </div>
+                            </td>
+                            <td>2024/08/10</td>
+                            <td>2024/08/18</td>
+                            <td>¥450</td>
+                            <td>¥405</td>
+                            <td class="return-negative">-10.0%</td>
+                            <td><span class="result-badge danger">損切り</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 月次パフォーマンス -->
+        <div class="performance-section">
+            <h2 class="section-title">月次パフォーマンス</h2>
+            <div class="chart-placeholder">
+                <div class="chart-bar" style="height: 60%;">
+                    <span class="month">1月</span>
+                    <span class="value">+5.2%</span>
+                </div>
+                <div class="chart-bar" style="height: 80%;">
+                    <span class="month">2月</span>
+                    <span class="value">+8.7%</span>
+                </div>
+                <div class="chart-bar negative" style="height: 30%;">
+                    <span class="month">3月</span>
+                    <span class="value">-2.1%</span>
+                </div>
+                <div class="chart-bar" style="height: 90%;">
+                    <span class="month">4月</span>
+                    <span class="value">+12.3%</span>
+                </div>
+                <div class="chart-bar" style="height: 70%;">
+                    <span class="month">5月</span>
+                    <span class="value">+6.8%</span>
+                </div>
+                <div class="chart-bar" style="height: 85%;">
+                    <span class="month">6月</span>
+                    <span class="value">+9.5%</span>
+                </div>
+                <div class="chart-bar" style="height: 75%;">
+                    <span class="month">7月</span>
+                    <span class="value">+7.2%</span>
+                </div>
+                <div class="chart-bar negative" style="height: 25%;">
+                    <span class="month">8月</span>
+                    <span class="value">-1.5%</span>
+                </div>
+                <div class="chart-bar" style="height: 95%;">
+                    <span class="month">9月</span>
+                    <span class="value">+15.8%</span>
+                </div>
+                <div class="chart-bar" style="height: 65%;">
+                    <span class="month">10月</span>
+                    <span class="value">+5.9%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

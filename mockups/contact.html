@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Harvest AI - 問合せ</title>
+    <link rel="stylesheet" href="../src/css/base.css">
+    <link rel="stylesheet" href="../src/css/alerts.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h1>Stock Harvest AI</h1>
+                </div>
+                <nav class="nav">
+                    <a href="../index.html" class="nav-link">
+                        <span class="material-icons">dashboard</span>
+                        ダッシュボード
+                    </a>
+                    <a href="alerts.html" class="nav-link">
+                        <span class="material-icons">notifications</span>
+                        アラート
+                    </a>
+                    <a href="contact.html" class="nav-link active">
+                        <span class="material-icons">contact_support</span>
+                        問合せ
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+        <div class="container">
+            <div class="page-header">
+                <h2><span class="material-icons">contact_support</span> 問合せ・サポート</h2>
+                <p>システムに関するご質問・ご要望はこちらから</p>
+            </div>
+
+            <!-- よくある質問 -->
+            <div class="card mb-lg">
+                <div class="card-header">
+                    <h3><span class="material-icons">help_outline</span> よくある質問</h3>
+                </div>
+                <div class="faq-list">
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>Q. ロジックスキャンの実行頻度を教えてください</span>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>ロジックA・Bともに5分間隔で自動実行されています。手動実行も可能です。</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>Q. 手動決済シグナルが表示されません</span>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>現在保有銘柄がない、または決済条件に該当する銘柄がない場合は表示されません。</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question" onclick="toggleFaq(this)">
+                            <span>Q. アラート通知が届きません</span>
+                            <span class="material-icons">expand_more</span>
+                        </div>
+                        <div class="faq-answer">
+                            <p>LINE Notifyトークンが正しく設定されているか確認してください。アラート設定ページで接続状況をチェックできます。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- お問い合わせフォーム -->
+            <div class="card">
+                <div class="card-header">
+                    <h3><span class="material-icons">email</span> お問い合わせ</h3>
+                </div>
+                <form class="contact-form">
+                    <div class="form-group">
+                        <label for="category">問合せ種別</label>
+                        <select id="category" class="form-control" required>
+                            <option value="">選択してください</option>
+                            <option value="technical">技術的な問題</option>
+                            <option value="feature">機能要望</option>
+                            <option value="bug">不具合報告</option>
+                            <option value="other">その他</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="subject">件名</label>
+                        <input type="text" id="subject" class="form-control" placeholder="問合せの件名を入力してください" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="message">内容</label>
+                        <textarea id="message" class="form-control" rows="6" placeholder="詳細な内容をご記入ください" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="email">連絡先メールアドレス</label>
+                        <input type="email" id="email" class="form-control" placeholder="回答先のメールアドレス" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">
+                            <span class="material-icons">send</span>
+                            送信する
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- システム情報 -->
+            <div class="card mt-lg">
+                <div class="card-header">
+                    <h3><span class="material-icons">info</span> システム情報</h3>
+                </div>
+                <div class="system-info">
+                    <div class="info-row">
+                        <span class="info-label">バージョン</span>
+                        <span class="info-value">v1.0.0</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">最終更新</span>
+                        <span class="info-value">2025-11-07 09:15:23</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">稼働状況</span>
+                        <span class="info-value">
+                            <span class="status-indicator status-active"></span>
+                            正常稼働中
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function toggleFaq(element) {
+            const faqItem = element.parentElement;
+            const isOpen = faqItem.classList.contains('active');
+            
+            // すべてのFAQを閉じる
+            document.querySelectorAll('.faq-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // クリックされたFAQを開く（すでに開いていた場合は閉じる）
+            if (!isOpen) {
+                faqItem.classList.add('active');
+            }
+        }
+
+        // フォーム送信処理
+        document.querySelector('.contact-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('お問い合わせを送信しました。回答まで1-2営業日お待ちください。');
+            this.reset();
+        });
+    </script>
+
+    <style>
+        .faq-list {
+            padding: 0;
+        }
+
+        .faq-item {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .faq-item:last-child {
+            border-bottom: none;
+        }
+
+        .faq-question {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            cursor: pointer;
+            background: var(--background-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .faq-question:hover {
+            background: var(--background-hover);
+        }
+
+        .faq-question .material-icons {
+            transition: transform 0.3s ease;
+        }
+
+        .faq-item.active .faq-question .material-icons {
+            transform: rotate(180deg);
+        }
+
+        .faq-answer {
+            padding: 0 1rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease, padding 0.3s ease;
+        }
+
+        .faq-item.active .faq-answer {
+            max-height: 200px;
+            padding: 1rem;
+        }
+
+        .contact-form {
+            padding: 1rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px var(--primary-color-alpha);
+        }
+
+        .form-actions {
+            margin-top: 1.5rem;
+        }
+
+        .system-info {
+            padding: 1rem;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .info-value {
+            color: var(--text-primary);
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+
+        .status-active {
+            background-color: var(--success-color);
+        }
+    </style>
+</body>
+</html>

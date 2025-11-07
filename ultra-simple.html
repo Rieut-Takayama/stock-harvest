@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Harvest AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 48px;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-size: 18px;
+            opacity: 0.9;
+            margin-bottom: 50px;
+        }
+        
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .big-button {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 20px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .big-button:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+        
+        .button-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .button-desc {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.8;
+        }
+        
+        .section {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-title {
+            font-size: 24px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .stocks {
+            display: grid;
+            gap: 20px;
+        }
+        
+        .stock-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 15px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 150px 1fr;
+            gap: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .stock-item:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateX(10px);
+        }
+        
+        .stock-code {
+            font-size: 36px;
+            font-weight: bold;
+        }
+        
+        .stock-name {
+            font-size: 16px;
+            opacity: 0.8;
+        }
+        
+        .prices {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+        
+        .price-box {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        
+        .price-label {
+            font-size: 12px;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+        
+        .price-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .buy { color: #4FC3F7; }
+        .target { color: #81C784; }
+        .stop { color: #E57373; }
+        
+        .alert {
+            background: linear-gradient(135deg, rgba(229,115,115,0.2) 0%, rgba(239,83,80,0.2) 100%);
+            border: 2px solid rgba(229,115,115,0.5);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .alert-title {
+            font-size: 28px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .alert-item {
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+        
+        .alert-stock {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .alert-message {
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            h1 { font-size: 32px; }
+            .buttons { grid-template-columns: 1fr; }
+            .stock-item { grid-template-columns: 1fr; }
+            .prices { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Stock Harvest AI</h1>
+        <p class="subtitle">東証全3,842銘柄を24時間365日監視。人間には不可能な分析を実現。</p>
+        
+        <div class="buttons">
+            <div class="big-button" onclick="alert('ロジックAをスキャンします')">
+                <div class="icon">▲</div>
+                <div class="button-title">ロジックA</div>
+                <div class="button-desc">ストップ高張り付き銘柄を即座に検出</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">5</div>
+                        <div class="stat-label">検出中</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">65.2%</div>
+                        <div class="stat-label">勝率</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="big-button" onclick="alert('ロジックBをスキャンします')">
+                <div class="icon">◆</div>
+                <div class="button-title">ロジックB</div>
+                <div class="button-desc">赤字→黒字転換の成長株を発掘</div>
+                <div class="stats">
+                    <div class="stat">
+                        <div class="stat-value">12</div>
+                        <div class="stat-label">検出中</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">72.3%</div>
+                        <div class="stat-label">勝率</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section">
+            <h2 class="section-title">
+                <span style="font-size: 32px;">▲</span>
+                ロジックA - 現在の推奨銘柄
+            </h2>
+            <div class="stocks">
+                <div class="stock-item">
+                    <div>
+                        <div class="stock-code">4180</div>
+                        <div class="stock-name">Appier Group</div>
+                    </div>
+                    <div class="prices">
+                        <div class="price-box">
+                            <div class="price-label">推奨買値</div>
+                            <div class="price-value buy">¥2,264</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">利確目標</div>
+                            <div class="price-value target">¥2,830</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">損切り</div>
+                            <div class="price-value stop">3日連続↓</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="stock-item">
+                    <div>
+                        <div class="stock-code">7342</div>
+                        <div class="stock-name">ウェルスナビ</div>
+                    </div>
+                    <div class="prices">
+                        <div class="price-box">
+                            <div class="price-label">推奨買値</div>
+                            <div class="price-value buy">¥1,029</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">利確目標</div>
+                            <div class="price-value target">¥1,286</div>
+                        </div>
+                        <div class="price-box">
+                            <div class="price-label">損切り</div>
+                            <div class="price-value stop">3日連続↓</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="alert">
+            <h2 class="alert-title">
+                <span style="font-size: 32px;">!</span>
+                緊急アクション
+            </h2>
+            <div class="alert-item">
+                <div class="alert-stock">7342 ウェルスナビ</div>
+                <div class="alert-message">3営業日連続下落 - 明日寄り値で損切り推奨</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
