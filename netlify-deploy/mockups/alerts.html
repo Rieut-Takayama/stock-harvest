@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アラート設定 - Stock Harvest AI</title>
+    <link rel="stylesheet" href="../src/css/base.css">
+    <link rel="stylesheet" href="../src/css/alerts.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</head>
+<body>
+    <!-- ヘッダー -->
+    <header class="header">
+        <div class="container">
+            <div class="header-content">
+                <div class="logo">
+                    <span class="logo-icon">📊</span>
+                    <h1>Stock Harvest AI</h1>
+                </div>
+                <nav class="nav">
+                    <a href="../index.html" class="nav-link">
+                        <span class="material-icons">dashboard</span>
+                        ダッシュボード
+                    </a>
+                    <a href="alerts.html" class="nav-link active">
+                        <span class="material-icons">notifications</span>
+                        アラート
+                    </a>
+                    <a href="contact.html" class="nav-link">
+                        <span class="material-icons">contact_support</span>
+                        問合せ
+                    </a>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="main">
+        <div class="container">
+            <!-- 新規アラート作成 -->
+            <div class="new-alert card">
+                <h2>新規アラート作成</h2>
+                <div class="alert-form">
+                    <div class="form-group">
+                        <label>銘柄</label>
+                        <select class="form-control">
+                            <option>7203 - トヨタ自動車</option>
+                            <option>9984 - ソフトバンクグループ</option>
+                            <option>6758 - ソニーグループ</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>条件</label>
+                        <select class="form-control">
+                            <option>価格が上回ったら</option>
+                            <option>価格が下回ったら</option>
+                            <option>変動率が±◯%を超えたら</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>価格</label>
+                        <input type="number" class="form-control" placeholder="例: 3000">
+                    </div>
+                    <button class="btn btn-primary" onclick="createAlert()">
+                        <span class="material-icons">add_alert</span>
+                        アラート作成
+                    </button>
+                </div>
+            </div>
+
+            <!-- アクティブなアラート -->
+            <div class="active-alerts card">
+                <h3>設定中のアラート</h3>
+                <div class="alert-list">
+                    <div class="alert-item">
+                        <div class="alert-content">
+                            <div class="alert-stock">
+                                <span class="stock-code">7203</span>
+                                <span class="stock-name">トヨタ自動車</span>
+                            </div>
+                            <div class="alert-condition">
+                                価格が <span class="highlight">¥3,000</span> を上回ったら通知
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <button class="btn-icon" onclick="deleteAlert()">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="alert-item">
+                        <div class="alert-content">
+                            <div class="alert-stock">
+                                <span class="stock-code">6758</span>
+                                <span class="stock-name">ソニーグループ</span>
+                            </div>
+                            <div class="alert-condition">
+                                価格が <span class="highlight">¥12,000</span> を下回ったら通知
+                            </div>
+                        </div>
+                        <div class="alert-actions">
+                            <label class="switch">
+                                <input type="checkbox" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <button class="btn-icon" onclick="deleteAlert()">
+                                <span class="material-icons">delete</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LINE連携 -->
+            <div class="line-settings card">
+                <h3>LINE通知設定</h3>
+                <div class="line-status">
+                    <span class="material-icons" style="color: #00c300; font-size: 48px;">check_circle</span>
+                    <p>LINE連携済み</p>
+                    <p class="sub-text">通知は自動的にLINEに送信されます</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function createAlert() {
+            showNotification('アラートを作成しました');
+        }
+        
+        function deleteAlert() {
+            showNotification('アラートを削除しました');
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #1976d2;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+                z-index: 1000;
+                animation: slideIn 0.3s ease;
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
