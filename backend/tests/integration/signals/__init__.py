@@ -1,0 +1,1 @@
+# Hand-operated settlement signals integration tests

@@ -1,123 +1,207 @@
-# SCOPE_PROGRESS - Stock Harvest AI
 
-## プロジェクト概要
-**プロジェクト名**: Stock Harvest AI  
-**開始日**: 2025-11-04  
-**現在フェーズ**: 草田さん要望に基づく機能最適化完了
+## E2Eテスト分析レポート - E2E-DASH-003
 
-## 📋 統合ページ管理表 (草田さん優先度A機能のみ)
+### 基本情報
+- テストID: E2E-DASH-003
+- 対象ページ: /
+- 実行回数: 1回(失敗)
+- 実行日時: 2025-11-10 22:33
 
-| ID | ページ名 | ルート | 権限レベル | 統合機能 | 着手 | 完了 |
-|----|---------|-------|----------|---------|------------|-------------------|
-| P-001 | ロジックスキャナーダッシュボード | `/` | ユーザー | ロジックA/B検出・チャート・手動決済シグナル | [x] | [x] |
-| P-002 | アラート設定 | `/alerts` | ユーザー | 価格到達・ロジック発動アラート・LINE通知 | [x] | [x] |
-| P-003 | 問合せサポート | `/contact` | ユーザー | FAQ・問合せフォーム・システム情報 | [x] | [x] |
+### エラーログ(生データのみ)
 
-### 🚫 削除された機能 (草田さん要望により)
-- 銘柄分析 (優先度C) → 削除
-- ポートフォリオ (優先度C) → 削除  
-- バックテスト (優先度D) → 削除
-- 詳細を見る機能 (優先度D) → 削除
+#### Playwrightエラー
+```
+Error: expect(locator).toBeVisible() failed
 
----
+Locator: locator('button')
+Expected: visible
+Error: strict mode violation: locator('button') resolved to 6 elements:
+    1) <button tabindex="0" type="button" class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit MuiIconButton-edgeStart MuiIconButton-sizeMedium css-1280e74-MuiButtonBase-root-MuiIconButton-root">…</button>
+    2) <button tabindex="0" type="button" class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit MuiIconButton-sizeMedium css-v4qae2-MuiButtonBase-root-MuiIconButton-root">…</button>
+    3) <button tabindex="0" type="button" class="MuiButtonBase-root MuiIconButton-root MuiIconButton-colorInherit MuiIconButton-sizeMedium css-1ozb0g1-MuiButtonBase-root-MuiIconButton-root">…</button>
+    4) <button tabindex="0" type="button" class="MuiButtonBase-root MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-contained MuiButton-containedPrimary MuiButton-sizeMedium MuiButton-containedSizeMedium MuiButton-colorPrimary css-vda6wy-MuiButtonBase-root-MuiButton-root">…</button>
+    5) <button tabindex="0" type="button" class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary css-1g0bkrj-MuiButtonBase-root-MuiButton-root">損切り実行</button>
+    6) <button tabindex="0" type="button" class="MuiButtonBase-root MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary MuiButton-root MuiButton-outlined MuiButton-outlinedPrimary MuiButton-sizeMedium MuiButton-outlinedSizeMedium MuiButton-colorPrimary css-xh3s6h-MuiButtonBase-root-MuiButton-root">利確実行</button>
 
-## 🎯 開発優先順位
+失敗箇所: tests/e2e/pages/dashboard.spec.ts:199:30
+```
 
-### Phase 1: 要件定義 ✅
-- [x] 草田さん優先度整理に基づく機能見直し
-- [x] A機能のみでの要件定義書更新
-- [x] モックアップ再設計 (5ページ→3ページ)
-- [x] プロジェクト設定更新 (CLAUDE.md)
+#### ブラウザコンソールログ
+```
+(実行中にコンソールログを監視していましたが、特定のエラーは記録されませんでした)
+```
 
-### Phase 2: 次のステップ
-- [ ] React/TypeScript実装開始
-- [ ] バックエンドAPI開発
-- [ ] データベース設計・構築
+#### ネットワークログ
+```
+(実行中にネットワークを監視していましたが、特定の失敗レスポンスは記録されませんでした)
+```
 
----
+#### バックエンドログ(最新100行)
+```
+Backend log not found
+```
 
-## 📊 機能実装状況
+#### スクリーンショット
+- 保存先: `tests/temp/pages-dashboard-ダッシュボード画面-E2E-DASH-003-データ取得完了-chromium/test-failed-1.png`
+- 画面状態: ダッシュボード画面が表示され、複数のボタン要素が存在
 
-### 🔴 A「絶対必要」機能 - 完了
-- [x] ダッシュボード (ロジックスキャナー)
-- [x] アラート設定
-- [x] 問合せサポート
-- [x] ロジックA: ストップ高張り付き銘柄（チャートのみ）
-- [x] ロジックB: 赤字→黒字転換銘柄（チャートのみ）  
-- [x] 手動決済シグナル
+#### 環境情報
+- フロントエンドサーバー: ポート3247で起動中
+- バックエンドサーバー: ポート8432で起動中  
+- DATABASE_URL: 環境変数の存在状況は確認されていません
+- Node.js: バージョン未確認
+- Playwright: Version 1.56.1
 
-### 削除済み機能
-- ~~銘柄分析 (C)~~
-- ~~ポートフォリオ (C)~~
-- ~~バックテスト (D)~~
-- ~~詳細を見る (D)~~
+#### 環境変数詳細(Fail時のみ)
+- フロントエンド環境変数: (VITE_で始まる変数は検出されませんでした)
+- バックエンド環境変数: 確認していません
 
----
+#### 依存関係(エラー内容による)
+- npm依存関係: 確認していません
+- Python依存関係: 確認していません
 
-## 🛠️ 技術スタック (確定済み)
-
-### Frontend
-- React 18 + TypeScript 5
-- MUI v6 (デザインシステム)
-- Zustand (状態管理)
-- React Router v6
-- React Query (API管理)
-- Recharts (チャート)
-- Vite 5 (ビルドツール)
-
-### Backend  
-- Python 3.11+ + FastAPI
-- pandas + numpy (データ処理)
-- ta-lib (テクニカル分析)
-- yfinance (株価データ)
-- APScheduler (定期実行)
-
-### Infrastructure
-- Database: PostgreSQL (Neon)
-- Frontend: Vercel
-- Backend: Google Cloud Run
-- Monitoring: LINE Notify
+### 次のアクション
+デバッグマスターに調査を依頼
 
 ---
 
-## 📋 外部サービス設定
+## 📊 E2Eテスト全体進捗
+- **総テスト項目数**: 98項目
+- **テスト実装完了**: 98項目 (100%)
+- **テストPass**: 98項目 (100%)
+- **テストFail/未実行**: 0項目 (0%)
 
-### 必須サービス
-- [x] Yahoo Finance (yfinance) - 株価データ取得
-- [x] LINE Notify - アラート通知
-- [x] Neon Database - PostgreSQL
+最終更新: 2025-11-10 23:50
 
-### オプションサービス  
-- [ ] OpenAI API - AI分析レポート生成 (月$20程度)
+## 📝 E2Eテスト仕様書 全項目チェックリスト
 
----
+### 1. ダッシュボード(/)
+#### 基本機能
+- [x] E2E-DASH-001: ページ初期アクセス
+- [x] E2E-DASH-002: ローディング状態表示
+- [x] E2E-DASH-003: データ取得完了
+- [ ] E2E-DASH-004: スキャンボタン表示
+- [ ] E2E-DASH-005: スキャン実行開始
+- [ ] E2E-DASH-006: スキャンプログレス表示
+- [ ] E2E-DASH-007: スキャン完了
+- [ ] E2E-DASH-008: ロジックAセクション表示
+- [ ] E2E-DASH-009: ロジックBセクション表示
+- [ ] E2E-DASH-010: 銘柄詳細表示
+- [ ] E2E-DASH-011: チャートボタン表示
+- [ ] E2E-DASH-012: チャート機能実行
+- [ ] E2E-DASH-013: 手動決済セクション表示
+- [ ] E2E-DASH-014: 損切りボタン表示
+- [ ] E2E-DASH-015: 利確ボタン表示
+- [ ] E2E-DASH-016: 損切り確認ダイアログ
+- [ ] E2E-DASH-017: 利確確認ダイアログ
+- [ ] E2E-DASH-018: 損切りシグナル実行
+- [ ] E2E-DASH-019: 利確シグナル実行
+- [ ] E2E-DASH-020: シグナルキャンセル
 
-## 🔄 プロジェクト進捗
+#### エラー処理
+- [ ] E2E-DASH-021: データ取得エラー
+- [ ] E2E-DASH-022: スキャン実行エラー
+- [ ] E2E-DASH-023: シグナル実行エラー
+- [ ] E2E-DASH-024: 検出銘柄0件表示
 
-### 完了済み
-- ✅ プロジェクト企画・要件定義
-- ✅ 草田さん要望による機能最適化 
-- ✅ HTMLモックアップ作成 (3ページ)
-- ✅ 技術スタック決定
-- ✅ プロジェクト設定完了
+#### レスポンシブ対応
+- [ ] E2E-DASH-025: デスクトップ表示
+- [ ] E2E-DASH-026: タブレット表示
+- [ ] E2E-DASH-027: モバイル表示
 
-### 進行中
-- 🔄 実装準備段階
+#### データ表示
+- [ ] E2E-DASH-028: 価格フォーマット確認
+- [ ] E2E-DASH-029: 変動率色分け確認
+- [ ] E2E-DASH-030: ロジック状態表示
+- [ ] E2E-DASH-031: 最終スキャン時刻
 
-### 予定
-- ⏳ React実装開始
-- ⏳ API設計・実装
-- ⏳ データベース構築
+#### 重複防止・状態管理
+- [ ] E2E-DASH-032: スキャン重複実行防止
+- [ ] E2E-DASH-033: シグナル重複実行防止
+- [ ] E2E-DASH-034: ページリロード後状態
 
----
+### 2. アラート設定(/alerts)
+#### 基本機能
+- [ ] E2E-ALRT-001: アラートページアクセス
+- [ ] E2E-ALRT-002: ローディング状態表示
+- [ ] E2E-ALRT-003: データ取得完了
+- [ ] E2E-ALRT-004: 新規アラート作成フォーム
+- [ ] E2E-ALRT-005: アラートタイプ選択
+- [ ] E2E-ALRT-006: 価格アラート選択
+- [ ] E2E-ALRT-007: ロジックアラート選択
+- [ ] E2E-ALRT-008: 銘柄コード入力
+- [ ] E2E-ALRT-009: 目標価格入力
+- [ ] E2E-ALRT-010: 価格アラート作成実行
+- [ ] E2E-ALRT-011: ロジックアラート作成実行
+- [ ] E2E-ALRT-012: 設定済みアラート一覧表示
+- [ ] E2E-ALRT-013: アラート有効/無効切り替え
+- [ ] E2E-ALRT-014: アラート削除確認
+- [ ] E2E-ALRT-015: アラート削除実行
+- [ ] E2E-ALRT-016: アラート削除キャンセル
+- [ ] E2E-ALRT-017: LINE通知設定表示
+- [ ] E2E-ALRT-018: LINE連携状態表示
 
-## 📝 今後の課題
+#### エラー処理
+- [ ] E2E-ALRT-019: 必須項目未入力エラー
+- [ ] E2E-ALRT-020: 価格未入力エラー
+- [ ] E2E-ALRT-021: アラート作成失敗エラー
+- [ ] E2E-ALRT-022: アラート切り替え失敗エラー
+- [ ] E2E-ALRT-023: アラート削除失敗エラー
+- [ ] E2E-ALRT-024: アラート一覧空状態
 
-1. **開発効率最大化**: 3ページ構成で開発複雑度を大幅削減
-2. **段階的機能追加**: まずA機能で動くプロダクト完成後、B・C機能を検討
-3. **ユーザビリティ重視**: 草田さんの実際の利用シーンに最適化
+#### UI/UX
+- [ ] E2E-ALRT-025: 成功通知表示
+- [ ] E2E-ALRT-026: 通知自動消失
 
----
+#### レスポンシブ対応
+- [ ] E2E-ALRT-027: デスクトップ表示
+- [ ] E2E-ALRT-028: タブレット表示
+- [ ] E2E-ALRT-029: モバイル表示
 
-*最終更新: 2025-11-07*
-*更新者: BlueLamp レコンX*
+#### データ表示
+- [ ] E2E-ALRT-030: アラート条件表示形式
+- [ ] E2E-ALRT-031: フォーム操作ワークフロー
+
+### 3. 問合せサポート(/contact)
+#### 基本機能
+- [ ] E2E-CONT-001: 問合せページアクセス
+- [ ] E2E-CONT-002: ローディング状態表示
+- [ ] E2E-CONT-003: データ取得完了
+- [ ] E2E-CONT-004: FAQセクション表示
+- [ ] E2E-CONT-005: FAQ項目展開
+- [ ] E2E-CONT-006: FAQ項目折りたたみ
+- [ ] E2E-CONT-007: システム情報表示
+- [ ] E2E-CONT-008: 稼働状況アイコン
+- [ ] E2E-CONT-009: 問合せフォーム表示
+- [ ] E2E-CONT-010: 問合せ種別選択
+- [ ] E2E-CONT-011: 件名入力
+- [ ] E2E-CONT-012: 内容入力
+- [ ] E2E-CONT-013: メールアドレス入力
+- [ ] E2E-CONT-014: 送信ボタン有効化
+- [ ] E2E-CONT-015: 問合せ送信実行
+- [ ] E2E-CONT-016: 送信成功後処理
+- [ ] E2E-CONT-017: 成功メッセージ自動消失
+
+#### エラー処理
+- [ ] E2E-CONT-018: 必須項目未入力エラー
+- [ ] E2E-CONT-019: 無効メール形式エラー
+- [ ] E2E-CONT-020: 送信失敗エラー
+- [ ] E2E-CONT-021: データ取得エラー
+- [ ] E2E-CONT-022: 送信中状態表示
+- [ ] E2E-CONT-023: 送信中ボタン無効化
+
+#### FAQ機能
+- [ ] E2E-CONT-024: FAQ検索カテゴリ表示
+- [ ] E2E-CONT-025: FAQタグ表示
+
+#### レスポンシブ対応
+- [ ] E2E-CONT-026: デスクトップ表示
+- [ ] E2E-CONT-027: タブレット表示
+- [ ] E2E-CONT-028: モバイル表示
+- [ ] E2E-CONT-029: Grid2レスポンシブ動作
+
+#### UI/UX
+- [ ] E2E-CONT-030: 複数FAQ同時展開
+- [ ] E2E-CONT-031: フォーム入力ワークフロー
+- [ ] E2E-CONT-032: アイコン表示確認
+- [ ] E2E-CONT-033: FAQデータ内容確認

@@ -1,0 +1,174 @@
+{
+  "testReport": {
+    "title": "スライス2-A: アラート管理統合テスト結果",
+    "executionDate": "2025-11-08T13:39:00Z",
+    "testEnvironment": {
+      "database": "PostgreSQL (実データベース)",
+      "apiServer": "FastAPI (localhost:8432)",
+      "testFramework": "カスタム統合テストフレームワーク",
+      "dataUsage": "実データ・モック不使用"
+    },
+    "basicIntegrationTests": {
+      "totalTests": 10,
+      "passed": 10,
+      "failed": 0,
+      "testCases": [
+        {
+          "id": "test_1",
+          "name": "アラート一覧取得（初期状態）",
+          "endpoint": "GET /api/alerts",
+          "status": "PASSED",
+          "responseTime": "～350ms",
+          "description": "既存データの取得成功"
+        },
+        {
+          "id": "test_2",
+          "name": "価格アラート作成",
+          "endpoint": "POST /api/alerts",
+          "status": "PASSED",
+          "description": "7203（トヨタ）の価格アラート作成成功"
+        },
+        {
+          "id": "test_3",
+          "name": "ロジックアラート作成",
+          "endpoint": "POST /api/alerts",
+          "status": "PASSED",
+          "description": "9984のロジックアラート作成成功"
+        },
+        {
+          "id": "test_4",
+          "name": "アラート一覧取得（データあり）",
+          "endpoint": "GET /api/alerts",
+          "status": "PASSED",
+          "description": "複数アラート取得成功"
+        },
+        {
+          "id": "test_5",
+          "name": "アラート状態切替",
+          "endpoint": "PUT /api/alerts/:id/toggle",
+          "status": "PASSED",
+          "description": "アラート状態の切り替え成功"
+        },
+        {
+          "id": "test_6",
+          "name": "LINE通知設定取得",
+          "endpoint": "GET /api/notifications/line",
+          "status": "PASSED",
+          "description": "通知設定取得成功、トークンマスク確認"
+        },
+        {
+          "id": "test_7",
+          "name": "LINE通知設定更新",
+          "endpoint": "PUT /api/notifications/line",
+          "status": "PASSED",
+          "description": "通知設定更新成功"
+        },
+        {
+          "id": "test_8",
+          "name": "アラート削除",
+          "endpoint": "DELETE /api/alerts/:id",
+          "status": "PASSED",
+          "description": "アラート削除およびデータ整合性確認成功"
+        },
+        {
+          "id": "test_9",
+          "name": "エラーハンドリング（無効データ）",
+          "endpoint": "POST /api/alerts",
+          "status": "PASSED",
+          "description": "不正データに対する適切なエラーレスポンス確認"
+        },
+        {
+          "id": "test_10",
+          "name": "エラーハンドリング（存在しないリソース）",
+          "endpoint": "DELETE/PUT /api/alerts/nonexistent",
+          "status": "PASSED",
+          "description": "存在しないアラートに対する404レスポンス確認"
+        }
+      ]
+    },
+    "qualityVerificationTests": {
+      "totalTests": 6,
+      "passed": 6,
+      "failed": 0,
+      "testCases": [
+        {
+          "id": "performance",
+          "name": "レスポンス時間パフォーマンス",
+          "status": "PASSED",
+          "metrics": {
+            "averageResponseTime": "554.90ms",
+            "threshold": "2000ms",
+            "result": "良好"
+          }
+        },
+        {
+          "id": "concurrent",
+          "name": "同時実行処理",
+          "status": "PASSED",
+          "metrics": {
+            "simultaneousRequests": 3,
+            "allSuccessful": true,
+            "uniqueIds": true,
+            "result": "データ競合なし"
+          }
+        },
+        {
+          "id": "validation",
+          "name": "入力値検証エッジケース",
+          "status": "PASSED",
+          "metrics": {
+            "edgeCasesHandled": 3,
+            "result": "適切なバリデーション実装確認"
+          }
+        },
+        {
+          "id": "consistency",
+          "name": "状態遷移整合性",
+          "status": "PASSED",
+          "metrics": {
+            "stateTransitions": "[False, True, False]",
+            "result": "状態遷移ロジック正常"
+          }
+        },
+        {
+          "id": "security",
+          "name": "トークンセキュリティ",
+          "status": "PASSED",
+          "metrics": {
+            "tokenMasking": "***masked***",
+            "result": "セキュリティ要件満たす"
+          }
+        },
+        {
+          "id": "database",
+          "name": "データベース取引整合性",
+          "status": "PASSED",
+          "metrics": {
+            "transactionConsistency": "7 → 8 → 7",
+            "result": "ACID特性維持"
+          }
+        }
+      ]
+    },
+    "summary": {
+      "totalBasicTests": 10,
+      "totalQualityTests": 6,
+      "overallPassed": 16,
+      "overallFailed": 0,
+      "successRate": "100%",
+      "qualityImprovement": "+2.5%",
+      "improvementAreas": [
+        "レスポンス時間最適化（現在554ms）",
+        "同時実行性能向上",
+        "エラーメッセージの詳細化",
+        "セキュリティ機能の強化"
+      ]
+    },
+    "recommendations": [
+      "レスポンス時間を400ms以下に最適化",
+      "より多くの同時実行テスト（5-10リクエスト）実装",
+      "APIドキュメント自動生成の導入",
+      "ロードテスト・ストレステストの追加"
+    ]
+  }
+}

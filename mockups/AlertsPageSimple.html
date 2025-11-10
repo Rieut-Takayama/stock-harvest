@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>アラート設定 - Stock Harvest AI</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f5f5;
+            color: #212121;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .page-title {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .page-title h1 {
+            color: #1976d2;
+            font-size: 32px;
+            font-weight: 500;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card h2 {
+            color: #1976d2;
+            margin-bottom: 20px;
+            font-size: 20px;
+            font-weight: 500;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #424242;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: #1976d2;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .btn-primary {
+            background-color: #1976d2;
+        }
+
+        .btn-primary:hover {
+            background-color: #1565c0;
+        }
+
+        .alert-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 12px;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-stock {
+            font-weight: 500;
+            color: #1976d2;
+            margin-bottom: 4px;
+        }
+
+        .alert-condition {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .highlight {
+            color: #4caf50;
+            font-weight: 500;
+        }
+
+        .alert-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: 0.2s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: 0.2s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: #4caf50;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            color: #666;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-icon:hover {
+            background-color: #f0f0f0;
+            color: #f44336;
+        }
+
+        .line-status {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .line-status .material-icons {
+            color: #00c300;
+            font-size: 48px;
+            margin-bottom: 8px;
+        }
+
+        .line-status p {
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .sub-text {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+    </style>
+</head>
+<body>
+    <!-- MainLayoutで提供されるヘッダー・サイドバーは含めない -->
+
+    <div class="container">
+        <!-- ページタイトル -->
+        <div class="page-title">
+            <h1>アラート設定</h1>
+        </div>
+
+        <!-- 新規アラート作成 -->
+        <div class="card">
+            <h2>新規アラート作成</h2>
+            <form>
+                <div class="form-group">
+                    <label>アラートタイプ</label>
+                    <select class="form-control" id="alertType">
+                        <option value="price">価格到達アラート</option>
+                        <option value="logic">ロジック発動アラート</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>銘柄コード</label>
+                    <input type="text" class="form-control" placeholder="例: 7203" id="stockCode">
+                </div>
+                
+                <div class="form-group" id="priceFields">
+                    <label>目標価格</label>
+                    <input type="number" class="form-control" placeholder="例: 3000" id="targetPrice">
+                </div>
+                
+                <button type="button" class="btn btn-primary" onclick="createAlert()">
+                    <span class="material-icons">add_alert</span>
+                    アラート作成
+                </button>
+            </form>
+        </div>
+
+        <!-- 設定済みアラート一覧 -->
+        <div class="card">
+            <h2>設定済みアラート</h2>
+            <div class="alert-list" id="alertList">
+                <div class="alert-item">
+                    <div class="alert-content">
+                        <div class="alert-stock">7203 - トヨタ自動車</div>
+                        <div class="alert-condition">価格が <span class="highlight">¥3,000</span> を上回ったら通知</div>
+                    </div>
+                    <div class="alert-actions">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <button class="btn-icon" onclick="deleteAlert(this)">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="alert-item">
+                    <div class="alert-content">
+                        <div class="alert-stock">ロジックA - ストップ高張り付き</div>
+                        <div class="alert-condition">発動時にLINE通知</div>
+                    </div>
+                    <div class="alert-actions">
+                        <label class="switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                        <button class="btn-icon" onclick="deleteAlert(this)">
+                            <span class="material-icons">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- LINE通知設定 -->
+        <div class="card">
+            <h2>LINE通知設定</h2>
+            <div class="line-status">
+                <span class="material-icons">check_circle</span>
+                <p>LINE連携済み</p>
+                <p class="sub-text">通知は自動的にLINEに送信されます</p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // アラートタイプ変更時の表示切り替え
+        document.getElementById('alertType').addEventListener('change', function() {
+            const priceFields = document.getElementById('priceFields');
+            if (this.value === 'logic') {
+                priceFields.style.display = 'none';
+            } else {
+                priceFields.style.display = 'block';
+            }
+        });
+
+        function createAlert() {
+            const alertType = document.getElementById('alertType').value;
+            const stockCode = document.getElementById('stockCode').value;
+            const targetPrice = document.getElementById('targetPrice').value;
+            
+            if (!stockCode) {
+                alert('銘柄コードを入力してください');
+                return;
+            }
+            
+            if (alertType === 'price' && !targetPrice) {
+                alert('目標価格を入力してください');
+                return;
+            }
+            
+            showNotification('アラートを作成しました');
+            
+            // フォームをリセット
+            document.getElementById('stockCode').value = '';
+            document.getElementById('targetPrice').value = '';
+        }
+        
+        function deleteAlert(button) {
+            if (confirm('このアラートを削除しますか？')) {
+                button.closest('.alert-item').remove();
+                showNotification('アラートを削除しました');
+            }
+        }
+        
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #4caf50;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 4px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                z-index: 1000;
+                opacity: 0;
+                transform: translateX(100px);
+                transition: all 0.3s ease;
+            `;
+            document.body.appendChild(notification);
+            
+            // アニメーション開始
+            setTimeout(() => {
+                notification.style.opacity = '1';
+                notification.style.transform = 'translateX(0)';
+            }, 10);
+            
+            // 3秒後に削除
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateX(100px)';
+                setTimeout(() => {
+                    notification.remove();
+                }, 300);
+            }, 3000);
+        }
+    </script>
+</body>
+</html>

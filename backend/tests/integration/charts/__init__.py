@@ -1,0 +1,1 @@
+# Charts integration tests package

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ロジックスキャナーダッシュボード - Stock Harvest AI</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f8fffe;
+            color: #212121;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        
+        .header-section {
+            margin-bottom: 32px;
+        }
+        
+        .page-title {
+            font-size: 2rem;
+            font-weight: 500;
+            color: #38a169;
+            margin-bottom: 8px;
+        }
+        
+        .page-subtitle {
+            color: #757575;
+            font-size: 0.875rem;
+        }
+        
+        .scan-controls {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 32px;
+            align-items: center;
+        }
+        
+        .scan-button {
+            background: linear-gradient(135deg, #38a169 0%, #4caf50 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 12px rgba(56, 161, 105, 0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .scan-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56, 161, 105, 0.4);
+        }
+        
+        .scan-status {
+            color: #757575;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .logic-sections {
+            display: grid;
+            gap: 32px;
+        }
+        
+        .logic-section {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8f5e8;
+        }
+        
+        .logic-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8f5e8;
+        }
+        
+        .logic-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #2d3748;
+        }
+        
+        .logic-badge {
+            background: #38a169;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        
+        .stocks-list {
+            display: grid;
+            gap: 16px;
+        }
+        
+        .stock-item {
+            display: grid;
+            grid-template-columns: 1fr auto auto;
+            gap: 16px;
+            padding: 16px;
+            background: #fafafa;
+            border-radius: 8px;
+            border: 1px solid #eeeeee;
+            align-items: center;
+        }
+        
+        .stock-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .stock-code {
+            font-weight: 500;
+            color: #2d3748;
+            font-size: 0.875rem;
+        }
+        
+        .stock-name {
+            color: #757575;
+            font-size: 0.75rem;
+        }
+        
+        .stock-price {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .current-price {
+            font-weight: 500;
+            font-size: 1rem;
+            color: #2d3748;
+        }
+        
+        .price-change {
+            font-size: 0.75rem;
+        }
+        
+        .price-up {
+            color: #38a169;
+        }
+        
+        .price-down {
+            color: #e53e3e;
+        }
+        
+        .chart-button {
+            background: #38a169;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background-color 0.2s ease;
+        }
+        
+        .chart-button:hover {
+            background: #2f855a;
+        }
+        
+        .manual-signals {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e8f5e8;
+            margin-top: 32px;
+        }
+        
+        .signals-header {
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e8f5e8;
+        }
+        
+        .signals-title {
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .signals-subtitle {
+            color: #757575;
+            font-size: 0.875rem;
+        }
+        
+        .signal-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .signal-button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: 1px solid;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        .sell-button {
+            color: #e53e3e;
+            border-color: #e53e3e;
+        }
+        
+        .sell-button:hover {
+            background: #e53e3e;
+            color: white;
+        }
+        
+        .profit-button {
+            color: #38a169;
+            border-color: #38a169;
+        }
+        
+        .profit-button:hover {
+            background: #38a169;
+            color: white;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #757575;
+        }
+        
+        .empty-icon {
+            font-size: 48px;
+            color: #e0e0e0;
+            margin-bottom: 16px;
+        }
+        
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #38a169;
+        }
+        
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #e8f5e8;
+            border-top: 2px solid #38a169;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            
+            .scan-controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+            
+            .stock-item {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .signal-actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- ヘッダーセクション -->
+        <div class="header-section">
+            <h1 class="page-title">ロジックスキャナーダッシュボード</h1>
+            <p class="page-subtitle">全銘柄AIスキャンで投資チャンスを発見</p>
+        </div>
+        
+        <!-- スキャン実行コントロール -->
+        <div class="scan-controls">
+            <button class="scan-button" onclick="startScan()">
+                <span class="material-icons">search</span>
+                今すぐスキャン
+            </button>
+            <div class="scan-status" id="scanStatus">
+                最終スキャン: 2025-11-07 14:30
+            </div>
+        </div>
+        
+        <!-- ロジックAセクション -->
+        <div class="logic-sections">
+            <div class="logic-section">
+                <div class="logic-header">
+                    <h2 class="logic-title">ロジックA: ストップ高張り付き銘柄</h2>
+                    <span class="logic-badge">検出中</span>
+                </div>
+                <div class="stocks-list" id="logicAStocks">
+                    <div class="stock-item">
+                        <div class="stock-info">
+                            <div class="stock-code">7203</div>
+                            <div class="stock-name">トヨタ自動車</div>
+                        </div>
+                        <div class="stock-price">
+                            <div class="current-price">¥2,850</div>
+                            <div class="price-change price-up">+150 (+5.6%)</div>
+                        </div>
+                        <button class="chart-button" onclick="showChart('7203')">チャート</button>
+                    </div>
+                    
+                    <div class="stock-item">
+                        <div class="stock-info">
+                            <div class="stock-code">9984</div>
+                            <div class="stock-name">ソフトバンクグループ</div>
+                        </div>
+                        <div class="stock-price">
+                            <div class="current-price">¥8,920</div>
+                            <div class="price-change price-up">+420 (+4.9%)</div>
+                        </div>
+                        <button class="chart-button" onclick="showChart('9984')">チャート</button>
+                    </div>
+                    
+                    <div class="stock-item">
+                        <div class="stock-info">
+                            <div class="stock-code">6758</div>
+                            <div class="stock-name">ソニーグループ</div>
+                        </div>
+                        <div class="stock-price">
+                            <div class="current-price">¥12,440</div>
+                            <div class="price-change price-up">+580 (+4.9%)</div>
+                        </div>
+                        <button class="chart-button" onclick="showChart('6758')">チャート</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- ロジックBセクション -->
+            <div class="logic-section">
+                <div class="logic-header">
+                    <h2 class="logic-title">ロジックB: 赤字→黒字転換銘柄</h2>
+                    <span class="logic-badge">検出中</span>
+                </div>
+                <div class="stocks-list" id="logicBStocks">
+                    <div class="stock-item">
+                        <div class="stock-info">
+                            <div class="stock-code">4689</div>
+                            <div class="stock-name">Zホールディングス</div>
+                        </div>
+                        <div class="stock-price">
+                            <div class="current-price">¥385</div>
+                            <div class="price-change price-up">+18 (+4.9%)</div>
+                        </div>
+                        <button class="chart-button" onclick="showChart('4689')">チャート</button>
+                    </div>
+                    
+                    <div class="stock-item">
+                        <div class="stock-info">
+                            <div class="stock-code">9437</div>
+                            <div class="stock-name">NTTドコモ</div>
+                        </div>
+                        <div class="stock-price">
+                            <div class="current-price">¥4,120</div>
+                            <div class="price-change price-up">+85 (+2.1%)</div>
+                        </div>
+                        <button class="chart-button" onclick="showChart('9437')">チャート</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 手動決済シグナルセクション -->
+        <div class="manual-signals">
+            <div class="signals-header">
+                <h2 class="signals-title">手動決済シグナル</h2>
+                <p class="signals-subtitle">損切り・利確タイミングの実行</p>
+            </div>
+            <div class="signal-actions">
+                <button class="signal-button sell-button" onclick="executeSell()">
+                    損切り実行
+                </button>
+                <button class="signal-button profit-button" onclick="executeProfit()">
+                    利確実行
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startScan() {
+            const button = document.querySelector('.scan-button');
+            const status = document.getElementById('scanStatus');
+            
+            // ボタンをローディング状態に
+            button.innerHTML = '<div class="spinner"></div> スキャン中...';
+            button.disabled = true;
+            
+            // ステータス更新
+            status.innerHTML = '<div class="loading"><div class="spinner"></div> 全3,800銘柄をスキャン中...</div>';
+            
+            // 3秒後に完了状態に
+            setTimeout(() => {
+                button.innerHTML = '<span class="material-icons">search</span> 今すぐスキャン';
+                button.disabled = false;
+                status.innerHTML = '最終スキャン: ' + new Date().toLocaleString('ja-JP');
+            }, 3000);
+        }
+        
+        function showChart(stockCode) {
+            alert(`${stockCode}のチャートを表示します`);
+        }
+        
+        function executeSell() {
+            if (confirm('損切りを実行しますか？')) {
+                alert('損切りシグナルを送信しました');
+            }
+        }
+        
+        function executeProfit() {
+            if (confirm('利確を実行しますか？')) {
+                alert('利確シグナルを送信しました');
+            }
+        }
+    </script>
+</body>
+</html>

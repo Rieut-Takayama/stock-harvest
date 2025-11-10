@@ -1,0 +1,36 @@
+{
+  "name": "stock-harvest-ai-backend",
+  "version": "1.0.0",
+  "description": "Stock Harvest AI バックエンドAPI",
+  "main": "src/main.py",
+  "scripts": {
+    "dev": "uvicorn src.main:app --reload --host 0.0.0.0 --port 8432",
+    "start": "uvicorn src.main:app --host 0.0.0.0 --port 8432",
+    "test": "pytest tests/ -v",
+    "test:integration": "pytest tests/integration/ -v --runInBand",
+    "db:migrate": "prisma db push",
+    "db:studio": "prisma studio"
+  },
+  "dependencies": {
+    "fastapi": "^0.104.0",
+    "uvicorn": "^0.24.0",
+    "pydantic": "^2.5.0",
+    "python-dotenv": "^1.0.0",
+    "databases": "^0.8.0",
+    "asyncpg": "^0.29.0",
+    "pandas": "^2.1.0",
+    "numpy": "^1.24.0",
+    "yfinance": "^0.2.28",
+    "ta-lib": "^0.4.28",
+    "apscheduler": "^3.10.0",
+    "requests": "^2.31.0"
+  },
+  "devDependencies": {
+    "pytest": "^7.4.0",
+    "pytest-asyncio": "^0.21.0",
+    "httpx": "^0.25.0"
+  },
+  "keywords": ["stock", "ai", "fastapi", "trading"],
+  "author": "Stock Harvest AI Team",
+  "license": "MIT"
+}

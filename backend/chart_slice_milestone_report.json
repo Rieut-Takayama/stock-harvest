@@ -1,0 +1,122 @@
+{
+  "slice_info": {
+    "name": "スライス4-B（チャート表示）",
+    "id": "slice_4b_charts",
+    "start_time": "2025-11-08T15:02:18.776008",
+    "current_time": "2025-11-08T15:02:19.249393",
+    "duration_minutes": 0.00788975
+  },
+  "progress": {
+    "implementation": 0.0,
+    "testing": 10.0,
+    "endpoint_implementation": 0.0,
+    "endpoint_testing": 0.0,
+    "overall": 4.0
+  },
+  "implementation_tasks": {
+    "chart_controller": {
+      "name": "チャートコントローラー実装",
+      "description": "FastAPIコントローラー(/api/charts)の実装",
+      "status": "pending",
+      "weight": 30
+    },
+    "chart_service": {
+      "name": "チャートサービス実装",
+      "description": "yfinance統合・データ加工サービス実装",
+      "status": "pending",
+      "weight": 40
+    },
+    "main_integration": {
+      "name": "メインアプリ統合",
+      "description": "main.pyへのルーター登録・初期化",
+      "status": "pending",
+      "weight": 10
+    },
+    "data_structure": {
+      "name": "データ構造設計",
+      "description": "レスポンス形式・型定義の整備",
+      "status": "pending",
+      "weight": 20
+    }
+  },
+  "test_cases": {
+    "health_check": {
+      "name": "ヘルスチェック",
+      "description": "チャート機能基本動作確認",
+      "status": "pending",
+      "weight": 10
+    },
+    "chart_data_valid_stock": {
+      "name": "有効銘柄データ取得",
+      "description": "正常銘柄コードでのチャートデータ取得",
+      "status": "pending",
+      "weight": 25
+    },
+    "chart_data_with_parameters": {
+      "name": "パラメータ付きデータ取得",
+      "description": "期間・指標パラメータ付きデータ取得",
+      "status": "pending",
+      "weight": 20
+    },
+    "chart_data_invalid_stock_code": {
+      "name": "無効銘柄エラーハンドリング",
+      "description": "不正銘柄コードでの適切なエラー処理",
+      "status": "pending",
+      "weight": 15
+    },
+    "chart_data_nonexistent_stock_code": {
+      "name": "存在しない銘柄処理",
+      "description": "存在しない銘柄での空レスポンス処理",
+      "status": "passed",
+      "weight": 10,
+      "completed_at": "2025-11-08T15:02:19.248615"
+    },
+    "chart_data_response_performance": {
+      "name": "パフォーマンステスト",
+      "description": "チャートデータ取得性能確認",
+      "status": "pending",
+      "weight": 10
+    },
+    "chart_multiple_stocks_concurrent": {
+      "name": "複数銘柄同時処理",
+      "description": "並行リクエスト処理確認",
+      "status": "pending",
+      "weight": 5
+    },
+    "chart_api_integration_full_workflow": {
+      "name": "統合ワークフロー",
+      "description": "チャート機能統合フルワークフロー",
+      "status": "pending",
+      "weight": 5
+    }
+  },
+  "endpoints": {
+    "GET /api/charts/data/:stockCode": {
+      "name": "チャートデータ取得",
+      "implemented": false,
+      "tested": false
+    },
+    "GET /api/charts/health": {
+      "name": "チャート機能ヘルスチェック",
+      "implemented": false,
+      "tested": false
+    }
+  },
+  "statistics": {
+    "implementation": {
+      "total": 4,
+      "completed": 0,
+      "pending": 4
+    },
+    "testing": {
+      "total": 8,
+      "passed": 1,
+      "failed": 0,
+      "pending": 7
+    },
+    "errors": 0,
+    "warnings": 0
+  },
+  "errors": [],
+  "warnings": []
+}
