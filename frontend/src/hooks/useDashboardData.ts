@@ -38,7 +38,7 @@ export const useDashboardData = () => {
       status: 'completed'
     }
   ]);
-  const [loading, setLoading] = useState(false); // 即座にfalseに設定
+  const [loading] = useState(false); // 即座にfalseに設定
   const [error, setError] = useState<Error | null>(null);
   const [isScanning, setIsScanning] = useState(false);
   const [scanProgress, setScanProgress] = useState(0);
