@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: stock-harvest-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main_simple:app --host 0.0.0.0 --port $PORT
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        value: postgresql://neondb_owner:npg_fsRaw45HcPFX@ep-still-base-ad3788kq-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+      - key: JWT_SECRET
+        value: HeZRmIvSG1PIl/cE37I042MT3jnNmZ+yMTGiM9eq41A=
+      - key: SESSION_SECRET
+        value: psldCEnu7DAfAp4IiAibjChaVAbxCQKUVITMKiCMwPE=
+      - key: TESTING_MODE
+        value: false
+      - key: CORS_ORIGIN
+        value: https://your-netlify-app.netlify.app
+      - key: FRONTEND_URL
+        value: https://your-netlify-app.netlify.app

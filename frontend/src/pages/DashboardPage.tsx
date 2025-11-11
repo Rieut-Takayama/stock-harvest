@@ -68,11 +68,11 @@ export const DashboardPage: React.FC = () => {
       }}>
         {/* ヘッダーセクション - ガラスモーフィズム */}
         <Box sx={{ 
-          mb: 4, 
+          mb: { xs: 3, sm: 4 }, 
           textAlign: 'center',
           background: 'rgba(255, 255, 255, 0.95)',
           borderRadius: 4,
-          p: 4,
+          p: { xs: 2, sm: 3, md: 4 },
           border: '1px solid rgba(255, 255, 255, 0.3)',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)'
         }}>
@@ -104,10 +104,11 @@ export const DashboardPage: React.FC = () => {
         <Box sx={{ 
           display: 'flex', 
           flexDirection: { xs: 'column', sm: 'row' },
-          gap: 2, 
-          mb: 4, 
+          gap: { xs: 2, sm: 3 }, 
+          mb: { xs: 3, sm: 4 }, 
           alignItems: { xs: 'stretch', sm: 'center' },
-          justifyContent: 'center'
+          justifyContent: 'center',
+          px: { xs: 1, sm: 0 }
         }}>
           <Button
             variant="contained"
@@ -117,15 +118,16 @@ export const DashboardPage: React.FC = () => {
             sx={{
               background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
               color: 'white',
-              px: 4,
-              py: 2,
+              px: { xs: 3, sm: 4 },
+              py: { xs: 1.5, sm: 2 },
               borderRadius: '50px',
-              fontSize: '1.1rem',
+              fontSize: { xs: '0.95rem', sm: '1.1rem' },
               fontWeight: 600,
               boxShadow: '0 8px 32px rgba(37, 99, 235, 0.4)',
               backdropFilter: 'blur(10px)',
               border: '1px solid rgba(255, 255, 255, 0.2)',
               textTransform: 'none',
+              minHeight: { xs: '48px', sm: '56px' },
               '&:hover': {
                 transform: 'translateY(-3px) scale(1.02)',
                 boxShadow: '0 12px 40px rgba(37, 99, 235, 0.6)',
@@ -180,38 +182,49 @@ export const DashboardPage: React.FC = () => {
         </Box>
 
         {/* ロジックセクション - 2列グリッド */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, 
+          gap: { xs: 2, sm: 3 }, 
+          mb: { xs: 3, sm: 4 },
+          px: { xs: 0, sm: 0 }
+        }}>
           {logicStatus.map((logic, index) => (
             <Card key={logic.logicType} sx={{ 
-              borderRadius: 4,
+              borderRadius: { xs: 3, sm: 4 },
               border: 'none',
               background: index === 0 
                 ? 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)'
                 : 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
               boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
               color: 'white',
-              minHeight: '240px',
+              minHeight: { xs: '200px', sm: '220px', md: '240px' },
               position: 'relative',
               overflow: 'hidden',
               transform: 'perspective(1000px) rotateX(0deg)',
               transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
               '&:hover': {
-                transform: 'perspective(1000px) rotateX(-5deg) translateY(-10px)',
+                transform: { xs: 'translateY(-5px)', md: 'perspective(1000px) rotateX(-5deg) translateY(-10px)' },
                 boxShadow: '0 25px 80px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
               }
             }}>
               {/* ロケットアイコン背景 */}
               <Box sx={{
                 position: 'absolute',
-                top: 20,
-                right: 20,
-                fontSize: '3rem',
+                top: { xs: 15, sm: 20 },
+                right: { xs: 15, sm: 20 },
+                fontSize: { xs: '2.5rem', sm: '3rem' },
                 opacity: 0.3
               }}>
                 🚀
               </Box>
               
-              <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <CardContent sx={{ 
+                p: { xs: 2.5, sm: 3 }, 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column' 
+              }}>
                 {/* ロジックヘッダー */}
                 <Box sx={{ mb: 2 }}>
                   <Typography variant="h5" sx={{ 
@@ -219,7 +232,7 @@ export const DashboardPage: React.FC = () => {
                     mb: 1, 
                     color: '#ffffff',
                     textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
-                    fontSize: '1.5rem'
+                    fontSize: { xs: '1.25rem', sm: '1.4rem', md: '1.5rem' }
                   }}>
                     ロジック{logic.logicType.charAt(logic.logicType.length - 1).toUpperCase()}
                   </Typography>
@@ -228,14 +241,14 @@ export const DashboardPage: React.FC = () => {
                     lineHeight: 1.4,
                     fontWeight: 600,
                     textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)',
-                    fontSize: '1rem',
+                    fontSize: { xs: '0.9rem', sm: '1rem' },
                     mb: 1
                   }}>
                     {logic.name}
                   </Typography>
                   <Typography variant="body2" sx={{ 
                     color: '#ffffff', 
-                    fontSize: '0.8rem',
+                    fontSize: { xs: '0.75rem', sm: '0.8rem' },
                     fontWeight: 400,
                     textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)'
                   }}>
@@ -247,17 +260,19 @@ export const DashboardPage: React.FC = () => {
                 <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Chip 
                     label="分析中..."
+                    size="small"
                     sx={{
                       bgcolor: 'rgba(0, 0, 0, 0.3)',
                       color: '#ffffff',
-                      fontSize: '0.75rem',
+                      fontSize: { xs: '0.7rem', sm: '0.75rem' },
                       fontWeight: 700,
                       border: '1px solid rgba(255, 255, 255, 0.4)',
-                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
+                      height: { xs: '20px', sm: '24px' }
                     }}
                   />
                   <Typography variant="body2" sx={{ 
-                    fontSize: '0.75rem', 
+                    fontSize: { xs: '0.7rem', sm: '0.75rem' }, 
                     color: '#ffffff',
                     fontWeight: 600,
                     textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)'
@@ -275,16 +290,17 @@ export const DashboardPage: React.FC = () => {
           display: 'grid', 
           gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, 
           gap: { xs: 2, sm: 3 }, 
-          mb: 4,
-          maxWidth: '700px',
-          mx: 'auto'
+          mb: { xs: 3, sm: 4 },
+          maxWidth: { xs: '100%', sm: '700px' },
+          mx: 'auto',
+          px: { xs: 1, sm: 0 }
         }}>
           <Card sx={{ 
-            borderRadius: 3, 
+            borderRadius: { xs: 2, sm: 3 }, 
             background: 'rgba(255, 255, 255, 0.95)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             textAlign: 'center', 
-            p: 3,
+            p: { xs: 2, sm: 2.5, md: 3 },
             transition: 'all 0.3s ease',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             '&:hover': {
@@ -293,17 +309,17 @@ export const DashboardPage: React.FC = () => {
               background: 'rgba(255, 255, 255, 1)'
             }
           }}>
-            <Typography variant="h4" sx={{ mb: 1, fontSize: '2rem' }}>📊</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a202c' }}>3</Typography>
-            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500 }}>アクティブロジック</Typography>
+            <Typography variant="h4" sx={{ mb: 1, fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' } }}>📊</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a202c', fontSize: { xs: '1.8rem', sm: '2rem', md: '2.25rem' } }}>3</Typography>
+            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>アクティブロジック</Typography>
           </Card>
           
           <Card sx={{ 
-            borderRadius: 3, 
+            borderRadius: { xs: 2, sm: 3 }, 
             background: 'rgba(255, 255, 255, 0.95)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             textAlign: 'center', 
-            p: 3,
+            p: { xs: 2, sm: 2.5, md: 3 },
             transition: 'all 0.3s ease',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             '&:hover': {
@@ -312,17 +328,17 @@ export const DashboardPage: React.FC = () => {
               background: 'rgba(255, 255, 255, 1)'
             }
           }}>
-            <Typography variant="h4" sx={{ mb: 1, fontSize: '2rem' }}>📈</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a202c' }}>2</Typography>
-            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500 }}>今日発見した</Typography>
+            <Typography variant="h4" sx={{ mb: 1, fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' } }}>📈</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a202c', fontSize: { xs: '1.8rem', sm: '2rem', md: '2.25rem' } }}>2</Typography>
+            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>今日発見した</Typography>
           </Card>
           
           <Card sx={{ 
-            borderRadius: 3, 
+            borderRadius: { xs: 2, sm: 3 }, 
             background: 'rgba(255, 255, 255, 0.95)',
             border: '1px solid rgba(255, 255, 255, 0.3)',
             textAlign: 'center', 
-            p: 3,
+            p: { xs: 2, sm: 2.5, md: 3 },
             transition: 'all 0.3s ease',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
             '&:hover': {
@@ -331,22 +347,22 @@ export const DashboardPage: React.FC = () => {
               background: 'rgba(255, 255, 255, 1)'
             }
           }}>
-            <Typography variant="h4" sx={{ mb: 1, fontSize: '2rem' }}>🎯</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 800, color: '#059669' }}>+18.5%</Typography>
-            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500 }}>平均リターン</Typography>
+            <Typography variant="h4" sx={{ mb: 1, fontSize: { xs: '1.5rem', sm: '1.8rem', md: '2rem' } }}>🎯</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#059669', fontSize: { xs: '1.8rem', sm: '2rem', md: '2.25rem' } }}>+18.5%</Typography>
+            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500, fontSize: { xs: '0.75rem', sm: '0.875rem' } }}>平均リターン</Typography>
           </Card>
         </Box>
 
         <Typography variant="body2" sx={{ 
           textAlign: 'center', 
           color: '#ffffff', 
-          mb: 4,
-          fontSize: '0.9rem',
+          mb: { xs: 3, sm: 4 },
+          fontSize: { xs: '0.8rem', sm: '0.9rem' },
           fontWeight: 500,
           letterSpacing: '0.5px',
           background: 'rgba(0, 0, 0, 0.3)',
           borderRadius: '20px',
-          px: 3,
+          px: { xs: 2.5, sm: 3 },
           py: 1,
           display: 'inline-block',
           mx: 'auto'
@@ -357,16 +373,16 @@ export const DashboardPage: React.FC = () => {
         {/* 検出結果セクション */}
         <Box sx={{ mb: 4 }}>
           <Typography variant="h5" sx={{ 
-            mb: 3, 
+            mb: { xs: 2, sm: 3 }, 
             fontWeight: 800, 
             color: '#ffffff', 
             textAlign: 'center',
             textShadow: '0 3px 8px rgba(0,0,0,0.6)',
-            fontSize: { xs: '1.4rem', sm: '1.6rem' },
+            fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
             background: 'rgba(0, 0, 0, 0.4)',
             borderRadius: '30px',
-            px: 4,
-            py: 2,
+            px: { xs: 3, sm: 4 },
+            py: { xs: 1.5, sm: 2 },
             display: 'inline-block',
             border: '1px solid rgba(255, 255, 255, 0.2)'
           }}>
@@ -377,8 +393,9 @@ export const DashboardPage: React.FC = () => {
             display: 'grid', 
             gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, 
             gap: { xs: 2, sm: 3 },
-            maxWidth: '800px',
-            mx: 'auto'
+            maxWidth: { xs: '100%', sm: '800px' },
+            mx: 'auto',
+            px: { xs: 1, sm: 0 }
           }}>
             {[
               { code: '4819', name: 'デジタルガレージ', status: '分析中' },
@@ -386,36 +403,43 @@ export const DashboardPage: React.FC = () => {
               { code: '4477', name: 'BASE', status: '分析中' }
             ].map((stock) => (
               <Card key={stock.code} sx={{ 
-                borderRadius: 3, 
+                borderRadius: { xs: 2, sm: 3 }, 
                 background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(10px)',
                 border: '1px solid rgba(255, 255, 255, 0.3)',
-                p: 3,
+                p: { xs: 2.5, sm: 3 },
                 boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                 '&:hover': { 
-                  transform: 'translateY(-8px)',
+                  transform: { xs: 'translateY(-4px)', sm: 'translateY(-8px)' },
                   boxShadow: '0 16px 48px rgba(0, 0, 0, 0.2)',
                   background: 'rgba(255, 255, 255, 1)',
                 }
               }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                  <Typography variant="subtitle2" sx={{ 
+                    fontWeight: 600,
+                    fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                  }}>
                     {stock.code}
                   </Typography>
                   <Chip 
                     label={stock.status}
                     size="small"
                     sx={{ 
-                      fontSize: '0.7rem', 
+                      fontSize: { xs: '0.65rem', sm: '0.7rem' }, 
                       bgcolor: '#2563eb', 
                       color: '#ffffff',
                       fontWeight: 600,
-                      border: '1px solid rgba(255, 255, 255, 0.2)'
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      height: { xs: '20px', sm: '24px' }
                     }}
                   />
                 </Box>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                <Typography variant="body2" color="text.secondary" sx={{ 
+                  mb: 2,
+                  fontSize: { xs: '0.8rem', sm: '0.875rem' }
+                }}>
                   {stock.name}
                 </Typography>
                 <Button
@@ -425,11 +449,13 @@ export const DashboardPage: React.FC = () => {
                   sx={{ 
                     background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
                     color: 'white',
-                    fontSize: '0.75rem',
+                    fontSize: { xs: '0.7rem', sm: '0.75rem' },
                     fontWeight: 600,
                     borderRadius: '20px',
                     textTransform: 'none',
                     boxShadow: '0 4px 16px rgba(37, 99, 235, 0.3)',
+                    py: { xs: 0.5, sm: 1 },
+                    minHeight: { xs: '32px', sm: '36px' },
                     '&:hover': {
                       transform: 'translateY(-2px)',
                       boxShadow: '0 6px 24px rgba(37, 99, 235, 0.5)',

@@ -46,17 +46,25 @@ export const useDashboardData = () => {
   const fetchInitialData = useCallback(async () => {
     try {
       console.log('実際のAPIからデータを取得中...');
+      console.log('API_BASE_URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8432');
       
       // スキャン状況を取得
       const status = await scanApi.getScanStatus();
+      console.log('スキャン状況取得成功:', status);
       setScanStatus(status);
       
       // ロジック検出結果を取得
       const logicResults = await scanApi.getLogicDetectionStatus();
+      console.log('ロジック結果取得成功:', logicResults);
       setLogicStatus(logicResults);
       
     } catch (err) {
       console.error('初期データ取得エラー:', err);
+      console.error('エラー詳細:', {
+        name: (err as Error).name,
+        message: (err as Error).message,
+        stack: (err as Error).stack
+      });
       setError(err as Error);
     }
   }, []);

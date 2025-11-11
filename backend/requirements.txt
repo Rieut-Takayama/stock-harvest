@@ -7,7 +7,7 @@ asyncpg==0.29.0
 pandas==2.1.4
 numpy==1.24.4
 yfinance==0.2.28
-TA-Lib==0.4.28
+pandas-ta==0.3.14b
 APScheduler==3.10.4
 requests==2.31.0
 pytest==7.4.3
