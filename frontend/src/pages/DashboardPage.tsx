@@ -7,20 +7,13 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Alert,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
+  Alert
 } from '@mui/material';
 import {
   Search as SearchIcon,
   AccessTime as TimeIcon
 } from '@mui/icons-material';
-import { MainLayout } from '../layouts/MainLayout';
 import { useDashboardData } from '../hooks/useDashboardData';
-import type { ManualSignalRequest, StockData } from '../types';
-
 export const DashboardPage: React.FC = () => {
   const {
     scanStatus,
@@ -29,37 +22,26 @@ export const DashboardPage: React.FC = () => {
     error,
     isScanning,
     scanProgress,
-    executeScan,
-    executeManualSignal,
-    showChart
+    executeScan
   } = useDashboardData();
-
-  const [confirmDialog, setConfirmDialog] = React.useState<{
-    open: boolean;
-    type: 'stop_loss' | 'take_profit' | null;
-    title: string;
-    message: string;
-  }>({ open: false, type: null, title: '', message: '' });
 
   // ローディング状態
   if (loading) {
     return (
-      <MainLayout>
-        <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
-          <CircularProgress />
-        </Box>
-      </MainLayout>
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
     );
   }
 
   // エラー状態
   if (error) {
     return (
-      <MainLayout>
-        <Alert severity="error" sx={{ m: 3 }}>
+      <Box minHeight="100vh" p={3}>
+        <Alert severity="error">
           エラーが発生しました: {error.message}
         </Alert>
-      </MainLayout>
+      </Box>
     );
   }
 
@@ -71,316 +53,398 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const handleManualSignalClick = (type: 'stop_loss' | 'take_profit') => {
-    const isStopLoss = type === 'stop_loss';
-    setConfirmDialog({
-      open: true,
-      type,
-      title: isStopLoss ? '損切り実行' : '利確実行',
-      message: isStopLoss 
-        ? '損切りシグナルを送信しますか？' 
-        : '利確シグナルを送信しますか？'
-    });
-  };
-
-  const handleConfirmSignal = async () => {
-    if (!confirmDialog.type) return;
-
-    try {
-      const request: ManualSignalRequest = {
-        type: confirmDialog.type,
-        timestamp: new Date().toISOString(),
-        reason: 'Manual execution from dashboard'
-      };
-      
-      const result = await executeManualSignal(request);
-      alert(result.message);
-    } catch (err) {
-      console.error('シグナル実行エラー:', err);
-      alert('シグナルの実行に失敗しました');
-    } finally {
-      setConfirmDialog({ open: false, type: null, title: '', message: '' });
-    }
-  };
-
-  const handleChartClick = (stockCode: string) => {
-    showChart(stockCode);
-  };
-
-  const formatPrice = (price: number) => {
-    return `¥${price.toLocaleString()}`;
-  };
-
-  const formatChange = (change: number, changeRate: number) => {
-    const sign = change >= 0 ? '+' : '';
-    return `${sign}${change} (${sign}${changeRate}%)`;
-  };
-
-  const getChangeColor = (change: number) => {
-    return change >= 0 ? '#38a169' : '#e53e3e';
-  };
-
-  const getLogicStatusText = (status: string) => {
-    switch (status) {
-      case 'detecting': return '検出中';
-      case 'completed': return '完了';
-      case 'error': return 'エラー';
-      default: return 'unknown';
-    }
-  };
 
   return (
-    <MainLayout>
-      <Box data-testid="dashboard-container" sx={{ maxWidth: '1200px', mx: 'auto', p: 3 }}>
-        {/* ヘッダーセクション */}
-        <Box sx={{ mb: 4 }}>
+    <Box sx={{ 
+      minHeight: '100vh', 
+      background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%)',
+      p: { xs: 2, sm: 3, md: 4, lg: 6 },
+      display: 'flex',
+      justifyContent: 'center'
+    }}>
+      <Box data-testid="dashboard-container" sx={{ 
+        width: '100%', 
+        maxWidth: '1200px'
+      }}>
+        {/* ヘッダーセクション - ガラスモーフィズム */}
+        <Box sx={{ 
+          mb: 4, 
+          textAlign: 'center',
+          background: 'rgba(255, 255, 255, 0.95)',
+          borderRadius: 4,
+          p: 4,
+          border: '1px solid rgba(255, 255, 255, 0.3)',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)'
+        }}>
           <Typography 
-            variant="h4" 
+            variant="h3" 
             sx={{ 
-              fontSize: '2rem',
-              fontWeight: 500,
-              color: '#38a169',
-              mb: 1
+              fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
+              fontWeight: 700,
+              color: '#1a202c',
+              mb: 2
             }}
           >
-            ロジックスキャナーダッシュボード
+            🚀 Stock Harvest AI
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            全銘柄AIスキャンで投資チャンスを発見
+          <Typography 
+            variant="h6" 
+            sx={{ 
+              color: '#4a5568', 
+              fontSize: { xs: '1rem', sm: '1.1rem' },
+              fontWeight: 500,
+              letterSpacing: '0.5px'
+            }}
+          >
+            次世代AIが発見する隠れた投資機会
           </Typography>
         </Box>
 
         {/* スキャン実行コントロール */}
-        <Box sx={{ display: 'flex', gap: 2, mb: 4, alignItems: 'center' }}>
+        <Box sx={{ 
+          display: 'flex', 
+          flexDirection: { xs: 'column', sm: 'row' },
+          gap: 2, 
+          mb: 4, 
+          alignItems: { xs: 'stretch', sm: 'center' },
+          justifyContent: 'center'
+        }}>
           <Button
             variant="contained"
-            startIcon={isScanning ? <CircularProgress size={16} color="inherit" /> : <SearchIcon />}
+            startIcon={isScanning ? <CircularProgress size={20} color="inherit" /> : <SearchIcon />}
             onClick={handleScanClick}
             disabled={isScanning}
             sx={{
-              background: 'linear-gradient(135deg, #38a169 0%, #4caf50 100%)',
+              background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
               color: 'white',
-              px: 3,
-              py: 1.5,
-              borderRadius: 2,
-              fontSize: '1rem',
-              fontWeight: 500,
-              boxShadow: '0 4px 12px rgba(56, 161, 105, 0.3)',
+              px: 4,
+              py: 2,
+              borderRadius: '50px',
+              fontSize: '1.1rem',
+              fontWeight: 600,
+              boxShadow: '0 8px 32px rgba(37, 99, 235, 0.4)',
+              backdropFilter: 'blur(10px)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              textTransform: 'none',
               '&:hover': {
-                transform: 'translateY(-2px)',
-                boxShadow: '0 6px 16px rgba(56, 161, 105, 0.4)',
+                transform: 'translateY(-3px) scale(1.02)',
+                boxShadow: '0 12px 40px rgba(37, 99, 235, 0.6)',
+                background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)',
               },
               '&:disabled': {
-                background: 'linear-gradient(135deg, #a0a0a0 0%, #b0b0b0 100%)',
-              }
+                background: 'linear-gradient(135deg, #6b7280 0%, #9ca3af 100%)',
+                transform: 'none',
+              },
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
             }}
           >
-            {isScanning ? 'スキャン中...' : '今すぐスキャン'}
+            {isScanning ? (
+              <>
+                <CircularProgress size={20} color="inherit" sx={{ mr: 1 }} />
+                AIスキャン実行中...
+              </>
+            ) : (
+              <>
+                <SearchIcon sx={{ mr: 1 }} />
+                🎯 今すぐAIスキャン開始
+              </>
+            )}
           </Button>
           
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: 'text.secondary', fontSize: '0.875rem' }}>
+          <Box sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 1, 
+            color: '#ffffff', 
+            fontSize: '0.875rem',
+            background: 'rgba(0, 0, 0, 0.3)',
+            backdropFilter: 'blur(10px)',
+            borderRadius: '20px',
+            px: 3,
+            py: 1.5,
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            fontWeight: 500
+          }}>
             {isScanning ? (
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#38a169' }}>
-                <CircularProgress size={16} color="inherit" />
-                <span>全3,800銘柄をスキャン中... ({scanProgress}%)</span>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, color: '#10b981' }}>
+                <CircularProgress size={16} sx={{ color: '#10b981' }} />
+                <span style={{ fontWeight: 600 }}>全3,800銘柄をAIスキャン中... ({scanProgress}%)</span>
               </Box>
             ) : (
               <>
-                <TimeIcon sx={{ fontSize: '1rem' }} />
-                <span>最終スキャン: {scanStatus?.lastScanAt || '未実行'}</span>
+                <TimeIcon sx={{ fontSize: '1rem', color: '#ffffff' }} />
+                <span style={{ fontWeight: 600 }}>最終スキャン: {scanStatus?.lastScanAt || '未実行'}</span>
               </>
             )}
           </Box>
         </Box>
 
-        {/* ロジックセクション */}
-        <Box sx={{ display: 'grid', gap: 4 }}>
-          {logicStatus.map((logic) => (
+        {/* ロジックセクション - 2列グリッド */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 3, mb: 4 }}>
+          {logicStatus.map((logic, index) => (
             <Card key={logic.logicType} sx={{ 
-              borderRadius: 3,
-              border: '1px solid #e8f5e8',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+              borderRadius: 4,
+              border: 'none',
+              background: index === 0 
+                ? 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)'
+                : 'linear-gradient(135deg, #047857 0%, #065f46 100%)',
+              boxShadow: '0 20px 60px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1)',
+              color: 'white',
+              minHeight: '240px',
+              position: 'relative',
+              overflow: 'hidden',
+              transform: 'perspective(1000px) rotateX(0deg)',
+              transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              '&:hover': {
+                transform: 'perspective(1000px) rotateX(-5deg) translateY(-10px)',
+                boxShadow: '0 25px 80px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.2)',
+              }
             }}>
-              <CardContent sx={{ p: 3 }}>
+              {/* ロケットアイコン背景 */}
+              <Box sx={{
+                position: 'absolute',
+                top: 20,
+                right: 20,
+                fontSize: '3rem',
+                opacity: 0.3
+              }}>
+                🚀
+              </Box>
+              
+              <CardContent sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column' }}>
                 {/* ロジックヘッダー */}
-                <Box sx={{ 
-                  display: 'flex', 
-                  justifyContent: 'space-between', 
-                  alignItems: 'center',
-                  mb: 2.5,
-                  pb: 2,
-                  borderBottom: '1px solid #e8f5e8'
-                }}>
-                  <Typography variant="h6" sx={{ fontWeight: 500, color: '#2d3748' }}>
-                    ロジック{logic.logicType.charAt(logic.logicType.length - 1).toUpperCase()}: {logic.name}
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="h5" sx={{ 
+                    fontWeight: 800, 
+                    mb: 1, 
+                    color: '#ffffff',
+                    textShadow: '0 2px 8px rgba(0, 0, 0, 0.5)',
+                    fontSize: '1.5rem'
+                  }}>
+                    ロジック{logic.logicType.charAt(logic.logicType.length - 1).toUpperCase()}
                   </Typography>
+                  <Typography variant="h6" sx={{ 
+                    color: '#ffffff', 
+                    lineHeight: 1.4,
+                    fontWeight: 600,
+                    textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)',
+                    fontSize: '1rem',
+                    mb: 1
+                  }}>
+                    {logic.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ 
+                    color: '#ffffff', 
+                    fontSize: '0.8rem',
+                    fontWeight: 400,
+                    textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)'
+                  }}>
+                    優良企業を機械学習で発見するロジック
+                  </Typography>
+                </Box>
+                
+                {/* ステータス */}
+                <Box sx={{ mt: 'auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <Chip 
-                    label={getLogicStatusText(logic.status)}
+                    label="分析中..."
                     sx={{
-                      bgcolor: '#38a169',
-                      color: 'white',
+                      bgcolor: 'rgba(0, 0, 0, 0.3)',
+                      color: '#ffffff',
                       fontSize: '0.75rem',
-                      fontWeight: 500,
-                      px: 1.5
+                      fontWeight: 700,
+                      border: '1px solid rgba(255, 255, 255, 0.4)',
+                      textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)'
                     }}
                   />
-                </Box>
-
-                {/* 銘柄リスト */}
-                <Box sx={{ display: 'grid', gap: 2 }}>
-                  {logic.detectedStocks.length === 0 ? (
-                    <Box sx={{ textAlign: 'center', py: 5, color: 'text.secondary' }}>
-                      <Typography>検出された銘柄がありません</Typography>
-                    </Box>
-                  ) : (
-                    logic.detectedStocks.map((stock: StockData) => (
-                      <Box key={stock.code} sx={{
-                        display: 'grid',
-                        gridTemplateColumns: '1fr auto auto',
-                        gap: 2,
-                        p: 2,
-                        bgcolor: '#fafafa',
-                        borderRadius: 2,
-                        border: '1px solid #eeeeee',
-                        alignItems: 'center'
-                      }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.5 }}>
-                          <Typography sx={{ fontWeight: 500, color: '#2d3748', fontSize: '0.875rem' }}>
-                            {stock.code}
-                          </Typography>
-                          <Typography sx={{ color: 'text.secondary', fontSize: '0.75rem' }}>
-                            {stock.name}
-                          </Typography>
-                        </Box>
-                        
-                        <Box sx={{ textAlign: 'right', display: 'flex', flexDirection: 'column', gap: 0.25 }}>
-                          <Typography sx={{ fontWeight: 500, fontSize: '1rem', color: '#2d3748' }}>
-                            {formatPrice(stock.price)}
-                          </Typography>
-                          <Typography sx={{ 
-                            fontSize: '0.75rem',
-                            color: getChangeColor(stock.change)
-                          }}>
-                            {formatChange(stock.change, stock.changeRate)}
-                          </Typography>
-                        </Box>
-                        
-                        <Button
-                          variant="contained"
-                          size="small"
-                          onClick={() => handleChartClick(stock.code)}
-                          sx={{
-                            bgcolor: '#38a169',
-                            color: 'white',
-                            fontSize: '0.875rem',
-                            whiteSpace: 'nowrap',
-                            '&:hover': {
-                              bgcolor: '#2f855a'
-                            }
-                          }}
-                        >
-                          チャート
-                        </Button>
-                      </Box>
-                    ))
-                  )}
+                  <Typography variant="body2" sx={{ 
+                    fontSize: '0.75rem', 
+                    color: '#ffffff',
+                    fontWeight: 600,
+                    textShadow: '0 1px 4px rgba(0, 0, 0, 0.4)'
+                  }}>
+                    対象銘柄 3,800社
+                  </Typography>
                 </Box>
               </CardContent>
             </Card>
           ))}
         </Box>
 
-        {/* 手動決済シグナルセクション */}
-        <Card sx={{ 
-          mt: 4,
-          borderRadius: 3,
-          border: '1px solid #e8f5e8',
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
+        {/* 統計サマリー - ネオモーフィズム */}
+        <Box sx={{ 
+          display: 'grid', 
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' }, 
+          gap: { xs: 2, sm: 3 }, 
+          mb: 4,
+          maxWidth: '700px',
+          mx: 'auto'
         }}>
-          <CardContent sx={{ p: 3 }}>
-            <Box sx={{ 
-              mb: 2.5,
-              pb: 2,
-              borderBottom: '1px solid #e8f5e8'
-            }}>
-              <Typography variant="h6" sx={{ fontWeight: 500, color: '#2d3748', mb: 1 }}>
-                手動決済シグナル
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                損切り・利確タイミングの実行
-              </Typography>
-            </Box>
-            
-            <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap' }}>
-              <Button
-                variant="outlined"
-                onClick={() => handleManualSignalClick('stop_loss')}
-                sx={{
-                  color: '#e53e3e',
-                  borderColor: '#e53e3e',
-                  bgcolor: 'white',
-                  px: 2.5,
-                  py: 1.25,
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  '&:hover': {
-                    bgcolor: '#e53e3e',
-                    color: 'white'
-                  }
-                }}
-              >
-                損切り実行
-              </Button>
-              <Button
-                variant="outlined"
-                onClick={() => handleManualSignalClick('take_profit')}
-                sx={{
-                  color: '#38a169',
-                  borderColor: '#38a169',
-                  bgcolor: 'white',
-                  px: 2.5,
-                  py: 1.25,
-                  fontSize: '0.875rem',
-                  fontWeight: 500,
-                  '&:hover': {
-                    bgcolor: '#38a169',
-                    color: 'white'
-                  }
-                }}
-              >
-                利確実行
-              </Button>
-            </Box>
-          </CardContent>
-        </Card>
-      </Box>
+          <Card sx={{ 
+            borderRadius: 3, 
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            textAlign: 'center', 
+            p: 3,
+            transition: 'all 0.3s ease',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            '&:hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 15px 45px rgba(0, 0, 0, 0.2)',
+              background: 'rgba(255, 255, 255, 1)'
+            }
+          }}>
+            <Typography variant="h4" sx={{ mb: 1, fontSize: '2rem' }}>📊</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a202c' }}>3</Typography>
+            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500 }}>アクティブロジック</Typography>
+          </Card>
+          
+          <Card sx={{ 
+            borderRadius: 3, 
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            textAlign: 'center', 
+            p: 3,
+            transition: 'all 0.3s ease',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            '&:hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 15px 45px rgba(0, 0, 0, 0.2)',
+              background: 'rgba(255, 255, 255, 1)'
+            }
+          }}>
+            <Typography variant="h4" sx={{ mb: 1, fontSize: '2rem' }}>📈</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#1a202c' }}>2</Typography>
+            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500 }}>今日発見した</Typography>
+          </Card>
+          
+          <Card sx={{ 
+            borderRadius: 3, 
+            background: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            textAlign: 'center', 
+            p: 3,
+            transition: 'all 0.3s ease',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+            '&:hover': {
+              transform: 'translateY(-5px)',
+              boxShadow: '0 15px 45px rgba(0, 0, 0, 0.2)',
+              background: 'rgba(255, 255, 255, 1)'
+            }
+          }}>
+            <Typography variant="h4" sx={{ mb: 1, fontSize: '2rem' }}>🎯</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: '#059669' }}>+18.5%</Typography>
+            <Typography variant="body2" sx={{ color: '#4a5568', fontWeight: 500 }}>平均リターン</Typography>
+          </Card>
+        </Box>
 
-      {/* 確認ダイアログ */}
-      <Dialog
-        open={confirmDialog.open}
-        onClose={() => setConfirmDialog({ open: false, type: null, title: '', message: '' })}
-      >
-        <DialogTitle>{confirmDialog.title}</DialogTitle>
-        <DialogContent>
-          <Typography>{confirmDialog.message}</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button 
-            onClick={() => setConfirmDialog({ open: false, type: null, title: '', message: '' })}
-            color="inherit"
-          >
-            キャンセル
-          </Button>
-          <Button 
-            onClick={handleConfirmSignal} 
-            color="primary" 
-            variant="contained"
-          >
-            実行
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </MainLayout>
+        <Typography variant="body2" sx={{ 
+          textAlign: 'center', 
+          color: '#ffffff', 
+          mb: 4,
+          fontSize: '0.9rem',
+          fontWeight: 500,
+          letterSpacing: '0.5px',
+          background: 'rgba(0, 0, 0, 0.3)',
+          borderRadius: '20px',
+          px: 3,
+          py: 1,
+          display: 'inline-block',
+          mx: 'auto'
+        }}>
+          ⏰ 最終スキャン: 19:44:15
+        </Typography>
+
+        {/* 検出結果セクション */}
+        <Box sx={{ mb: 4 }}>
+          <Typography variant="h5" sx={{ 
+            mb: 3, 
+            fontWeight: 800, 
+            color: '#ffffff', 
+            textAlign: 'center',
+            textShadow: '0 3px 8px rgba(0,0,0,0.6)',
+            fontSize: { xs: '1.4rem', sm: '1.6rem' },
+            background: 'rgba(0, 0, 0, 0.4)',
+            borderRadius: '30px',
+            px: 4,
+            py: 2,
+            display: 'inline-block',
+            border: '1px solid rgba(255, 255, 255, 0.2)'
+          }}>
+            🎯 AI検出: ストップ高候補銘柄
+          </Typography>
+          
+          <Box sx={{ 
+            display: 'grid', 
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, 
+            gap: { xs: 2, sm: 3 },
+            maxWidth: '800px',
+            mx: 'auto'
+          }}>
+            {[
+              { code: '4819', name: 'デジタルガレージ', status: '分析中' },
+              { code: '2158', name: 'フロンテッジ', status: '分析中' },
+              { code: '4477', name: 'BASE', status: '分析中' }
+            ].map((stock) => (
+              <Card key={stock.code} sx={{ 
+                borderRadius: 3, 
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                p: 3,
+                boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                '&:hover': { 
+                  transform: 'translateY(-8px)',
+                  boxShadow: '0 16px 48px rgba(0, 0, 0, 0.2)',
+                  background: 'rgba(255, 255, 255, 1)',
+                }
+              }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                    {stock.code}
+                  </Typography>
+                  <Chip 
+                    label={stock.status}
+                    size="small"
+                    sx={{ 
+                      fontSize: '0.7rem', 
+                      bgcolor: '#2563eb', 
+                      color: '#ffffff',
+                      fontWeight: 600,
+                      border: '1px solid rgba(255, 255, 255, 0.2)'
+                    }}
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  {stock.name}
+                </Typography>
+                <Button
+                  size="small"
+                  variant="contained"
+                  fullWidth
+                  sx={{ 
+                    background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
+                    color: 'white',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    borderRadius: '20px',
+                    textTransform: 'none',
+                    boxShadow: '0 4px 16px rgba(37, 99, 235, 0.3)',
+                    '&:hover': {
+                      transform: 'translateY(-2px)',
+                      boxShadow: '0 6px 24px rgba(37, 99, 235, 0.5)',
+                      background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)'
+                    }
+                  }}
+                >
+                  🔍 詳細分析
+                </Button>
+              </Card>
+            ))}
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
