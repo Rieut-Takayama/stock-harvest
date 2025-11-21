@@ -84,7 +84,7 @@ export const ContactPage = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // ここで実際のフォーム送信処理を行う
-    console.log('問い合わせ送信:', contactForm);
+    // Contact form submitted
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 5000);
   };

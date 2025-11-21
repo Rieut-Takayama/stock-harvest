@@ -85,7 +85,7 @@ class TokenService {
 
       return JSON.parse(jsonPayload);
     } catch (error) {
-      console.error('JWT デコードエラー:', error);
+      // JWT decode error handled
       throw new Error('無効なトークン形式');
     }
   }

@@ -50,7 +50,7 @@ async def get_alerts() -> List[Dict[str, Any]]:
         return alerts
     
     except Exception as e:
-        print(f"❌ GET /api/alerts error: {e}")
+        # Controller GET alerts error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve alerts"
@@ -98,7 +98,7 @@ async def create_alert(request: AlertCreateRequest) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ POST /api/alerts error: {e}")
+        # Controller POST alerts error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to create alert"
@@ -130,7 +130,7 @@ async def toggle_alert(alert_id: str) -> Dict[str, Any]:
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ PUT /api/alerts/{alert_id}/toggle error: {e}")
+        # Controller PUT alert toggle error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to toggle alert"
@@ -162,7 +162,7 @@ async def delete_alert(alert_id: str) -> Dict[str, str]:
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ DELETE /api/alerts/{alert_id} error: {e}")
+        # Controller DELETE alert error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to delete alert"
@@ -192,7 +192,7 @@ async def get_line_notification_config() -> Dict[str, Any]:
             }
     
     except Exception as e:
-        print(f"❌ GET /api/notifications/line error: {e}")
+        # Controller GET LINE notifications error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to retrieve LINE notification config"
@@ -242,7 +242,7 @@ async def update_line_notification_config(request: LineNotificationConfigRequest
     except HTTPException:
         raise
     except Exception as e:
-        print(f"❌ PUT /api/notifications/line error: {e}")
+        # Controller PUT LINE notifications error
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update LINE notification config"

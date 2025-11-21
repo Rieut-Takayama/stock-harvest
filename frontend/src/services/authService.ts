@@ -14,7 +14,7 @@ class AuthService {
       const response = await axios.post(`${this.baseURL}/auth/login`, credentials);
       return response.data;
     } catch (error) {
-      console.error('ログインエラー:', error);
+      // Login service error handled
       throw new Error('ログインに失敗しました');
     }
   }
@@ -23,7 +23,7 @@ class AuthService {
     try {
       await axios.post(`${this.baseURL}/auth/logout`);
     } catch (error) {
-      console.error('ログアウトエラー:', error);
+      // Logout service error handled
     }
   }
 
@@ -34,7 +34,7 @@ class AuthService {
       });
       return response.data;
     } catch (error) {
-      console.error('トークン更新エラー:', error);
+      // Token refresh error handled
       throw new Error('認証の更新に失敗しました');
     }
   }
@@ -44,7 +44,7 @@ class AuthService {
       const response = await axios.get(`${this.baseURL}/auth/me`);
       return response.data;
     } catch (error) {
-      console.error('ユーザー情報取得エラー:', error);
+      // User info fetch error handled
       throw new Error('ユーザー情報の取得に失敗しました');
     }
   }

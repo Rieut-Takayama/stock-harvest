@@ -44,16 +44,10 @@ export class ChartsApiService {
       
       const result = await this.makeRequest<ChartData>(url);
       
-      console.log(`Chart data fetched for ${stockCode}:`, {
-        stockName: result.stockName,
-        dataCount: result.dataCount,
-        timeframe: result.timeframe,
-        period: result.period
-      });
+      // Chart data fetched successfully
       
       return result;
     } catch (error) {
-      console.error(`Failed to fetch chart data for ${stockCode}:`, error);
       throw new Error(`Failed to fetch chart data for ${stockCode}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
@@ -67,7 +61,6 @@ export class ChartsApiService {
       const result = await this.makeRequest<{ status: string; service: string; details: Record<string, unknown> }>('/api/charts/health');
       return result;
     } catch (error) {
-      console.error('Charts health check failed:', error);
       throw new Error(`Charts health check failed: ${error instanceof Error ? error.message : String(error)}`);
     }
   }

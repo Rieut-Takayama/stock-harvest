@@ -27,7 +27,7 @@ export const useAlertsData = () => {
       const config = await alertsService.getLineConfig();
       setLineConfig(config);
     } catch (err) {
-      console.error('Failed to fetch LINE config:', err);
+      // LINE config fetch error in hook
     }
   };
 

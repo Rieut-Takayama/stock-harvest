@@ -7,7 +7,7 @@ services:
     plan: free
     envVars:
       - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_fsRaw45HcPFX@ep-still-base-ad3788kq-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        value: postgresql://neondb_owner:npg_oVq0mDaP1xbn@ep-purple-glade-ah1ruz2b-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - key: JWT_SECRET
         value: HeZRmIvSG1PIl/cE37I042MT3jnNmZ+yMTGiM9eq41A=
       - key: SESSION_SECRET
@@ -15,6 +15,6 @@ services:
       - key: TESTING_MODE
         value: false
       - key: CORS_ORIGIN
-        value: https://your-netlify-app.netlify.app
+        value: https://frontend-pbywjmuxs-rieuts-projects.vercel.app
       - key: FRONTEND_URL
-        value: https://your-netlify-app.netlify.app
+        value: https://frontend-pbywjmuxs-rieuts-projects.vercel.app

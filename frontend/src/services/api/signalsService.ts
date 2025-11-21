@@ -53,7 +53,7 @@ export class SignalsApiService {
         affectedPositions: data.affectedPositions
       };
     } catch (error) {
-      console.error('手動決済シグナル実行エラー:', error);
+      // Manual close signal error handled
       throw error;
     }
   }
@@ -75,7 +75,7 @@ export class SignalsApiService {
       // 400エラー（バリデーションエラー）が返ってくればAPIは生きている
       return response.status === 400 || response.ok;
     } catch (error) {
-      console.warn('手動決済APIヘルスチェック失敗:', error);
+      // Manual close API health check error handled
       return false;
     }
   }

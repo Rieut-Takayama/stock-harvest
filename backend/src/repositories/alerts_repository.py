@@ -51,7 +51,7 @@ class AlertsRepository:
             return [AlertsRepository._row_to_alert(row) for row in rows]
         
         except Exception as e:
-            print(f"❌ Failed to fetch alerts: {e}")
+            # Repository alert fetch error
             return []
     
     @staticmethod
@@ -69,7 +69,7 @@ class AlertsRepository:
             return AlertsRepository._row_to_alert(row)
         
         except Exception as e:
-            print(f"❌ Failed to fetch alert {alert_id}: {e}")
+            # Repository alert fetch by id error
             return None
     
     @staticmethod
@@ -97,7 +97,7 @@ class AlertsRepository:
             return await AlertsRepository.get_alert_by_id(alert_id)
         
         except Exception as e:
-            print(f"❌ Failed to create alert: {e}")
+            # Repository alert creation error
             return None
     
     @staticmethod
@@ -127,7 +127,7 @@ class AlertsRepository:
             return await AlertsRepository.get_alert_by_id(alert_id)
         
         except Exception as e:
-            print(f"❌ Failed to toggle alert {alert_id}: {e}")
+            # Repository alert toggle error
             return None
     
     @staticmethod
@@ -145,7 +145,7 @@ class AlertsRepository:
             return True
         
         except Exception as e:
-            print(f"❌ Failed to delete alert {alert_id}: {e}")
+            # Repository alert deletion error
             return False
 
 
@@ -180,7 +180,7 @@ class LineNotificationRepository:
             return LineNotificationRepository._row_to_line_config(row)
         
         except Exception as e:
-            print(f"❌ Failed to fetch LINE config: {e}")
+            # Repository LINE config fetch error
             return None
     
     @staticmethod
@@ -236,7 +236,7 @@ class LineNotificationRepository:
             return await LineNotificationRepository.get_line_config()
         
         except Exception as e:
-            print(f"❌ Failed to update LINE config: {e}")
+            # Repository LINE config update error
             return None
     
     @staticmethod
@@ -254,7 +254,7 @@ class LineNotificationRepository:
             return True
         
         except Exception as e:
-            print(f"❌ Failed to increment notification count: {e}")
+            # Repository notification count error
             return False
     
     @staticmethod
@@ -276,5 +276,5 @@ class LineNotificationRepository:
             return True
         
         except Exception as e:
-            print(f"❌ Failed to record notification error: {e}")
+            # Repository notification error record failed
             return False

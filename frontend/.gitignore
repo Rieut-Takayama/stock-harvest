@@ -30,3 +30,4 @@ tests/temp/*
 !tests/temp/.gitkeep
 test-results/
 playwright-report/
+.vercel

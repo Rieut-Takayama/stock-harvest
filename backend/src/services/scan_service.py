@@ -1,31 +1,34 @@
 """
-スキャンサービス
-株価データ取得とロジック検出機能を提供
-テストモードでは決定的なデータを提供し、外部API依存を軽減
+スキャンサービス（統合・オーケストレーション）
+各専門サービスを組み合わせてスキャン機能を提供
+公開API、エラーハンドリング、結果統合を担当
 """
 
 import asyncio
-import os
 import uuid
 from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Tuple
-import yfinance as yf
-import pandas as pd
-import numpy as np
-from ..repositories.scan_repository import ScanRepository
-# from ..types.index import *
+from typing import Dict, List, Optional
 import logging
-import random
-from .test_data_provider import test_data_provider
+
+from ..repositories.scan_repository import ScanRepository
+from .stock_data_service import StockDataService
+from .technical_analysis_service import TechnicalAnalysisService
+from .logic_detection_service import LogicDetectionService
 
 logger = logging.getLogger(__name__)
 
+
 class ScanService:
+    """統合スキャンサービス"""
+    
     def __init__(self, scan_repository: ScanRepository):
         self.scan_repository = scan_repository
-        self.is_test_mode = os.getenv('TESTING_MODE', 'false').lower() == 'true'
-        self.fallback_enabled = True
         
+        # 専門サービスの依存性注入
+        self.stock_data_service = StockDataService()
+        self.technical_analysis_service = TechnicalAnalysisService()
+        self.logic_detection_service = LogicDetectionService()
+    
     async def start_scan(self) -> Dict:
         """
         全銘柄スキャンを開始する
@@ -149,23 +152,12 @@ class ScanService:
     async def _execute_scan(self, scan_id: str):
         """
         実際のスキャン処理を非同期で実行
+        各専門サービスを協調させて実行
         """
         try:
-            # サンプル銘柄リスト（実際の実装では全銘柄を取得）
-            sample_stocks = [
-                {'code': '7203', 'name': 'トヨタ自動車'},
-                {'code': '6758', 'name': 'ソニーグループ'},
-                {'code': '9984', 'name': 'ソフトバンクグループ'},
-                {'code': '4689', 'name': 'Zホールディングス'},
-                {'code': '8306', 'name': '三菱UFJフィナンシャル・グループ'},
-                {'code': '6861', 'name': 'キーエンス'},
-                {'code': '9433', 'name': 'KDDI'},
-                {'code': '4063', 'name': '信越化学工業'},
-                {'code': '6954', 'name': 'ファナック'},
-                {'code': '8058', 'name': '三菱商事'}
-            ]
-            
-            total_stocks = len(sample_stocks)
+            # 銘柄リストを取得
+            stock_list = self.stock_data_service.get_sample_stock_list()
+            total_stocks = len(stock_list)
             logic_a_detected = []
             logic_b_detected = []
             
@@ -177,35 +169,46 @@ class ScanService:
             })
             
             # 各銘柄をスキャン
-            for i, stock in enumerate(sample_stocks):
+            for i, stock in enumerate(stock_list):
                 try:
                     # 進捗更新
-                    progress = int((i / total_stocks) * 100)
-                    remaining_time = (total_stocks - i) * 2
+                    await self._update_scan_progress(scan_id, i, total_stocks, stock)
                     
-                    await self.scan_repository.update_scan_execution(scan_id, {
-                        'progress': progress,
-                        'processed_stocks': i + 1,
-                        'current_stock': stock['code'],
-                        'estimated_time': remaining_time,
-                        'message': f'{stock["name"]}({stock["code"]})を分析中...'
-                    })
+                    # 株価データ取得
+                    stock_data = await self.stock_data_service.fetch_stock_data(
+                        stock['code'], stock['name']
+                    )
                     
-                    # 実際の株価データを取得
-                    stock_data = await self._fetch_stock_data(stock['code'], stock['name'])
+                    if not stock_data:
+                        logger.warning(f"銘柄 {stock['code']} のデータ取得失敗")
+                        continue
                     
-                    if stock_data:
-                        # ロジックA: ストップ高張り付き検出（模擬）
-                        if await self._detect_logic_a(stock_data):
-                            logic_a_detected.append(stock_data)
-                            await self._save_scan_result(scan_id, stock_data, 'logic_a')
-                        
-                        # ロジックB: 赤字→黒字転換検出（模擬）
-                        if await self._detect_logic_b(stock_data):
-                            logic_b_detected.append(stock_data)
-                            await self._save_scan_result(scan_id, stock_data, 'logic_b')
+                    # データ妥当性検証
+                    if not self.logic_detection_service.validate_stock_data(stock_data):
+                        logger.warning(f"銘柄 {stock['code']} のデータが不正")
+                        continue
                     
-                    # 実際のAPI制限を考慮して適度な待機
+                    # テクニカル分析実行
+                    raw_data = stock_data.get('raw_data')
+                    technical_signals = self.technical_analysis_service.generate_technical_signals(
+                        price_data=raw_data,
+                        stock_data=stock_data
+                    )
+                    
+                    # テクニカルシグナルを統合
+                    stock_data['signals'] = technical_signals
+                    
+                    # ロジックA検出
+                    if await self.logic_detection_service.detect_logic_a(stock_data):
+                        logic_a_detected.append(stock_data)
+                        await self._save_scan_result(scan_id, stock_data, 'logic_a')
+                    
+                    # ロジックB検出
+                    if await self.logic_detection_service.detect_logic_b(stock_data):
+                        logic_b_detected.append(stock_data)
+                        await self._save_scan_result(scan_id, stock_data, 'logic_b')
+                    
+                    # API制限を考慮した待機
                     await asyncio.sleep(1)
                     
                 except Exception as e:
@@ -213,224 +216,49 @@ class ScanService:
                     continue
             
             # スキャン完了
-            await self.scan_repository.update_scan_execution(scan_id, {
-                'status': 'completed',
-                'progress': 100,
-                'processed_stocks': total_stocks,
-                'current_stock': None,
-                'estimated_time': 0,
-                'message': 'スキャンが完了しました',
-                'logic_a_count': len(logic_a_detected),
-                'logic_b_count': len(logic_b_detected),
-                'completed_at': datetime.now()
-            })
-            
-            logger.info(f"スキャン {scan_id} が完了: ロジックA={len(logic_a_detected)}件, ロジックB={len(logic_b_detected)}件")
+            await self._complete_scan(scan_id, total_stocks, logic_a_detected, logic_b_detected)
             
         except Exception as e:
             logger.error(f"スキャン実行エラー {scan_id}: {str(e)}")
-            await self.scan_repository.update_scan_execution(scan_id, {
-                'status': 'failed',
-                'message': 'スキャンでエラーが発生しました',
-                'error_message': str(e),
-                'completed_at': datetime.now()
-            })
+            await self._fail_scan(scan_id, str(e))
     
-    async def _fetch_stock_data(self, stock_code: str, stock_name: str) -> Optional[Dict]:
-        """
-        株価データを取得（テストモード対応）
-        テストモードでは決定的なデータ、本番モードではyfinance+フォールバック
-        """
-        try:
-            # テストモード時は常に固定データを使用
-            if self.is_test_mode:
-                logger.info(f"🧪 テストモード: 固定データを使用 - {stock_code}")
-                fixed_data = test_data_provider.get_fixed_stock_data(stock_code)
-                return {
-                    'code': fixed_data['code'],
-                    'name': fixed_data['name'],
-                    'price': fixed_data['price'],
-                    'change': fixed_data['change'],
-                    'changeRate': fixed_data['changeRate'],
-                    'volume': fixed_data['volume'],
-                    'signals': fixed_data['signals']
-                }
-            
-            # 本番モード: yfinanceを試行し、失敗時はフォールバック
-            # API可用性のチェック（シミュレーション対応）
-            if not test_data_provider.is_api_available_simulation():
-                raise Exception("API unavailable simulation")
-            
-            # yfinanceの銘柄コード形式に変換（日本株は.T追加）
-            ticker_symbol = f"{stock_code}.T"
-            ticker = yf.Ticker(ticker_symbol)
-            
-            # 直近の株価データを取得
-            hist = ticker.history(period="2d", interval="1d")
-            
-            if hist.empty or len(hist) < 1:
-                logger.warning(f"銘柄 {stock_code} のデータが取得できませんでした")
-                raise Exception("Empty data from yfinance")
-            
-            # 最新の株価データ
-            latest = hist.iloc[-1]
-            
-            # 前日比を計算（2日分データがある場合）
-            if len(hist) >= 2:
-                prev_close = hist.iloc[-2]['Close']
-                change = latest['Close'] - prev_close
-                change_rate = (change / prev_close) * 100
-            else:
-                change = 0
-                change_rate = 0
-            
-            # テクニカル指標を生成
-            technical_signals = self._generate_technical_signals(hist)
-            
-            return {
-                'code': stock_code,
-                'name': stock_name,
-                'price': float(latest['Close']),
-                'change': float(change),
-                'changeRate': float(change_rate),
-                'volume': int(latest['Volume']),
-                'signals': technical_signals
-            }
-            
-        except Exception as e:
-            logger.warning(f"銘柄 {stock_code} のデータ取得エラー: {str(e)}")
-            # エラーの場合はフォールバックデータを返す
-            if self.fallback_enabled:
-                logger.info(f"🔄 フォールバックデータを使用: {stock_code}")
-                fixed_data = test_data_provider.get_fixed_stock_data(stock_code)
-                return {
-                    'code': fixed_data['code'],
-                    'name': fixed_data['name'],
-                    'price': fixed_data['price'],
-                    'change': fixed_data['change'],
-                    'changeRate': fixed_data['changeRate'],
-                    'volume': fixed_data['volume'],
-                    'signals': fixed_data['signals']
-                }
-            else:
-                return self._generate_mock_stock_data(stock_code, stock_name)
-    
-    def _generate_mock_stock_data(self, stock_code: str, stock_name: str) -> Dict:
-        """
-        モック株価データを生成（yfinance接続失敗時の代替）
-        """
-        # 基準価格を銘柄コードベースで設定
-        base_prices = {
-            '7203': 2900,  # トヨタ
-            '6758': 13000,  # ソニー
-            '9984': 5200,   # ソフトバンクG
-            '4689': 420,    # Z Holdings
-            '8306': 1200,   # 三菱UFJ
-            '6861': 47000,  # キーエンス
-            '9433': 3800,   # KDDI
-            '4063': 25000,  # 信越化学
-            '6954': 55000,  # ファナック
-            '8058': 4500    # 三菱商事
-        }
+    async def _update_scan_progress(self, scan_id: str, current_index: int, total_stocks: int, current_stock: Dict):
+        """スキャン進捗を更新"""
+        progress = int((current_index / total_stocks) * 100)
+        remaining_time = (total_stocks - current_index) * 2
         
-        base_price = base_prices.get(stock_code, 1000)
+        await self.scan_repository.update_scan_execution(scan_id, {
+            'progress': progress,
+            'processed_stocks': current_index + 1,
+            'current_stock': current_stock['code'],
+            'estimated_time': remaining_time,
+            'message': f'{current_stock["name"]}({current_stock["code"]})を分析中...'
+        })
+    
+    async def _complete_scan(self, scan_id: str, total_stocks: int, logic_a_detected: List, logic_b_detected: List):
+        """スキャン完了処理"""
+        await self.scan_repository.update_scan_execution(scan_id, {
+            'status': 'completed',
+            'progress': 100,
+            'processed_stocks': total_stocks,
+            'current_stock': None,
+            'estimated_time': 0,
+            'message': 'スキャンが完了しました',
+            'logic_a_count': len(logic_a_detected),
+            'logic_b_count': len(logic_b_detected),
+            'completed_at': datetime.now()
+        })
         
-        # ランダムな変動を生成
-        change_rate = random.uniform(-5.0, 5.0)
-        change = base_price * (change_rate / 100)
-        current_price = base_price + change
-        
-        return {
-            'code': stock_code,
-            'name': stock_name,
-            'price': round(current_price, 2),
-            'change': round(change, 2),
-            'changeRate': round(change_rate, 2),
-            'volume': random.randint(1000000, 50000000),
-            'signals': {
-                'rsi': round(random.uniform(20, 80), 2),
-                'macd': round(random.uniform(-1, 1), 3),
-                'bollingerPosition': round(random.uniform(-1, 1), 2),
-                'volumeRatio': round(random.uniform(0.5, 2.0), 2),
-                'trendDirection': random.choice(['up', 'down', 'sideways'])
-            }
-        }
+        logger.info(f"スキャン {scan_id} が完了: ロジックA={len(logic_a_detected)}件, ロジックB={len(logic_b_detected)}件")
     
-    def _generate_technical_signals(self, price_data: pd.DataFrame) -> Dict:
-        """
-        価格データからテクニカル指標を計算
-        """
-        try:
-            if len(price_data) < 14:
-                # データ不足の場合はモック値
-                return {
-                    'rsi': round(random.uniform(30, 70), 2),
-                    'macd': round(random.uniform(-0.5, 0.5), 3),
-                    'bollingerPosition': round(random.uniform(-1, 1), 2),
-                    'volumeRatio': round(random.uniform(0.8, 1.5), 2),
-                    'trendDirection': 'sideways'
-                }
-            
-            # 簡単なRSI計算
-            closes = price_data['Close']
-            delta = closes.diff()
-            gain = delta.where(delta > 0, 0).rolling(window=14).mean()
-            loss = -delta.where(delta < 0, 0).rolling(window=14).mean()
-            rs = gain / loss
-            rsi = 100 - (100 / (1 + rs))
-            
-            # トレンド方向判定（単純移動平均ベース）
-            if len(closes) >= 5:
-                recent_avg = closes.tail(5).mean()
-                older_avg = closes.head(-5).tail(5).mean()
-                if recent_avg > older_avg * 1.02:
-                    trend = 'up'
-                elif recent_avg < older_avg * 0.98:
-                    trend = 'down'
-                else:
-                    trend = 'sideways'
-            else:
-                trend = 'sideways'
-            
-            return {
-                'rsi': round(float(rsi.iloc[-1]) if not pd.isna(rsi.iloc[-1]) else 50.0, 2),
-                'macd': round(random.uniform(-0.5, 0.5), 3),
-                'bollingerPosition': round(random.uniform(-1, 1), 2),
-                'volumeRatio': round(random.uniform(0.8, 1.5), 2),
-                'trendDirection': trend
-            }
-            
-        except Exception as e:
-            logger.warning(f"テクニカル指標計算エラー: {str(e)}")
-            return {
-                'rsi': 50.0,
-                'macd': 0.0,
-                'bollingerPosition': 0.0,
-                'volumeRatio': 1.0,
-                'trendDirection': 'sideways'
-            }
-    
-    async def _detect_logic_a(self, stock_data: Dict) -> bool:
-        """
-        ロジックA: ストップ高張り付き銘柄の検出
-        実装: 大幅な上昇（5%以上）をストップ高張り付きとみなす
-        """
-        try:
-            return stock_data['changeRate'] >= 5.0 and stock_data['volume'] > 10000000
-        except:
-            return False
-    
-    async def _detect_logic_b(self, stock_data: Dict) -> bool:
-        """
-        ロジックB: 赤字→黒字転換銘柄の検出
-        実装: RSIが30以下から60以上に上昇した銘柄（底値からの反転）
-        """
-        try:
-            rsi = stock_data['signals']['rsi']
-            change_rate = stock_data['changeRate']
-            return rsi >= 60 and change_rate > 2.0 and stock_data['volume'] > 5000000
-        except:
-            return False
+    async def _fail_scan(self, scan_id: str, error_message: str):
+        """スキャン失敗処理"""
+        await self.scan_repository.update_scan_execution(scan_id, {
+            'status': 'failed',
+            'message': 'スキャンでエラーが発生しました',
+            'error_message': error_message,
+            'completed_at': datetime.now()
+        })
     
     async def _save_scan_result(self, scan_id: str, stock_data: Dict, logic_type: str):
         """
@@ -468,3 +296,28 @@ class ScanService:
             'changeRate': float(db_result['change_rate']),
             'volume': int(db_result['volume'])
         }
+    
+    # 新機能：設定管理
+    async def get_logic_configs(self) -> Dict:
+        """ロジック検出の設定を取得"""
+        return self.logic_detection_service.get_logic_configs()
+    
+    async def update_logic_config(self, logic_type: str, **kwargs) -> Dict:
+        """ロジック検出の設定を更新"""
+        try:
+            if logic_type == 'logic_a':
+                self.logic_detection_service.update_logic_a_config(**kwargs)
+            elif logic_type == 'logic_b':
+                self.logic_detection_service.update_logic_b_config(**kwargs)
+            else:
+                raise ValueError(f"未知のロジックタイプ: {logic_type}")
+            
+            return {
+                'success': True,
+                'message': f'{logic_type}の設定を更新しました',
+                'updated_config': self.logic_detection_service.get_logic_configs()
+            }
+            
+        except Exception as e:
+            logger.error(f"ロジック設定更新エラー: {str(e)}")
+            raise Exception(f"設定更新に失敗しました: {str(e)}")

@@ -27,7 +27,7 @@ export class AlertsService {
       const alerts: Alert[] = await response.json();
       return alerts;
     } catch (error) {
-      console.error('Error fetching alerts:', error);
+      // Alert fetch error handled
       throw new Error('Failed to fetch alerts');
     }
   }
@@ -50,7 +50,7 @@ export class AlertsService {
       const alert: Alert = await response.json();
       return alert;
     } catch (error) {
-      console.error('Error creating alert:', error);
+      // Alert creation error handled
       throw new Error('Failed to create alert');
     }
   }
@@ -72,7 +72,7 @@ export class AlertsService {
       const alert: Alert = await response.json();
       return alert;
     } catch (error) {
-      console.error('Error toggling alert:', error);
+      // Alert toggle error handled
       throw new Error('Failed to toggle alert');
     }
   }
@@ -91,7 +91,7 @@ export class AlertsService {
         throw new Error(`Failed to delete alert: ${response.status}`);
       }
     } catch (error) {
-      console.error('Error deleting alert:', error);
+      // Alert deletion error handled
       throw new Error('Failed to delete alert');
     }
   }
@@ -113,7 +113,7 @@ export class AlertsService {
       const config: LineNotificationConfig = await response.json();
       return config;
     } catch (error) {
-      console.error('Error fetching LINE config:', error);
+      // LINE config fetch error handled
       throw new Error('Failed to fetch LINE config');
     }
   }
@@ -136,7 +136,7 @@ export class AlertsService {
       const config: LineNotificationConfig = await response.json();
       return config;
     } catch (error) {
-      console.error('Error updating LINE status:', error);
+      // LINE status update error handled
       throw new Error('Failed to update LINE status');
     }
   }

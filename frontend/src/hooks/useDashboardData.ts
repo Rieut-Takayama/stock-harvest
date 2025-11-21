@@ -45,22 +45,21 @@ export const useDashboardData = () => {
 
   const fetchInitialData = useCallback(async () => {
     try {
-      console.log('実際のAPIからデータを取得中...');
-      console.log('API_BASE_URL:', import.meta.env.VITE_API_BASE_URL || 'http://localhost:8432');
+      // Fetching data from API
       
       // スキャン状況を取得
       const status = await scanApi.getScanStatus();
-      console.log('スキャン状況取得成功:', status);
+      // Scan status fetched successfully
       setScanStatus(status);
       
       // ロジック検出結果を取得
       const logicResults = await scanApi.getLogicDetectionStatus();
-      console.log('ロジック結果取得成功:', logicResults);
+      // Logic results fetched successfully
       setLogicStatus(logicResults);
       
     } catch (err) {
-      console.error('初期データ取得エラー:', err);
-      console.error('エラー詳細:', {
+      // Initial data fetch error handled
+      console.error('Initial data fetch error:', {
         name: (err as Error).name,
         message: (err as Error).message,
         stack: (err as Error).stack
@@ -107,7 +106,7 @@ export const useDashboardData = () => {
             }, 1000);
           }
         } catch (err) {
-          console.error('進捗監視エラー:', err);
+          // Progress monitoring error handled
         }
       }, 2000);
 

@@ -26,19 +26,20 @@ async def connect_db():
     """データベースに接続"""
     try:
         await database.connect()
-        print("✅ Database connection established")
+        # Database connection established
         return True
     except Exception as e:
-        print(f"❌ Database connection failed: {e}")
+        # Database connection failed
         return False
 
 async def disconnect_db():
     """データベースから切断"""
     try:
         await database.disconnect()
-        print("✅ Database disconnected")
+        # Database disconnected
     except Exception as e:
-        print(f"❌ Database disconnection failed: {e}")
+        # Database disconnection failed
+        print(f"Database disconnection error: {e}")
 
 async def get_db_connection():
     """
@@ -58,7 +59,7 @@ async def get_db_status():
             "healthy": True if result else False
         }
     except Exception as e:
-        print(f"Database health check failed: {e}")
+        # Database health check failed
         return {
             "status": "disconnected", 
             "healthy": False,

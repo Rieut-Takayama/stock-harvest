@@ -29,7 +29,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           }
         }
       } catch (error) {
-        console.error('認証初期化エラー:', error);
+        // Auth initialization error handled
         tokenService.clearTokens();
       } finally {
         setLoading(false);
@@ -79,7 +79,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(response.user);
     } catch (error) {
-      console.error('ログインエラー:', error);
+      // Login error handled
       throw error;
     } finally {
       setLoading(false);
@@ -93,9 +93,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
       
       // 無効化APIを呼び出し
-      authService.logout().catch(console.error);
+      authService.logout().catch(() => {});
     } catch (error) {
-      console.error('ログアウトエラー:', error);
+      // Logout error handled
     }
   };
 
@@ -115,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(response.user);
     } catch (error) {
-      console.error('認証更新エラー:', error);
+      // Auth refresh error handled
       logout();
       throw error;
     }

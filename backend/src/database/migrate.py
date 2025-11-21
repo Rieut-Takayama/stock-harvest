@@ -11,10 +11,10 @@ async def create_tables():
     try:
         # メタデータからテーブルを作成
         metadata.create_all(bind=engine)
-        print("✅ Database tables created successfully")
+        # Database tables created successfully
         return True
     except Exception as e:
-        print(f"❌ Failed to create tables: {e}")
+        # Failed to create tables
         return False
 
 async def seed_initial_data():
@@ -41,7 +41,7 @@ async def seed_initial_data():
                 "INSERT INTO system_info (id, version, status, active_alerts, total_users, database_status, status_display) VALUES (:id, :version, :status, :active_alerts, :total_users, :database_status, :status_display)",
                 system_data
             )
-            print("✅ System info data seeded")
+            # System info data seeded
         
         # FAQの初期データ
         faq_data = [
@@ -97,7 +97,7 @@ async def seed_initial_data():
                     faq_item
                 )
         
-        print("✅ FAQ initial data seeded")
+        # FAQ initial data seeded
         
         # LINE通知設定の初期データ
         line_config_data = {
@@ -116,16 +116,16 @@ async def seed_initial_data():
                    VALUES (:id, :is_connected, :status, :notification_count, :error_count)""",
                 line_config_data
             )
-            print("✅ LINE notification config initialized")
+            # LINE notification config initialized
         
         return True
     except Exception as e:
-        print(f"❌ Failed to seed initial data: {e}")
+        # Failed to seed initial data
         return False
 
 async def migrate():
     """マイグレーション実行"""
-    print("🔄 Starting database migration...")
+    # Starting database migration
     
     # データベース接続
     if not await connect_db():
@@ -140,7 +140,7 @@ async def migrate():
         if not await seed_initial_data():
             return False
         
-        print("✅ Database migration completed successfully")
+        # Database migration completed successfully
         return True
     finally:
         await disconnect_db()

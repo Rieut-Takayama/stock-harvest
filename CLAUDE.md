@@ -6,22 +6,26 @@
 開始日: 2025-11-04
 技術スタック:
   frontend: 
-    - React 18
-    - TypeScript 5
-    - MUI v6
-    - Recharts
-    - Zustand
-    - React Router v6
-    - React Query
-    - Vite 5
+    - React 19.1
+    - TypeScript 5.9
+    - MUI v7
+    - Recharts 3.3
+    - Zustand 5.0
+    - React Router v7
+    - React Query (Tanstack) 5.90
+    - Vite 7.1
+    - Playwright (E2Eテスト)
   backend:
     - Python 3.11+
-    - FastAPI
-    - pandas
-    - numpy
-    - ta-lib
-    - yfinance
-    - APScheduler
+    - FastAPI 0.104.1
+    - Uvicorn 0.24.0
+    - pandas 2.1.4
+    - numpy 1.24.4
+    - pandas-ta 0.3.14b
+    - yfinance 0.2.28
+    - APScheduler 3.10.4
+    - AsyncPG 0.29.0 (PostgreSQL接続)
+    - Pydantic 2.5.0 (データバリデーション)
   database:
     - PostgreSQL (Neon推奨)
 ```

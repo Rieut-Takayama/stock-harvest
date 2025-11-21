@@ -104,7 +104,7 @@ class AlertsService:
             alerts = await AlertsRepository.get_all_alerts()
             return alerts
         except Exception as e:
-            print(f"❌ AlertsService.get_all_alerts error: {e}")
+            # Alerts fetch error handled
             return []
     
     @staticmethod
@@ -138,7 +138,7 @@ class AlertsService:
                 return None, "Failed to create alert"
                 
         except Exception as e:
-            print(f"❌ AlertsService.create_alert error: {e}")
+            # Alert creation error handled
             return None, f"Internal server error: {str(e)}"
     
     @staticmethod
@@ -157,7 +157,7 @@ class AlertsService:
                 return None, "Alert not found"
                 
         except Exception as e:
-            print(f"❌ AlertsService.toggle_alert error: {e}")
+            # Alert toggle error handled
             return None, f"Internal server error: {str(e)}"
     
     @staticmethod
@@ -175,7 +175,7 @@ class AlertsService:
                 return False, "Alert not found"
                 
         except Exception as e:
-            print(f"❌ AlertsService.delete_alert error: {e}")
+            # Alert deletion error handled
             return False, f"Internal server error: {str(e)}"
 
 
@@ -211,7 +211,7 @@ class LineNotificationService:
             config = await LineNotificationRepository.get_line_config()
             return config
         except Exception as e:
-            print(f"❌ LineNotificationService.get_line_config error: {e}")
+            # LINE config fetch error handled
             return None
     
     @staticmethod
@@ -241,7 +241,7 @@ class LineNotificationService:
                 return None, "Failed to update LINE notification config"
                 
         except Exception as e:
-            print(f"❌ LineNotificationService.update_line_config error: {e}")
+            # LINE config update error handled
             return None, f"Internal server error: {str(e)}"
     
     @staticmethod
@@ -262,6 +262,6 @@ class LineNotificationService:
             return True, "Connection test successful"
             
         except Exception as e:
-            print(f"❌ LineNotificationService.test_line_connection error: {e}")
+            # LINE connection test error handled
             await LineNotificationRepository.record_notification_error(str(e))
             return False, f"Connection test failed: {str(e)}"

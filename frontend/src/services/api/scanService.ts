@@ -57,7 +57,7 @@ export class ScanApiService {
         }
       };
     } catch (error) {
-      console.error('スキャン実行エラー:', error);
+      // Scan execution error handled
       throw error;
     }
   }
@@ -67,8 +67,7 @@ export class ScanApiService {
    */
   async getScanStatus(): Promise<ScanStatus> {
     try {
-      console.log('API_BASE:', API_BASE);
-      console.log('リクエストURL:', `${API_BASE}/api/scan/status`);
+      // Getting scan status
       
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 8000); // 8秒タイムアウト
@@ -85,17 +84,16 @@ export class ScanApiService {
       
       clearTimeout(timeoutId);
       
-      console.log('Response status:', response.status);
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+      // Response received
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Response error text:', errorText);
+        // Error response received
         throw new Error(`スキャン状況取得に失敗しました: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Response data:', data);
+      // Response data parsed
       
       // バックエンドAPIのレスポンスをフロントエンド型に変換
       return {
@@ -104,10 +102,7 @@ export class ScanApiService {
         statusMessage: data.message
       };
     } catch (error) {
-      console.error('スキャン状況取得エラー:', error);
-      const err = error as Error;
-      console.error('エラー型:', err.constructor.name);
-      console.error('エラーメッセージ:', err.message);
+      // Scan status error handled
       throw error;
     }
   }
@@ -178,7 +173,7 @@ export class ScanApiService {
         }
       ];
     } catch (error) {
-      console.error('ロジック検出状況取得エラー:', error);
+      // Logic detection error handled
       throw error;
     }
   }
