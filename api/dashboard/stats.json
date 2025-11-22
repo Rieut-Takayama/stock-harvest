@@ -1,0 +1,18 @@
+{
+  "totalStocks": 3842,
+  "gainers": 245,
+  "losers": 167,
+  "unchanged": 3430,
+  "lastUpdate": "2025-11-21T21:50:00Z",
+  "logicA": {
+    "detected": 5,
+    "description": "ストップ高検出"
+  },
+  "logicB": {
+    "detected": 12,
+    "description": "黒字転換検出"
+  },
+  "activeSignals": 3,
+  "todayTrades": 2,
+  "averageReturn": 18.5
+}

@@ -1,0 +1,8 @@
+{
+    "token": "demo_token_12345",
+    "user": {
+        "id": 1,
+        "username": "demo",
+        "email": "demo@example.com"
+    }
+}

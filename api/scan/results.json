@@ -1,0 +1,42 @@
+{
+  "results": [
+    {
+      "code": "7203",
+      "name": "トヨタ自動車",
+      "price": 2456.0,
+      "change": 45.0,
+      "changeRate": 1.87,
+      "volume": 12450000,
+      "signals": ["上昇トレンド", "高出来高"],
+      "logic": "A",
+      "entryPrice": 2400,
+      "currentProfit": 2.33
+    },
+    {
+      "code": "6758",
+      "name": "ソニーグループ",
+      "price": 13890.0,
+      "change": -230.0,
+      "changeRate": -1.63,
+      "volume": 8760000,
+      "signals": ["下降トレンド", "売りシグナル"],
+      "logic": "B",
+      "entryPrice": 14200,
+      "currentProfit": -2.18
+    },
+    {
+      "code": "9984",
+      "name": "ソフトバンクグループ",
+      "price": 8125.0,
+      "change": 125.0,
+      "changeRate": 1.56,
+      "volume": 5430000,
+      "signals": ["買いシグナル", "上昇継続"],
+      "logic": "A",
+      "entryPrice": 8000,
+      "currentProfit": 1.56
+    }
+  ],
+  "total": 3,
+  "lastUpdate": "2025-11-21T21:50:00Z"
+}
