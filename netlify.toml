@@ -4,7 +4,7 @@
 
 [[redirects]]
   from = "/api/*"
-  to = "https://rieut-takayama.github.io/stock-harvest/api/:splat"
+  to = "/api/:splat"
   status = 200
 
 [[redirects]]
