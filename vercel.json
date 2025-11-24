@@ -1,15 +1,19 @@
 {
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "buildCommand": "npm run build",
   "outputDirectory": "frontend/dist",
+  "installCommand": "npm install",
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://stock-harvest-api.up.railway.app/api/$1"
+      "source": "/api/scan/logic-a-enhanced",
+      "destination": "/api/logic-a-enhanced"
     },
     {
-      "source": "/((?\!api).*)",
-      "destination": "/index.html"
+      "source": "/api/scan/logic-b-enhanced", 
+      "destination": "/api/logic-b-enhanced"
+    },
+    {
+      "source": "/api/scan/combined-analysis",
+      "destination": "/api/combined-analysis"
     }
   ]
 }
-EOF < /dev/null
