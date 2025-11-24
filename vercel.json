@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "frontend/dist",
-  "installCommand": "npm install",
   "rewrites": [
     {
       "source": "/api/scan/logic-a-enhanced",

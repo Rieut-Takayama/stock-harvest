@@ -1,22 +1,23 @@
 """
 株価データ取得サービス
-yfinance APIとデータ取得に特化したサービスクラス
-テストモード対応とフォールバック機能を提供
-エラーハンドリング・リトライ機能強化版
+Yahoo Finance APIを使用した株価データの取得・管理
+
+機能:
+- リアルタイム株価データ取得
+- 履歴データ取得（日足、時間足、分足）
+- マルチタイムフレームデータ管理
+- データキャッシング
+- エラーハンドリング
 """
 
-import os
 import logging
-import asyncio
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional, Tuple
 from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
-import random
-import aiohttp
-from ..database.config import database
-from ..database.tables import stock_data_cache
-from .test_data_provider import test_data_provider
+import asyncio
+from concurrent.futures import ThreadPoolExecutor
+import time
 
 logger = logging.getLogger(__name__)
 
@@ -25,163 +26,576 @@ class StockDataService:
     """株価データ取得専門サービス"""
     
     def __init__(self):
-        self.is_test_mode = os.getenv('TESTING_MODE', 'false').lower() == 'true'
-        self.fallback_enabled = True
-        self.cache_enabled = True
-        self.cache_ttl = 300  # キャッシュ有効期間（秒）
+        # データ取得設定
+        self.config = {
+            # タイムアウト設定
+            'request_timeout': 30,
+            'retry_count': 3,
+            'retry_delay': 1,
+            
+            # キャッシュ設定
+            'cache_duration': {
+                '1m': timedelta(minutes=1),
+                '5m': timedelta(minutes=5),
+                '15m': timedelta(minutes=15),
+                '1h': timedelta(hours=1),
+                '1d': timedelta(hours=6),
+                'info': timedelta(hours=24),
+            },
+            
+            # データ期間設定
+            'max_periods': {
+                '1m': '1d',      # 1分足は1日分
+                '5m': '5d',      # 5分足は5日分
+                '15m': '1mo',    # 15分足は1ヶ月分
+                '1h': '3mo',     # 1時間足は3ヶ月分
+                '1d': '2y',      # 日足は2年分
+            },
+            
+            # レート制限設定
+            'rate_limit_delay': 0.1,  # API呼び出し間隔（秒）
+            'max_concurrent': 5,      # 最大同時実行数
+        }
         
-        # リトライ設定
-        self.max_retries = 3
-        self.retry_delays = [1, 3, 5]  # 秒
-        self.timeout_seconds = 30
+        # キャッシュ管理
+        self.price_cache = {}
+        self.cache_timestamps = {}
+        self.info_cache = {}
         
-        # レート制限設定
-        self.rate_limit_delay = 0.1  # 各リクエスト間の遅延（秒）
-        self.last_request_time = 0
+        # レート制限管理
+        self.last_request_time = {}
+        self.request_semaphore = asyncio.Semaphore(self.config['max_concurrent'])
+        
+        # スレッドプール（同期処理用）
+        self.executor = ThreadPoolExecutor(max_workers=10)
     
-    async def fetch_stock_data(self, stock_code: str, stock_name: str) -> Optional[Dict]:
+    async def get_current_price(self, stock_code: str) -> Dict:
         """
-        株価データを取得（テストモード対応）
-        テストモードでは決定的なデータ、本番モードではyfinance+フォールバック
+        現在の株価データ取得（リアルタイム）
         """
         try:
-            # テストモード時は常に固定データを使用
-            if self.is_test_mode:
-                logger.info(f"🧪 テストモード: 固定データを使用 - {stock_code}")
-                fixed_data = test_data_provider.get_fixed_stock_data(stock_code)
-                return {
-                    'code': fixed_data['code'],
-                    'name': fixed_data['name'],
-                    'price': fixed_data['price'],
-                    'change': fixed_data['change'],
-                    'changeRate': fixed_data['changeRate'],
-                    'volume': fixed_data['volume'],
-                    'signals': fixed_data['signals']
-                }
+            # キャッシュチェック（1分間有効）
+            cache_key = f"{stock_code}_current"
+            if await self._is_cache_valid(cache_key, '1m'):
+                logger.debug(f"キャッシュから現在価格取得: {stock_code}")
+                return self.price_cache[cache_key]
             
-            # 本番モード: yfinanceを試行し、失敗時はフォールバック
-            # API可用性のチェック（シミュレーション対応）
-            if not test_data_provider.is_api_available_simulation():
-                raise Exception("API unavailable simulation")
-            
-            # yfinanceから実際のデータを取得
-            real_data = await self._fetch_real_stock_data(stock_code, stock_name)
-            if real_data:
-                return real_data
+            # Yahoo Financeから取得
+            data = await self._fetch_current_data(stock_code)
+            if data:
+                # キャッシュに保存
+                await self._save_to_cache(cache_key, data, '1m')
+                return data
+            else:
+                return self._create_error_response('データ取得失敗')
                 
-            # 実データ取得失敗時はフォールバック
-            raise Exception("Real data fetch failed")
+        except Exception as e:
+            logger.error(f"現在価格取得エラー {stock_code}: {str(e)}")
+            return self._create_error_response(f'取得エラー: {str(e)}')
+    
+    async def get_historical_data(
+        self, 
+        stock_code: str, 
+        period: str = '1mo', 
+        interval: str = '1d'
+    ) -> pd.DataFrame:
+        """
+        履歴データ取得
+        """
+        try:
+            # キャッシュキー生成
+            cache_key = f"{stock_code}_{period}_{interval}"
+            
+            # キャッシュチェック
+            cache_duration = self.config['cache_duration'].get(interval, timedelta(hours=1))
+            if await self._is_cache_valid(cache_key, cache_duration):
+                logger.debug(f"キャッシュから履歴データ取得: {cache_key}")
+                return self.price_cache[cache_key]
+            
+            # データ取得
+            data = await self._fetch_historical_data(stock_code, period, interval)
+            if data is not None and not data.empty:
+                # キャッシュに保存
+                await self._save_to_cache(cache_key, data, cache_duration)
+                return data
+            else:
+                logger.warning(f"履歴データが空です: {stock_code}")
+                return pd.DataFrame()
+                
+        except Exception as e:
+            logger.error(f"履歴データ取得エラー {stock_code}: {str(e)}")
+            return pd.DataFrame()
+    
+    async def get_multiple_stocks_data(self, stock_codes: List[str]) -> Dict[str, Dict]:
+        """
+        複数銘柄の同時データ取得
+        """
+        try:
+            # 並行処理でデータ取得
+            tasks = []
+            for stock_code in stock_codes:
+                task = self._get_stock_data_with_semaphore(stock_code)
+                tasks.append(task)
+            
+            # 結果収集
+            results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # 結果整理
+            stock_data = {}
+            for i, result in enumerate(results):
+                stock_code = stock_codes[i]
+                if isinstance(result, Exception):
+                    logger.warning(f"データ取得エラー {stock_code}: {str(result)}")
+                    stock_data[stock_code] = self._create_error_response(str(result))
+                else:
+                    stock_data[stock_code] = result
+            
+            return stock_data
             
         except Exception as e:
-            logger.warning(f"銘柄 {stock_code} のデータ取得エラー: {str(e)}")
-            # エラーの場合はフォールバックデータを返す
-            if self.fallback_enabled:
-                logger.info(f"🔄 フォールバックデータを使用: {stock_code}")
-                fixed_data = test_data_provider.get_fixed_stock_data(stock_code)
-                return {
-                    'code': fixed_data['code'],
-                    'name': fixed_data['name'],
-                    'price': fixed_data['price'],
-                    'change': fixed_data['change'],
-                    'changeRate': fixed_data['changeRate'],
-                    'volume': fixed_data['volume'],
-                    'signals': fixed_data['signals']
-                }
-            else:
-                return self._generate_mock_stock_data(stock_code, stock_name)
+            logger.error(f"複数銘柄データ取得エラー: {str(e)}")
+            return {}
     
-    async def _fetch_real_stock_data(self, stock_code: str, stock_name: str) -> Optional[Dict]:
-        """yfinanceから実際の株価データを取得"""
+    async def get_market_summary(self) -> Dict:
+        """
+        市場全体のサマリー取得
+        """
         try:
-            # yfinanceの銘柄コード形式に変換（日本株は.T追加）
-            ticker_symbol = f"{stock_code}.T"
-            ticker = yf.Ticker(ticker_symbol)
-            
-            # 直近の株価データを取得
-            hist = ticker.history(period="2d", interval="1d")
-            
-            if hist.empty or len(hist) < 1:
-                logger.warning(f"銘柄 {stock_code} のデータが取得できませんでした")
-                return None
-            
-            # 最新の株価データ
-            latest = hist.iloc[-1]
-            
-            # 前日比を計算（2日分データがある場合）
-            if len(hist) >= 2:
-                prev_close = hist.iloc[-2]['Close']
-                change = latest['Close'] - prev_close
-                change_rate = (change / prev_close) * 100
-            else:
-                change = 0
-                change_rate = 0
-            
-            return {
-                'code': stock_code,
-                'name': stock_name,
-                'price': float(latest['Close']),
-                'change': float(change),
-                'changeRate': float(change_rate),
-                'volume': int(latest['Volume']),
-                'raw_data': hist  # テクニカル分析用の生データ
+            # 主要指数のデータ取得
+            indices = {
+                'nikkei': '^N225',      # 日経平均
+                'topix': '^TOPX',       # TOPIX
+                'jasdaq': '^JASDAQ',    # JASDAQ
+                'mothers': '^MOTHERS',  # マザーズ（存在する場合）
             }
             
+            summary = {}
+            
+            for name, symbol in indices.items():
+                try:
+                    data = await self.get_current_price(symbol)
+                    if 'error' not in data:
+                        summary[name] = {
+                            'price': data.get('price', 0),
+                            'change': data.get('change', 0),
+                            'change_rate': data.get('change_rate', 0),
+                            'volume': data.get('volume', 0)
+                        }
+                except Exception as e:
+                    logger.warning(f"指数データ取得エラー {name}: {str(e)}")
+                    summary[name] = {'error': str(e)}
+            
+            # 市場統計情報
+            summary['market_stats'] = await self._calculate_market_stats()
+            summary['updated_at'] = datetime.now().isoformat()
+            
+            return summary
+            
         except Exception as e:
-            logger.error(f"yfinanceデータ取得エラー {stock_code}: {str(e)}")
+            logger.error(f"市場サマリー取得エラー: {str(e)}")
+            return {'error': str(e)}
+    
+    async def get_stock_info(self, stock_code: str) -> Dict:
+        """
+        銘柄基本情報取得
+        """
+        try:
+            # キャッシュチェック（24時間有効）
+            cache_key = f"{stock_code}_info"
+            if await self._is_cache_valid(cache_key, 'info'):
+                return self.info_cache[cache_key]
+            
+            # Yahoo Financeから取得
+            info = await self._fetch_stock_info(stock_code)
+            
+            if info:
+                # キャッシュに保存
+                await self._save_info_to_cache(cache_key, info)
+                return info
+            else:
+                return {'error': '企業情報取得失敗'}
+                
+        except Exception as e:
+            logger.error(f"銘柄情報取得エラー {stock_code}: {str(e)}")
+            return {'error': str(e)}
+    
+    async def validate_stock_code(self, stock_code: str) -> bool:
+        """
+        銘柄コード妥当性検証
+        """
+        try:
+            # 基本的なフォーマットチェック
+            if not stock_code or len(stock_code) < 3:
+                return False
+            
+            # 簡易データ取得テスト
+            symbol = f"{stock_code}.T" if stock_code.isdigit() else stock_code
+            
+            async with self.request_semaphore:
+                await self._rate_limit_check(stock_code)
+                
+                # スレッドプールで同期処理実行
+                loop = asyncio.get_event_loop()
+                ticker = yf.Ticker(symbol)
+                info = await loop.run_in_executor(self.executor, ticker.info)
+                
+                return bool(info and 'symbol' in info)
+                
+        except Exception as e:
+            logger.debug(f"銘柄コード検証エラー {stock_code}: {str(e)}")
+            return False
+    
+    async def get_earnings_calendar(self, stock_codes: List[str]) -> Dict[str, Dict]:
+        """
+        決算カレンダー取得（簡易版）
+        """
+        try:
+            earnings_data = {}
+            
+            for stock_code in stock_codes:
+                try:
+                    info = await self.get_stock_info(stock_code)
+                    if 'error' not in info:
+                        # 決算関連情報抽出
+                        earnings_data[stock_code] = {
+                            'fiscal_year_end': info.get('lastFiscalYearEnd'),
+                            'next_earnings_date': info.get('nextEarningsDate'),
+                            'earnings_quarterly_growth': info.get('earningsQuarterlyGrowth'),
+                            'revenue_quarterly_growth': info.get('revenueQuarterlyGrowth'),
+                        }
+                    else:
+                        earnings_data[stock_code] = {'error': 'データ取得不可'}
+                        
+                except Exception as e:
+                    logger.warning(f"決算情報取得エラー {stock_code}: {str(e)}")
+                    earnings_data[stock_code] = {'error': str(e)}
+            
+            return earnings_data
+            
+        except Exception as e:
+            logger.error(f"決算カレンダー取得エラー: {str(e)}")
+            return {}
+    
+    # プライベートメソッド
+    
+    async def _fetch_current_data(self, stock_code: str) -> Optional[Dict]:
+        """現在データ取得（内部処理）"""
+        try:
+            symbol = f"{stock_code}.T" if stock_code.isdigit() else stock_code
+            
+            async with self.request_semaphore:
+                await self._rate_limit_check(stock_code)
+                
+                # スレッドプールで同期処理実行
+                loop = asyncio.get_event_loop()
+                ticker = yf.Ticker(symbol)
+                
+                # 最新の価格データ取得
+                hist = await loop.run_in_executor(
+                    self.executor, 
+                    lambda: ticker.history(period='2d', interval='1d')
+                )
+                
+                if hist.empty:
+                    return None
+                
+                # 最新データ抽出
+                latest = hist.iloc[-1]
+                prev = hist.iloc[-2] if len(hist) > 1 else latest
+                
+                # 変化計算
+                current_price = float(latest['Close'])
+                prev_close = float(prev['Close'])
+                change = current_price - prev_close
+                change_rate = (change / prev_close * 100) if prev_close > 0 else 0
+                
+                return {
+                    'code': stock_code,
+                    'price': current_price,
+                    'change': change,
+                    'change_rate': change_rate,
+                    'volume': int(latest['Volume']),
+                    'high': float(latest['High']),
+                    'low': float(latest['Low']),
+                    'open': float(latest['Open']),
+                    'timestamp': datetime.now().isoformat(),
+                }
+                
+        except Exception as e:
+            logger.warning(f"現在データ取得失敗 {stock_code}: {str(e)}")
             return None
     
-    def _generate_mock_stock_data(self, stock_code: str, stock_name: str) -> Dict:
-        """
-        モック株価データを生成（yfinance接続失敗時の代替）
-        """
-        # 基準価格を銘柄コードベースで設定
-        base_prices = {
-            '7203': 2900,  # トヨタ
-            '6758': 13000,  # ソニー
-            '9984': 5200,   # ソフトバンクG
-            '4689': 420,    # Z Holdings
-            '8306': 1200,   # 三菱UFJ
-            '6861': 47000,  # キーエンス
-            '9433': 3800,   # KDDI
-            '4063': 25000,  # 信越化学
-            '6954': 55000,  # ファナック
-            '8058': 4500    # 三菱商事
-        }
-        
-        base_price = base_prices.get(stock_code, 1000)
-        
-        # ランダムな変動を生成
-        change_rate = random.uniform(-5.0, 5.0)
-        change = base_price * (change_rate / 100)
-        current_price = base_price + change
-        
-        return {
-            'code': stock_code,
-            'name': stock_name,
-            'price': round(current_price, 2),
-            'change': round(change, 2),
-            'changeRate': round(change_rate, 2),
-            'volume': random.randint(1000000, 50000000),
-            'signals': {
-                'rsi': round(random.uniform(20, 80), 2),
-                'macd': round(random.uniform(-1, 1), 3),
-                'bollingerPosition': round(random.uniform(-1, 1), 2),
-                'volumeRatio': round(random.uniform(0.5, 2.0), 2),
-                'trendDirection': random.choice(['up', 'down', 'sideways'])
+    async def _fetch_historical_data(
+        self, 
+        stock_code: str, 
+        period: str, 
+        interval: str
+    ) -> Optional[pd.DataFrame]:
+        """履歴データ取得（内部処理）"""
+        try:
+            symbol = f"{stock_code}.T" if stock_code.isdigit() else stock_code
+            
+            async with self.request_semaphore:
+                await self._rate_limit_check(stock_code)
+                
+                # スレッドプールで同期処理実行
+                loop = asyncio.get_event_loop()
+                ticker = yf.Ticker(symbol)
+                
+                data = await loop.run_in_executor(
+                    self.executor,
+                    lambda: ticker.history(period=period, interval=interval)
+                )
+                
+                if data.empty:
+                    return None
+                
+                # データ前処理
+                data = await self._preprocess_historical_data(data)
+                
+                return data
+                
+        except Exception as e:
+            logger.warning(f"履歴データ取得失敗 {stock_code}: {str(e)}")
+            return None
+    
+    async def _fetch_stock_info(self, stock_code: str) -> Optional[Dict]:
+        """銘柄情報取得（内部処理）"""
+        try:
+            symbol = f"{stock_code}.T" if stock_code.isdigit() else stock_code
+            
+            async with self.request_semaphore:
+                await self._rate_limit_check(stock_code)
+                
+                # スレッドプールで同期処理実行
+                loop = asyncio.get_event_loop()
+                ticker = yf.Ticker(symbol)
+                
+                info = await loop.run_in_executor(self.executor, ticker.info)
+                
+                if not info:
+                    return None
+                
+                # 必要な情報を抽出・整理
+                processed_info = {
+                    'symbol': info.get('symbol', stock_code),
+                    'name': info.get('longName', info.get('shortName', '')),
+                    'sector': info.get('sector', ''),
+                    'industry': info.get('industry', ''),
+                    'market_cap': info.get('marketCap', 0),
+                    'employees': info.get('fullTimeEmployees', 0),
+                    'website': info.get('website', ''),
+                    'business_summary': info.get('businessSummary', ''),
+                    'country': info.get('country', 'Japan'),
+                    'exchange': info.get('exchange', ''),
+                    'currency': info.get('currency', 'JPY'),
+                    
+                    # 財務情報
+                    'total_revenue': info.get('totalRevenue', 0),
+                    'gross_profits': info.get('grossProfits', 0),
+                    'total_debt': info.get('totalDebt', 0),
+                    'total_cash': info.get('totalCash', 0),
+                    'book_value': info.get('bookValue', 0),
+                    
+                    # 株価関連
+                    'shares_outstanding': info.get('sharesOutstanding', 0),
+                    'float_shares': info.get('floatShares', 0),
+                    'price_to_book': info.get('priceToBook', 0),
+                    'price_to_sales': info.get('priceToSalesTrailing12Months', 0),
+                    'forward_pe': info.get('forwardPE', 0),
+                    'trailing_pe': info.get('trailingPE', 0),
+                    
+                    # 配当情報
+                    'dividend_rate': info.get('dividendRate', 0),
+                    'dividend_yield': info.get('dividendYield', 0),
+                    'ex_dividend_date': info.get('exDividendDate', ''),
+                    
+                    # 決算情報
+                    'last_fiscal_year_end': info.get('lastFiscalYearEnd', ''),
+                    'next_earnings_date': info.get('nextEarningsDate', ''),
+                    'earnings_quarterly_growth': info.get('earningsQuarterlyGrowth', 0),
+                    'revenue_quarterly_growth': info.get('revenueQuarterlyGrowth', 0),
+                    
+                    # 分析者評価
+                    'recommendation_key': info.get('recommendationKey', ''),
+                    'recommendation_mean': info.get('recommendationMean', 0),
+                    'number_of_analyst_opinions': info.get('numberOfAnalystOpinions', 0),
+                    'target_high_price': info.get('targetHighPrice', 0),
+                    'target_low_price': info.get('targetLowPrice', 0),
+                    'target_mean_price': info.get('targetMeanPrice', 0),
+                }
+                
+                return processed_info
+                
+        except Exception as e:
+            logger.warning(f"銘柄情報取得失敗 {stock_code}: {str(e)}")
+            return None
+    
+    async def _get_stock_data_with_semaphore(self, stock_code: str) -> Dict:
+        """セマフォ付きデータ取得"""
+        try:
+            return await self.get_current_price(stock_code)
+        except Exception as e:
+            return self._create_error_response(str(e))
+    
+    async def _preprocess_historical_data(self, data: pd.DataFrame) -> pd.DataFrame:
+        """履歴データ前処理"""
+        try:
+            # NaN値の処理
+            data = data.fillna(method='forward').fillna(method='backward')
+            
+            # 追加計算フィールド
+            data['Returns'] = data['Close'].pct_change()
+            data['HL2'] = (data['High'] + data['Low']) / 2
+            data['HLC3'] = (data['High'] + data['Low'] + data['Close']) / 3
+            data['OHLC4'] = (data['Open'] + data['High'] + data['Low'] + data['Close']) / 4
+            
+            # True Range計算
+            data['TR'] = pd.concat([
+                data['High'] - data['Low'],
+                abs(data['High'] - data['Close'].shift(1)),
+                abs(data['Low'] - data['Close'].shift(1))
+            ], axis=1).max(axis=1)
+            
+            # 出来高平均
+            data['Volume_MA'] = data['Volume'].rolling(window=20).mean()
+            data['Volume_Ratio'] = data['Volume'] / data['Volume_MA']
+            
+            return data
+            
+        except Exception as e:
+            logger.warning(f"履歴データ前処理エラー: {str(e)}")
+            return data
+    
+    async def _calculate_market_stats(self) -> Dict:
+        """市場統計計算"""
+        try:
+            # 簡易的な市場統計（実装拡張可能）
+            return {
+                'active_stocks': 0,  # アクティブ銘柄数（実装予定）
+                'advancing_stocks': 0,  # 上昇銘柄数
+                'declining_stocks': 0,  # 下落銘柄数
+                'unchanged_stocks': 0,  # 変わらず銘柄数
+                'total_volume': 0,  # 全体出来高
+                'market_trend': 'NEUTRAL',  # 市場トレンド
+                'volatility_index': 50,  # ボラティリティ指標
             }
+            
+        except Exception as e:
+            logger.warning(f"市場統計計算エラー: {str(e)}")
+            return {'error': str(e)}
+    
+    async def _rate_limit_check(self, stock_code: str) -> None:
+        """レート制限チェック"""
+        try:
+            current_time = time.time()
+            last_time = self.last_request_time.get(stock_code, 0)
+            
+            elapsed = current_time - last_time
+            required_delay = self.config['rate_limit_delay']
+            
+            if elapsed < required_delay:
+                sleep_time = required_delay - elapsed
+                await asyncio.sleep(sleep_time)
+            
+            self.last_request_time[stock_code] = time.time()
+            
+        except Exception as e:
+            logger.debug(f"レート制限チェックエラー: {str(e)}")
+    
+    async def _is_cache_valid(self, cache_key: str, duration_key: str) -> bool:
+        """キャッシュ有効性判定"""
+        try:
+            if cache_key not in self.price_cache:
+                return False
+            
+            if cache_key not in self.cache_timestamps:
+                return False
+            
+            # 有効期限の決定
+            if isinstance(duration_key, str):
+                duration = self.config['cache_duration'].get(duration_key, timedelta(hours=1))
+            else:
+                duration = duration_key
+            
+            cached_time = self.cache_timestamps[cache_key]
+            return datetime.now() - cached_time < duration
+            
+        except Exception as e:
+            logger.debug(f"キャッシュ有効性判定エラー: {str(e)}")
+            return False
+    
+    async def _save_to_cache(self, cache_key: str, data, duration) -> None:
+        """キャッシュ保存"""
+        try:
+            self.price_cache[cache_key] = data
+            self.cache_timestamps[cache_key] = datetime.now()
+            
+            # キャッシュサイズ管理
+            if len(self.price_cache) > 1000:
+                await self._cleanup_cache()
+                
+        except Exception as e:
+            logger.debug(f"キャッシュ保存エラー: {str(e)}")
+    
+    async def _save_info_to_cache(self, cache_key: str, info: Dict) -> None:
+        """情報キャッシュ保存"""
+        try:
+            self.info_cache[cache_key] = info
+            self.cache_timestamps[cache_key] = datetime.now()
+            
+        except Exception as e:
+            logger.debug(f"情報キャッシュ保存エラー: {str(e)}")
+    
+    async def _cleanup_cache(self) -> None:
+        """キャッシュクリーンアップ"""
+        try:
+            # 古いキャッシュエントリを削除
+            current_time = datetime.now()
+            keys_to_remove = []
+            
+            for key, timestamp in self.cache_timestamps.items():
+                if current_time - timestamp > timedelta(hours=24):
+                    keys_to_remove.append(key)
+            
+            for key in keys_to_remove:
+                self.price_cache.pop(key, None)
+                self.cache_timestamps.pop(key, None)
+                self.info_cache.pop(key, None)
+            
+            logger.debug(f"キャッシュクリーンアップ完了: {len(keys_to_remove)}件削除")
+            
+        except Exception as e:
+            logger.warning(f"キャッシュクリーンアップエラー: {str(e)}")
+    
+    def _create_error_response(self, message: str) -> Dict:
+        """エラーレスポンス作成"""
+        return {
+            'error': message,
+            'timestamp': datetime.now().isoformat()
         }
     
-    def get_sample_stock_list(self) -> list:
-        """サンプル銘柄リストを返す"""
-        return [
-            {'code': '7203', 'name': 'トヨタ自動車'},
-            {'code': '6758', 'name': 'ソニーグループ'},
-            {'code': '9984', 'name': 'ソフトバンクグループ'},
-            {'code': '4689', 'name': 'Zホールディングス'},
-            {'code': '8306', 'name': '三菱UFJフィナンシャル・グループ'},
-            {'code': '6861', 'name': 'キーエンス'},
-            {'code': '9433', 'name': 'KDDI'},
-            {'code': '4063', 'name': '信越化学工業'},
-            {'code': '6954', 'name': 'ファナック'},
-            {'code': '8058', 'name': '三菱商事'}
-        ]
+    def get_cache_stats(self) -> Dict:
+        """キャッシュ統計取得"""
+        try:
+            return {
+                'price_cache_size': len(self.price_cache),
+                'info_cache_size': len(self.info_cache),
+                'total_cache_entries': len(self.cache_timestamps),
+                'oldest_entry': min(self.cache_timestamps.values()) if self.cache_timestamps else None,
+                'newest_entry': max(self.cache_timestamps.values()) if self.cache_timestamps else None,
+            }
+        except Exception as e:
+            return {'error': str(e)}
+    
+    async def clear_cache(self) -> bool:
+        """キャッシュクリア"""
+        try:
+            self.price_cache.clear()
+            self.info_cache.clear()
+            self.cache_timestamps.clear()
+            logger.info("全キャッシュをクリアしました")
+            return True
+        except Exception as e:
+            logger.error(f"キャッシュクリアエラー: {str(e)}")
+            return False

@@ -7,7 +7,8 @@ from .config import engine, metadata, connect_db, disconnect_db
 from .tables import (
     system_info, faq, contact_inquiries, alerts, line_notification_config,
     scan_executions, scan_results, stock_master, manual_signals,
-    listing_dates, price_limits, stock_data_cache, stock_filters
+    listing_dates, price_limits, stock_data_cache, stock_filters,
+    trading_signals, signal_executions, signal_performance, alert_history
 )
 
 async def create_tables():

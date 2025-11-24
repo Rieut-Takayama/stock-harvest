@@ -1,0 +1,2 @@
+# Vercel Functions用の最小限のPython依存関係
+# APIサーバーレス関数で使用

@@ -31,6 +31,7 @@ from .controllers.alerts_controller import router as alerts_router
 from .controllers.scan_controller import router as scan_router
 from .controllers.charts_controller import router as charts_router
 from .controllers.signals_controller import router as signals_router
+from .controllers.simple_scan_controller import router as simple_scan_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -83,6 +84,7 @@ app.include_router(alerts_router)
 app.include_router(scan_router)
 app.include_router(charts_router)
 app.include_router(signals_router)
+app.include_router(simple_scan_router, prefix="/api/scan")
 
 # ルートエンドポイント
 @app.get("/")
