@@ -1,0 +1,35 @@
+{
+  "success": true,
+  "message": "制限値幅計算完了（2456円）",
+  "data": {
+    "base_price": 2456,
+    "stage": 1,
+    "price_range": "2000-2999円",
+    "stop_high": 2700,
+    "stop_low": 2200,
+    "daily_limit": {
+      "upper_limit": 2700,
+      "lower_limit": 2200,
+      "limit_amount": 244,
+      "limit_rate": 10.0
+    },
+    "expanded_limits": {
+      "stage_2": {
+        "upper_limit": 2944,
+        "lower_limit": 1956,
+        "limit_rate": 20.0
+      },
+      "stage_3": {
+        "upper_limit": 3188,
+        "lower_limit": 1712,
+        "limit_rate": 30.0
+      }
+    },
+    "alert_thresholds": {
+      "approaching_high": 2646,
+      "approaching_low": 2254,
+      "proximity_percentage": 98.0
+    },
+    "calculation_time": "2025-11-24T12:00:00Z"
+  }
+}

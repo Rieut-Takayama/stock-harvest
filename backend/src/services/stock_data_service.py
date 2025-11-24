@@ -2,14 +2,20 @@
 株価データ取得サービス
 yfinance APIとデータ取得に特化したサービスクラス
 テストモード対応とフォールバック機能を提供
+エラーハンドリング・リトライ機能強化版
 """
 
 import os
 import logging
-from typing import Dict, Optional
+import asyncio
+from typing import Dict, Optional, List
+from datetime import datetime, timedelta
 import yfinance as yf
 import pandas as pd
 import random
+import aiohttp
+from ..database.config import database
+from ..database.tables import stock_data_cache
 from .test_data_provider import test_data_provider
 
 logger = logging.getLogger(__name__)
@@ -21,6 +27,17 @@ class StockDataService:
     def __init__(self):
         self.is_test_mode = os.getenv('TESTING_MODE', 'false').lower() == 'true'
         self.fallback_enabled = True
+        self.cache_enabled = True
+        self.cache_ttl = 300  # キャッシュ有効期間（秒）
+        
+        # リトライ設定
+        self.max_retries = 3
+        self.retry_delays = [1, 3, 5]  # 秒
+        self.timeout_seconds = 30
+        
+        # レート制限設定
+        self.rate_limit_delay = 0.1  # 各リクエスト間の遅延（秒）
+        self.last_request_time = 0
     
     async def fetch_stock_data(self, stock_code: str, stock_name: str) -> Optional[Dict]:
         """

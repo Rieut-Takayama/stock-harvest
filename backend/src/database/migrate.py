@@ -4,7 +4,11 @@
 
 import asyncio
 from .config import engine, metadata, connect_db, disconnect_db
-from .tables import system_info, faq, contact_inquiries, alerts, line_notification_config
+from .tables import (
+    system_info, faq, contact_inquiries, alerts, line_notification_config,
+    scan_executions, scan_results, stock_master, manual_signals,
+    listing_dates, price_limits, stock_data_cache, stock_filters
+)
 
 async def create_tables():
     """テーブルを作成"""
@@ -117,6 +121,130 @@ async def seed_initial_data():
                 line_config_data
             )
             # LINE notification config initialized
+        
+        # 上場日データの初期データ（サンプル）
+        sample_listing_data = [
+            {
+                'stock_code': '7203',
+                'listing_date': '1949-05-16',
+                'market': 'Prime',
+                'sector': '自動車',
+                'company_name': 'トヨタ自動車',
+                'years_since_listing': 74.5,
+                'is_target': False,
+                'data_source': 'sample'
+            },
+            {
+                'stock_code': '4477',
+                'listing_date': '2019-10-25',
+                'market': 'Growth',
+                'sector': 'インターネット',
+                'company_name': 'BASE',
+                'years_since_listing': 4.1,
+                'is_target': True,
+                'data_source': 'sample'
+            },
+            {
+                'stock_code': '4490',
+                'listing_date': '2020-03-19',
+                'market': 'Growth',
+                'sector': 'インターネット',
+                'company_name': 'ビザスク',
+                'years_since_listing': 3.7,
+                'is_target': True,
+                'data_source': 'sample'
+            }
+        ]
+        
+        # 上場日データの投入
+        for listing_item in sample_listing_data:
+            existing_listing = await database.fetch_one(
+                "SELECT stock_code FROM listing_dates WHERE stock_code = :stock_code", 
+                {"stock_code": listing_item["stock_code"]}
+            )
+            if not existing_listing:
+                await database.execute(
+                    """INSERT INTO listing_dates 
+                       (stock_code, listing_date, market, sector, company_name, years_since_listing, is_target, data_source) 
+                       VALUES (:stock_code, :listing_date, :market, :sector, :company_name, :years_since_listing, :is_target, :data_source)""",
+                    listing_item
+                )
+        
+        # 制限値幅データの初期サンプル
+        sample_price_limit_data = [
+            {
+                'stock_code': '7203',
+                'current_price': 2900,
+                'upper_limit': 3400,
+                'lower_limit': 2400,
+                'limit_stage': 1,
+                'market_cap_range': 'Large',
+                'price_range': '1,000-5,000円',
+                'calculation_method': 'standard'
+            },
+            {
+                'stock_code': '4477',
+                'current_price': 420,
+                'upper_limit': 500,
+                'lower_limit': 340,
+                'limit_stage': 1,
+                'market_cap_range': 'Small',
+                'price_range': '100-500円',
+                'calculation_method': 'standard'
+            }
+        ]
+        
+        # 制限値幅データの投入
+        for price_item in sample_price_limit_data:
+            existing_price = await database.fetch_one(
+                "SELECT stock_code FROM price_limits WHERE stock_code = :stock_code", 
+                {"stock_code": price_item["stock_code"]}
+            )
+            if not existing_price:
+                await database.execute(
+                    """INSERT INTO price_limits 
+                       (stock_code, current_price, upper_limit, lower_limit, limit_stage, market_cap_range, price_range, calculation_method) 
+                       VALUES (:stock_code, :current_price, :upper_limit, :lower_limit, :limit_stage, :market_cap_range, :price_range, :calculation_method)""",
+                    price_item
+                )
+        
+        # 銘柄フィルタの初期データ
+        filter_data = [
+            {
+                'id': 'filter-listing-period',
+                'filter_name': '上場2.5-5年以内',
+                'filter_type': 'listing_period',
+                'criteria': '{"min_years": 2.5, "max_years": 5.0}',
+                'description': '上場から2.5年以上5年以内の銘柄を対象',
+                'is_active': True,
+                'target_count': 100
+            },
+            {
+                'id': 'filter-growth-market',
+                'filter_name': 'グロース市場銘柄',
+                'filter_type': 'market',
+                'criteria': '{"markets": ["Growth"]}',
+                'description': 'グロース市場上場の銘柄のみを対象',
+                'is_active': True,
+                'target_count': 50
+            }
+        ]
+        
+        # フィルタデータの投入
+        for filter_item in filter_data:
+            existing_filter = await database.fetch_one(
+                "SELECT id FROM stock_filters WHERE id = :id", 
+                {"id": filter_item["id"]}
+            )
+            if not existing_filter:
+                await database.execute(
+                    """INSERT INTO stock_filters 
+                       (id, filter_name, filter_type, criteria, description, is_active, target_count) 
+                       VALUES (:id, :filter_name, :filter_type, :criteria, :description, :is_active, :target_count)""",
+                    filter_item
+                )
+        
+        # Initial data seeded for new tables
         
         return True
     except Exception as e:

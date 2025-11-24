@@ -153,3 +153,74 @@ manual_signals = Table(
     Column('created_at', DateTime, server_default=func.now()),
     Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
 )
+
+# 上場日管理テーブル
+listing_dates = Table(
+    'listing_dates',
+    metadata,
+    Column('stock_code', String(10), primary_key=True),  # 銘柄コード
+    Column('listing_date', DateTime, nullable=False),  # 上場日
+    Column('market', String(20), nullable=False),  # 上場市場（Prime, Standard, Growth）
+    Column('sector', String(100), nullable=True),  # 業種
+    Column('company_name', String(200), nullable=False),  # 会社名
+    Column('years_since_listing', Numeric(5, 2), nullable=True),  # 上場からの年数
+    Column('is_target', Boolean, default=False),  # スキャン対象フラグ（2.5～5年以内）
+    Column('data_source', String(50), default='jse'),  # データソース（jse: 日本取引所グループ）
+    Column('last_updated', DateTime, server_default=func.now(), onupdate=func.now()),
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('metadata_info', JSON, nullable=True)  # 追加情報（業績データ等）
+)
+
+# 制限値幅管理テーブル
+price_limits = Table(
+    'price_limits',
+    metadata,
+    Column('stock_code', String(10), primary_key=True),  # 銘柄コード
+    Column('current_price', Numeric(10, 2), nullable=False),  # 基準価格
+    Column('upper_limit', Numeric(10, 2), nullable=False),  # ストップ高価格
+    Column('lower_limit', Numeric(10, 2), nullable=False),  # ストップ安価格
+    Column('limit_stage', Integer, default=1),  # 値幅制限段階（1: 通常、2: 拡大等）
+    Column('market_cap_range', String(20), nullable=True),  # 時価総額レンジ（Large, Mid, Small）
+    Column('price_range', String(20), nullable=True),  # 価格帯（100円未満、100-500円等）
+    Column('last_price_update', DateTime, nullable=True),  # 最終価格更新日時
+    Column('calculation_method', String(50), default='standard'),  # 計算方式
+    Column('is_suspended', Boolean, default=False),  # 売買停止フラグ
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now()),
+    Column('metadata_info', JSON, nullable=True)  # 計算詳細等の追加情報
+)
+
+# 株価データキャッシュテーブル（パフォーマンス最適化用）
+stock_data_cache = Table(
+    'stock_data_cache',
+    metadata,
+    Column('stock_code', String(10), primary_key=True),  # 銘柄コード
+    Column('cache_date', DateTime, nullable=False),  # キャッシュ日付
+    Column('price_data', JSON, nullable=False),  # 株価データ（OHLCV）
+    Column('technical_indicators', JSON, nullable=True),  # テクニカル指標データ
+    Column('volume_data', JSON, nullable=True),  # 出来高関連データ
+    Column('fundamental_data', JSON, nullable=True),  # ファンダメンタル情報
+    Column('data_quality', String(20), default='good'),  # データ品質（good, poor, missing）
+    Column('fetch_attempts', Integer, default=1),  # 取得試行回数
+    Column('last_error', Text, nullable=True),  # 最後のエラーメッセージ
+    Column('expires_at', DateTime, nullable=False),  # キャッシュ有効期限
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
+)
+
+# 銘柄フィルタ設定テーブル
+stock_filters = Table(
+    'stock_filters',
+    metadata,
+    Column('id', String(50), primary_key=True),  # フィルタID
+    Column('filter_name', String(100), nullable=False),  # フィルタ名
+    Column('filter_type', String(30), nullable=False),  # 'listing_period', 'market_cap', 'sector', 'custom'
+    Column('criteria', JSON, nullable=False),  # フィルタ条件（JSON形式）
+    Column('is_active', Boolean, default=True),  # アクティブフラグ
+    Column('description', Text, nullable=True),  # フィルタ説明
+    Column('target_count', Integer, nullable=True),  # 対象銘柄数（推定）
+    Column('last_applied', DateTime, nullable=True),  # 最後の適用日時
+    Column('created_by', String(50), default='system'),  # 作成者
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
+)

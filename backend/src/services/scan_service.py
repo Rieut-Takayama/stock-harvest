@@ -48,7 +48,9 @@ class ScanService:
                 'estimated_time': None,
                 'message': 'スキャンを開始しています...',
                 'logic_a_count': 0,
+                'logic_a_enhanced_count': 0,
                 'logic_b_count': 0,
+                'logic_b_enhanced_count': 0,
                 'error_message': None
             }
             
@@ -119,7 +121,15 @@ class ScanService:
                         'detected': 0,
                         'stocks': []
                     },
+                    'logicAEnhanced': {
+                        'detected': 0,
+                        'stocks': []
+                    },
                     'logicB': {
+                        'detected': 0,
+                        'stocks': []
+                    },
+                    'logicBEnhanced': {
                         'detected': 0,
                         'stocks': []
                     }
@@ -129,7 +139,9 @@ class ScanService:
             
             # スキャン結果を取得
             logic_a_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_a')
+            logic_a_enhanced_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_a_enhanced')
             logic_b_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_b')
+            logic_b_enhanced_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_b_enhanced')
             
             return {
                 'scanId': scan_id,
@@ -139,9 +151,17 @@ class ScanService:
                     'detected': len(logic_a_results),
                     'stocks': [self._format_stock_data(result) for result in logic_a_results]
                 },
+                'logicAEnhanced': {
+                    'detected': len(logic_a_enhanced_results),
+                    'stocks': [self._format_stock_data(result) for result in logic_a_enhanced_results]
+                },
                 'logicB': {
                     'detected': len(logic_b_results),
                     'stocks': [self._format_stock_data(result) for result in logic_b_results]
+                },
+                'logicBEnhanced': {
+                    'detected': len(logic_b_enhanced_results),
+                    'stocks': [self._format_stock_data(result) for result in logic_b_enhanced_results]
                 }
             }
             
@@ -159,7 +179,9 @@ class ScanService:
             stock_list = self.stock_data_service.get_sample_stock_list()
             total_stocks = len(stock_list)
             logic_a_detected = []
+            logic_a_enhanced_detected = []
             logic_b_detected = []
+            logic_b_enhanced_detected = []
             
             # スキャン開始時の状態更新
             await self.scan_repository.update_scan_execution(scan_id, {
@@ -198,15 +220,29 @@ class ScanService:
                     # テクニカルシグナルを統合
                     stock_data['signals'] = technical_signals
                     
-                    # ロジックA検出
+                    # ロジックA検出（従来版）
                     if await self.logic_detection_service.detect_logic_a(stock_data):
                         logic_a_detected.append(stock_data)
                         await self._save_scan_result(scan_id, stock_data, 'logic_a')
                     
-                    # ロジックB検出
+                    # ロジックA強化版検出
+                    logic_a_enhanced_result = await self.logic_detection_service.detect_logic_a_enhanced(stock_data)
+                    if logic_a_enhanced_result['detected']:
+                        stock_data['enhanced_signals'] = logic_a_enhanced_result
+                        logic_a_enhanced_detected.append(stock_data)
+                        await self._save_scan_result(scan_id, stock_data, 'logic_a_enhanced')
+                    
+                    # ロジックB検出（従来版）
                     if await self.logic_detection_service.detect_logic_b(stock_data):
                         logic_b_detected.append(stock_data)
                         await self._save_scan_result(scan_id, stock_data, 'logic_b')
+                    
+                    # ロジックB強化版検出（黒字転換銘柄精密検出）
+                    logic_b_enhanced_result = await self.logic_detection_service.detect_logic_b_enhanced(stock_data)
+                    if logic_b_enhanced_result['detected']:
+                        stock_data['enhanced_signals'] = logic_b_enhanced_result
+                        logic_b_enhanced_detected.append(stock_data)
+                        await self._save_scan_result(scan_id, stock_data, 'logic_b_enhanced')
                     
                     # API制限を考慮した待機
                     await asyncio.sleep(1)
@@ -216,7 +252,7 @@ class ScanService:
                     continue
             
             # スキャン完了
-            await self._complete_scan(scan_id, total_stocks, logic_a_detected, logic_b_detected)
+            await self._complete_scan(scan_id, total_stocks, logic_a_detected, logic_a_enhanced_detected, logic_b_detected, logic_b_enhanced_detected)
             
         except Exception as e:
             logger.error(f"スキャン実行エラー {scan_id}: {str(e)}")
@@ -235,7 +271,7 @@ class ScanService:
             'message': f'{current_stock["name"]}({current_stock["code"]})を分析中...'
         })
     
-    async def _complete_scan(self, scan_id: str, total_stocks: int, logic_a_detected: List, logic_b_detected: List):
+    async def _complete_scan(self, scan_id: str, total_stocks: int, logic_a_detected: List, logic_a_enhanced_detected: List, logic_b_detected: List, logic_b_enhanced_detected: List):
         """スキャン完了処理"""
         await self.scan_repository.update_scan_execution(scan_id, {
             'status': 'completed',
@@ -245,11 +281,13 @@ class ScanService:
             'estimated_time': 0,
             'message': 'スキャンが完了しました',
             'logic_a_count': len(logic_a_detected),
+            'logic_a_enhanced_count': len(logic_a_enhanced_detected),
             'logic_b_count': len(logic_b_detected),
+            'logic_b_enhanced_count': len(logic_b_enhanced_detected),
             'completed_at': datetime.now()
         })
         
-        logger.info(f"スキャン {scan_id} が完了: ロジックA={len(logic_a_detected)}件, ロジックB={len(logic_b_detected)}件")
+        logger.info(f"スキャン {scan_id} が完了: ロジックA={len(logic_a_detected)}件, ロジックA強化版={len(logic_a_enhanced_detected)}件, ロジックB={len(logic_b_detected)}件, ロジックB強化版={len(logic_b_enhanced_detected)}件")
     
     async def _fail_scan(self, scan_id: str, error_message: str):
         """スキャン失敗処理"""
