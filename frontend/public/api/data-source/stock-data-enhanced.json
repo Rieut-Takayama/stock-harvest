@@ -1,0 +1,62 @@
+{
+  "success": true,
+  "message": "銘柄 7203 のデータ取得完了",
+  "data": {
+    "code": "7203",
+    "name": "トヨタ自動車",
+    "price": 2456.0,
+    "change": 45.0,
+    "changeRate": 1.87,
+    "volume": 12450000,
+    "previous_close": 2411.0,
+    "open": 2445.0,
+    "high": 2465.0,
+    "low": 2440.0,
+    "market_cap": 35800000000000,
+    "technical_indicators": {
+      "rsi": 75.2,
+      "macd": {
+        "macd": 12.5,
+        "signal": 8.3,
+        "histogram": 4.2
+      },
+      "moving_averages": {
+        "ma5": 2435.0,
+        "ma25": 2398.0,
+        "ma75": 2365.0
+      },
+      "bollinger_bands": {
+        "upper": 2520.0,
+        "middle": 2456.0,
+        "lower": 2392.0
+      }
+    },
+    "signals": {
+      "trendDirection": "up",
+      "volumeRatio": 2.1,
+      "momentum": "strong",
+      "support_levels": [2400, 2350, 2300],
+      "resistance_levels": [2500, 2550, 2600]
+    },
+    "fundamental_data": {
+      "sector": "自動車",
+      "market_segment": "Prime",
+      "listing_date": "1949-05-16",
+      "years_since_listing": 75.5,
+      "employee_count": 372817,
+      "fiscal_year_end": "03-31"
+    },
+    "price_limits": {
+      "stop_high": 2700,
+      "stop_low": 2200,
+      "proximity_to_high": 90.4,
+      "proximity_to_low": 11.6
+    },
+    "data_quality": {
+      "source": "yfinance",
+      "last_updated": "2025-11-24T12:00:00Z",
+      "cache_hit": false,
+      "fetch_time_ms": 145
+    }
+  }
+}

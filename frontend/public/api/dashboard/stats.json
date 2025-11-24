@@ -1,0 +1,34 @@
+{
+  "totalStocks": 3842,
+  "gainers": 245,
+  "losers": 167,
+  "unchanged": 3430,
+  "lastUpdate": "2025-11-24T12:00:00Z",
+  "logicA": {
+    "detected": 8,
+    "description": "ストップ高張り付き強化検出",
+    "enhanced": {
+      "active": true,
+      "precision": 94.2,
+      "profitRate": 24.7
+    }
+  },
+  "logicB": {
+    "detected": 15,
+    "description": "黒字転換精密検出", 
+    "enhanced": {
+      "active": true,
+      "precision": 89.3,
+      "profitRate": 22.1
+    }
+  },
+  "activeSignals": 7,
+  "todayTrades": 4,
+  "averageReturn": 26.8,
+  "enhanced_features": {
+    "listing_data": "active",
+    "price_limits": "active",
+    "earnings_timing": "active",
+    "exclusion_rules": "active"
+  }
+}

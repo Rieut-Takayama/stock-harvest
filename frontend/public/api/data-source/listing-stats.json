@@ -1,0 +1,32 @@
+{
+  "success": true,
+  "message": "上場統計取得完了",
+  "data": {
+    "total_listed_companies": 3842,
+    "target_companies": {
+      "total": 456,
+      "within_2_5_years": 234,
+      "within_3_years": 378,
+      "within_5_years": 456
+    },
+    "listing_year_distribution": {
+      "2022": 89,
+      "2021": 145,
+      "2020": 123,
+      "2019": 99
+    },
+    "sector_distribution": {
+      "technology": 145,
+      "manufacturing": 112,
+      "finance": 89,
+      "retail": 67,
+      "healthcare": 43
+    },
+    "market_segments": {
+      "prime": 234,
+      "standard": 156,
+      "growth": 66
+    },
+    "last_updated": "2025-11-24T12:00:00Z"
+  }
+}

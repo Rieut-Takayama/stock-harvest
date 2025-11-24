@@ -1,0 +1,51 @@
+{
+  "success": true,
+  "detection_mode": "enhanced",
+  "stock_code": "7203",
+  "stock_name": "トヨタ自動車",
+  "detection_result": {
+    "detected": true,
+    "signal_type": "ストップ高張り付き",
+    "signal_strength": 92.5,
+    "entry_price": 2400,
+    "profit_target": 2976,
+    "stop_loss": 2160,
+    "max_holding_days": 30,
+    "risk_assessment": "中リスク",
+    "detection_details": {
+      "stop_high_details": {
+        "is_stop_high": true,
+        "sticking_duration": "開場から継続",
+        "volume_threshold": true,
+        "price_limit_reached": true
+      },
+      "earnings_timing": {
+        "is_earnings_day": true,
+        "earnings_type": "決算翌日",
+        "announcement_date": "2025-11-23"
+      },
+      "exclusion_check": {
+        "should_exclude": false,
+        "consecutive_stop_high": false,
+        "listing_years": 2.1
+      },
+      "first_time_check": {
+        "is_first_time": true,
+        "previous_detections": 0
+      }
+    }
+  },
+  "stock_data": {
+    "price": 2456.0,
+    "change": 45.0,
+    "changeRate": 1.87,
+    "volume": 12450000,
+    "signals": {
+      "rsi": 75.2,
+      "macd": 12.5,
+      "trendDirection": "up",
+      "volumeRatio": 2.1
+    }
+  },
+  "timestamp": "2025-11-24T12:00:00Z"
+}

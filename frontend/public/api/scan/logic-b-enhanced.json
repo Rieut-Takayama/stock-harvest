@@ -1,0 +1,52 @@
+{
+  "success": true,
+  "detection_mode": "enhanced",
+  "stock_code": "6758", 
+  "stock_name": "ソニーグループ",
+  "detection_result": {
+    "detected": true,
+    "signal_type": "黒字転換",
+    "signal_strength": 87.3,
+    "entry_price": 14200,
+    "profit_target": 17750,
+    "stop_loss": 12780,
+    "max_holding_days": 45,
+    "risk_assessment": "中リスク",
+    "detection_details": {
+      "profitability_turnaround": {
+        "is_turnaround": true,
+        "previous_quarters": "赤字",
+        "current_quarter": "黒字",
+        "improvement_rate": 12.5
+      },
+      "ma5_crossover": {
+        "is_crossover": true,
+        "crossover_date": "2025-11-22",
+        "momentum": "強い"
+      },
+      "entry_conditions": {
+        "volume_sufficient": true,
+        "rsi_recovery": true,
+        "trend_reversal": true
+      },
+      "exclusion_check": {
+        "should_exclude": false,
+        "loss_carryforward": false,
+        "consecutive_quarters": 3
+      }
+    }
+  },
+  "stock_data": {
+    "price": 13890.0,
+    "change": -230.0,
+    "changeRate": -1.63,
+    "volume": 8760000,
+    "signals": {
+      "rsi": 65.8,
+      "macd": -2.3,
+      "trendDirection": "sideways",
+      "volumeRatio": 1.4
+    }
+  },
+  "timestamp": "2025-11-24T12:00:00Z"
+}
