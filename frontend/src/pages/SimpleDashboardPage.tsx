@@ -47,7 +47,7 @@ export const SimpleDashboardPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<StockResult[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [activeLogic, setActiveLogic] = useState<'A' | 'B' | 'combined' | 'realA' | null>(null);
+  const [activeLogic, setActiveLogic] = useState<'A' | 'B' | 'combined' | 'realA' | 'realB' | null>(null);
 
   const executeRealLogicA = async () => {
     setLoading(true);
@@ -118,6 +118,28 @@ export const SimpleDashboardPage: React.FC = () => {
       setResults(mockResults);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'エラーが発生しました');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const executeRealLogicB = async () => {
+    setLoading(true);
+    setActiveLogic('realB');
+    setError(null);
+    
+    try {
+      // 実データAPI呼び出し
+      const response = await fetch('/api/real-logic-b-enhanced');
+      if (!response.ok) throw new Error('実データ版ロジックBスキャンに失敗しました');
+      
+      const data = await response.json();
+      setResults(data.results || []);
+    } catch (err) {
+      // エラー時はモック版にフォールバック
+      console.warn('実データ取得失敗、モック版を使用:', err);
+      await executeLogicB();
+      return;
     } finally {
       setLoading(false);
     }
@@ -398,6 +420,21 @@ export const SimpleDashboardPage: React.FC = () => {
           ロジックB
         </Button>
         <Button
+          variant={activeLogic === 'realB' ? 'contained' : 'outlined'}
+          startIcon={<LogicBIcon />}
+          onClick={executeRealLogicB}
+          disabled={loading}
+          sx={{ 
+            minWidth: { xs: '100px', sm: '120px' },
+            height: '48px',
+            fontSize: { xs: '0.9rem', sm: '1rem' },
+            background: activeLogic === 'realB' ? 'linear-gradient(135deg, #059669 0%, #047857 100%)' : undefined,
+            color: activeLogic === 'realB' ? 'white' : undefined
+          }}
+        >
+          実データB
+        </Button>
+        <Button
           variant={activeLogic === 'combined' ? 'contained' : 'outlined'}
           startIcon={<CombinedIcon />}
           onClick={executeCombined}
@@ -419,7 +456,11 @@ export const SimpleDashboardPage: React.FC = () => {
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
             <CircularProgress size={24} />
             <Typography>
-              {activeLogic === 'A' ? 'ロジックA' : activeLogic === 'realA' ? '実データロジックA' : activeLogic === 'B' ? 'ロジックB' : '総合判断'}スキャン実行中...
+              {activeLogic === 'A' ? 'ロジックA' : 
+               activeLogic === 'realA' ? '実データロジックA' : 
+               activeLogic === 'B' ? 'ロジックB' : 
+               activeLogic === 'realB' ? '実データロジックB' : 
+               '総合判断'}スキャン実行中...
             </Typography>
           </Box>
         </Box>
