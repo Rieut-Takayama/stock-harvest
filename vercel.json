@@ -9,20 +9,25 @@
       }
     },
     {
-      "src": "api/**/*.py",
+      "src": "api/main.py",
       "use": "@vercel/python"
     }
   ],
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "/api/$1"
+      "dest": "/api/main.py"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
     },
     {
       "src": "/(.*)",
       "dest": "/index.html"
     }
   ],
+  "outputDirectory": "frontend/dist",
   "env": {
     "NODE_ENV": "production",
     "DATABASE_URL": "sqlite:///./database.db",
