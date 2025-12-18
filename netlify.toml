@@ -1,13 +1,19 @@
 [build]
-  command = "cd frontend && npm install && npm run build && cp -r public/api dist/"
   publish = "frontend/dist"
+  command = "cd frontend && npm install && npm run build"
 
 [[redirects]]
   from = "/api/*"
-  to = "/api/:splat"
+  to = "https://stock-harvest-ai-backend.railway.app/api/:splat"
   status = 200
+  force = true
+  headers = {X-From = "Netlify"}
 
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+[build.environment]
+  NODE_ENV = "production"
+  VITE_API_URL = "https://stock-harvest-ai-backend.railway.app"
