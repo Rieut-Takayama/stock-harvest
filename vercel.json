@@ -7,24 +7,15 @@
       "config": {
         "distDir": "dist"
       }
-    },
-    {
-      "src": "api/**/*.py",
-      "use": "@vercel/python"
     }
   ],
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "/api/$1"
-    },
-    {
       "source": "/(.*)",
-      "destination": "/frontend/$1"
+      "destination": "/index.html"
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "VITE_API_URL": "https://stock-harvest-ai.vercel.app"
+    "NODE_ENV": "production"
   }
 }
