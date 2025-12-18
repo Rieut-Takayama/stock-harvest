@@ -311,6 +311,90 @@ async def get_scan_results():
     # 実際の実装では、データベースから最新結果を取得
     return await execute_scan()
 
+# アラート機能
+from pydantic import BaseModel
+from typing import Optional
+
+class AlertCreate(BaseModel):
+    type: str
+    stock_code: str
+    target_price: Optional[float] = None
+    condition: str
+    notification_method: str
+
+class Alert(BaseModel):
+    id: str
+    type: str
+    stock_code: str
+    stock_name: str
+    target_price: Optional[float]
+    condition: str
+    status: str
+    notification_method: str
+    created_at: str
+    triggered_at: Optional[str] = None
+
+# アラートストレージ
+alerts_storage: List[Alert] = []
+
+@app.get("/api/alerts")
+async def get_alerts():
+    return {"alerts": alerts_storage}
+
+@app.post("/api/alerts")
+async def create_alert(alert_data: AlertCreate):
+    import random
+    stock_names = {"7203": "トヨタ自動車", "6758": "ソニーグループ", "9984": "ソフトバンクグループ"}
+    
+    new_alert = Alert(
+        id=f"alert_{random.randint(1000, 9999)}",
+        type=alert_data.type,
+        stock_code=alert_data.stock_code,
+        stock_name=stock_names.get(alert_data.stock_code, f"銘柄{alert_data.stock_code}"),
+        target_price=alert_data.target_price,
+        condition=alert_data.condition,
+        status="active",
+        notification_method=alert_data.notification_method,
+        created_at=datetime.now().isoformat()
+    )
+    
+    alerts_storage.append(new_alert)
+    return {"message": "アラートを作成しました", "alert": new_alert}
+
+# FAQ機能
+@app.get("/api/contact/faq")
+async def get_faq():
+    faqs = [
+        {
+            "id": "faq_001",
+            "question": "ロジックA強化版とは何ですか？",
+            "answer": "ストップ高張り付き銘柄を精密検出するロジックです。上場2年半以内の企業で、決算タイミングでのストップ高を検出し、+5%エントリー、+24%利確、-10%損切りのルールで運用します。",
+            "category": "logic"
+        },
+        {
+            "id": "faq_002", 
+            "question": "ロジックB強化版の特徴は？",
+            "answer": "黒字転換銘柄の精密検出を行います。直近1年間で初めて経常利益が黒字転換した企業を5日移動平均線上抜けタイミングで検出し、+25%利確/-10%損切りで運用します。",
+            "category": "logic"
+        }
+    ]
+    return {"faqs": faqs}
+
+# ダッシュボード機能
+@app.get("/api/dashboard/stats")
+async def get_dashboard_stats():
+    import random
+    return {
+        "total_stocks_monitored": 3800,
+        "active_alerts": random.randint(5, 15),
+        "todays_matches": {
+            "logic_a": random.randint(2, 8),
+            "logic_b": random.randint(1, 6),
+            "total": random.randint(3, 14)
+        },
+        "last_updated": datetime.now().isoformat()
+    }
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
