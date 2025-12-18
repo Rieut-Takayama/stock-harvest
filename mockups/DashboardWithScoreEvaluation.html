@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ロジックスキャナーダッシュボード (手動スコア評価統合) - モックアップ</title>
+  
+  <!-- Material UI Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+  
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 24px;
+      background-color: #f8fffe;
+      color: #2d3748;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .header {
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      margin: 0 0 24px 0;
+      font-size: 32px;
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+
+    @media (max-width: 768px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      border: 1px solid #e2e8f0;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 500;
+      color: #2d3748;
+      margin: 0;
+    }
+
+    /* スキャン実行セクション */
+    .scan-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .logic-selector {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .logic-button {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      text-align: center;
+      min-width: 120px;
+    }
+
+    .logic-button:hover {
+      border-color: #38a169;
+      background-color: rgba(56, 161, 105, 0.04);
+    }
+
+    .logic-button.selected {
+      border-color: #38a169;
+      background-color: #38a169;
+      color: #ffffff;
+    }
+
+    .execute-button {
+      padding: 16px 24px;
+      background-color: #38a169;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .execute-button:hover {
+      background-color: #2f855a;
+    }
+
+    .execute-button:disabled {
+      background-color: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    /* システム状態表示 */
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 16px;
+    }
+
+    .status-item {
+      text-align: center;
+      padding: 12px;
+      border-radius: 6px;
+      background-color: #edf7ed;
+      border: 1px solid #c6f6d5;
+    }
+
+    .status-value {
+      display: block;
+      font-size: 24px;
+      font-weight: 600;
+      color: #38a169;
+    }
+
+    .status-label {
+      font-size: 12px;
+      color: #4a5568;
+      margin-top: 4px;
+    }
+
+    .status-running {
+      background-color: #edf7ed;
+      border-color: #c6f6d5;
+    }
+
+    .status-running .status-value {
+      color: #38a169;
+    }
+
+    /* ロジック結果表示 */
+    .results-section {
+      margin-bottom: 24px;
+    }
+
+    .results-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .results-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .results-table th,
+    .results-table td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .results-table th {
+      background-color: #f8fffe;
+      font-weight: 600;
+      color: #2d3748;
+    }
+
+    .stock-code {
+      font-weight: 600;
+      color: #38a169;
+    }
+
+    .price-positive {
+      color: #38a169;
+    }
+
+    .price-negative {
+      color: #e53e3e;
+    }
+
+    .signal-buy {
+      background-color: #38a169;
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .signal-watch {
+      background-color: #d69e2e;
+      color: #ffffff;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    /* 手動スコア評価セクション */
+    .score-section {
+      margin-top: 24px;
+      padding: 20px;
+      background-color: #edf7ed;
+      border-radius: 6px;
+      border: 1px solid #c6f6d5;
+    }
+
+    .score-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .score-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #2d3748;
+      margin: 0;
+    }
+
+    .ai-calculating {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background-color: #ffffff;
+      border: 1px solid #c6f6d5;
+      border-radius: 4px;
+      color: #38a169;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid #c6f6d5;
+      border-top: 2px solid #38a169;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .score-controls {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 16px;
+      align-items: start;
+    }
+
+    .score-form {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .score-buttons {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .score-button {
+      padding: 8px 16px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      text-align: center;
+      min-width: 50px;
+    }
+
+    .score-button:hover {
+      border-color: #38a169;
+      background-color: rgba(56, 161, 105, 0.04);
+    }
+
+    .score-button.selected {
+      border-color: #38a169;
+      background-color: #38a169;
+      color: #ffffff;
+    }
+
+    .score-s { border-color: #38a169; color: #38a169; }
+    .score-s.selected { background-color: #38a169; }
+
+    .score-a-plus { border-color: #68d391; color: #2f855a; }
+    .score-a-plus.selected { background-color: #68d391; border-color: #68d391; }
+
+    .score-a { border-color: #3182ce; color: #3182ce; }
+    .score-a.selected { background-color: #3182ce; }
+
+    .score-b { border-color: #d69e2e; color: #d69e2e; }
+    .score-b.selected { background-color: #d69e2e; }
+
+    .score-c { border-color: #e53e3e; color: #e53e3e; }
+    .score-c.selected { background-color: #e53e3e; }
+
+    .memo-input {
+      padding: 8px 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 4px;
+      font-size: 14px;
+      font-family: 'Roboto', sans-serif;
+      resize: none;
+      height: 60px;
+    }
+
+    .memo-input:focus {
+      outline: none;
+      border-color: #38a169;
+      box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.12);
+    }
+
+    .save-score-button {
+      padding: 12px 20px;
+      background-color: #38a169;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+      align-self: start;
+    }
+
+    .save-score-button:hover {
+      background-color: #2f855a;
+    }
+
+    .save-score-button:disabled {
+      background-color: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    /* 履歴表示（コンパクト版） */
+    .history-compact {
+      margin-top: 16px;
+      padding: 16px;
+      background-color: #ffffff;
+      border-radius: 4px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .history-compact-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #2d3748;
+      margin: 0 0 12px 0;
+    }
+
+    .history-items-compact {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+
+    .history-item-compact {
+      display: flex;
+      justify-content: between;
+      align-items: center;
+      padding: 8px;
+      background-color: #f8fffe;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    .history-score-compact {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #ffffff;
+      margin: 0 4px;
+    }
+
+    .history-score-compact.S { background-color: #38a169; }
+    .history-score-compact.A-plus { background-color: #68d391; }
+    .history-score-compact.A { background-color: #3182ce; }
+    .history-score-compact.B { background-color: #d69e2e; }
+    .history-score-compact.C { background-color: #e53e3e; }
+
+    .no-results {
+      text-align: center;
+      padding: 32px;
+      color: #718096;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- ヘッダー -->
+    <div class="header">
+      <h1>ロジックスキャナーダッシュボード</h1>
+    </div>
+
+    <!-- ダッシュボードグリッド -->
+    <div class="dashboard-grid">
+      <!-- スキャン実行カード -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">スキャン実行</h2>
+        </div>
+        <div class="scan-controls">
+          <div class="logic-selector">
+            <button type="button" class="logic-button selected" data-logic="logic-a">
+              ロジックA強化版
+            </button>
+            <button type="button" class="logic-button" data-logic="logic-b">
+              ロジックB強化版
+            </button>
+          </div>
+          <button type="button" class="execute-button">
+            スキャン実行
+          </button>
+        </div>
+      </div>
+
+      <!-- システム状態カード -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">システム状態</h2>
+        </div>
+        <div class="status-grid">
+          <div class="status-item status-running">
+            <span class="status-value">実行中</span>
+            <div class="status-label">スキャン状態</div>
+          </div>
+          <div class="status-item">
+            <span class="status-value">3,801</span>
+            <div class="status-label">対象銘柄数</div>
+          </div>
+          <div class="status-item">
+            <span class="status-value">12</span>
+            <div class="status-label">検出銘柄数</div>
+          </div>
+          <div class="status-item">
+            <span class="status-value">03:24</span>
+            <div class="status-label">実行時間</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ロジック結果表示カード -->
+    <div class="card">
+      <div class="results-section">
+        <div class="results-header">
+          <h2 class="card-title">ロジックA強化版 検出結果</h2>
+          <span style="color: #718096; font-size: 14px;">最終更新: 2025-12-07 14:30</span>
+        </div>
+        
+        <table class="results-table">
+          <thead>
+            <tr>
+              <th>銘柄コード</th>
+              <th>銘柄名</th>
+              <th>現在価格</th>
+              <th>変動率</th>
+              <th>シグナル</th>
+              <th>評価</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="stock-code">1234</span></td>
+              <td>テクノロジー株式会社</td>
+              <td class="price-positive">¥1,450</td>
+              <td class="price-positive">+5.2%</td>
+              <td><span class="signal-buy">買い</span></td>
+              <td>-</td>
+            </tr>
+            <tr>
+              <td><span class="stock-code">5678</span></td>
+              <td>グロース企業</td>
+              <td class="price-positive">¥890</td>
+              <td class="price-positive">+3.8%</td>
+              <td><span class="signal-watch">注視</span></td>
+              <td>A+</td>
+            </tr>
+            <tr>
+              <td><span class="stock-code">9012</span></td>
+              <td>新興IT企業</td>
+              <td class="price-negative">¥2,180</td>
+              <td class="price-negative">-1.2%</td>
+              <td><span class="signal-watch">注視</span></td>
+              <td>B</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- 手動スコア評価セクション -->
+        <div class="score-section">
+          <div class="score-header">
+            <h3 class="score-title">手動スコア評価</h3>
+            <div class="ai-calculating" id="aiStatus">
+              <div class="spinner"></div>
+              AI計算中...
+            </div>
+          </div>
+          
+          <div class="score-controls">
+            <div class="score-form">
+              <div class="score-buttons">
+                <button type="button" class="score-button score-s" data-score="S">S</button>
+                <button type="button" class="score-button score-a-plus" data-score="A+">A+</button>
+                <button type="button" class="score-button score-a" data-score="A">A</button>
+                <button type="button" class="score-button score-b" data-score="B">B</button>
+                <button type="button" class="score-button score-c" data-score="C">C</button>
+              </div>
+              <textarea 
+                class="memo-input" 
+                placeholder="評価理由を入力..."
+                maxlength="200"
+              ></textarea>
+            </div>
+            <button type="button" class="save-score-button" disabled>
+              保存
+            </button>
+          </div>
+
+          <!-- 履歴表示（コンパクト版） -->
+          <div class="history-compact">
+            <h4 class="history-compact-title">最近の評価履歴</h4>
+            <div class="history-items-compact" id="historyCompact">
+              <div class="history-item-compact">
+                12/07 14:25:
+                <span class="history-score-compact A">A</span>
+                →
+                <span class="history-score-compact A-plus">A+</span>
+                成長性評価向上
+              </div>
+              <div class="history-item-compact">
+                12/07 14:20:
+                <span class="history-score-compact B">B</span>
+                →
+                <span class="history-score-compact A">A</span>
+                決算予想上方修正
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 要素の取得
+    const logicButtons = document.querySelectorAll('.logic-button');
+    const executeButton = document.querySelector('.execute-button');
+    const scoreButtons = document.querySelectorAll('.score-button');
+    const saveScoreButton = document.querySelector('.save-score-button');
+    const memoInput = document.querySelector('.memo-input');
+    const aiStatus = document.getElementById('aiStatus');
+    
+    let selectedLogic = 'logic-a';
+    let selectedScore = null;
+
+    // ロジック選択機能
+    logicButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        logicButtons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        selectedLogic = button.dataset.logic;
+      });
+    });
+
+    // スキャン実行機能
+    executeButton.addEventListener('click', () => {
+      executeButton.disabled = true;
+      executeButton.textContent = '実行中...';
+      
+      // デモ：2秒後に実行完了
+      setTimeout(() => {
+        executeButton.disabled = false;
+        executeButton.textContent = 'スキャン実行';
+        
+        // AI計算中状態を表示
+        showAICalculating();
+      }, 2000);
+    });
+
+    // スコアボタンの選択機能
+    scoreButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        scoreButtons.forEach(btn => btn.classList.remove('selected'));
+        button.classList.add('selected');
+        selectedScore = button.dataset.score;
+        updateSaveButtonState();
+      });
+    });
+
+    // 保存ボタン状態更新
+    function updateSaveButtonState() {
+      const hasScore = selectedScore !== null;
+      saveScoreButton.disabled = !hasScore;
+    }
+
+    // スコア保存機能
+    saveScoreButton.addEventListener('click', () => {
+      if (selectedScore) {
+        const memo = memoInput.value;
+        
+        // 履歴に追加（デモ用）
+        addToHistory(selectedScore, memo);
+        
+        // フォームリセット
+        scoreButtons.forEach(btn => btn.classList.remove('selected'));
+        memoInput.value = '';
+        selectedScore = null;
+        updateSaveButtonState();
+        
+        alert(`評価が保存されました\nスコア: ${selectedScore}\nメモ: ${memo || 'なし'}`);
+      }
+    });
+
+    // AI計算中表示
+    function showAICalculating() {
+      aiStatus.style.display = 'inline-flex';
+      
+      // 3秒後に非表示
+      setTimeout(() => {
+        aiStatus.style.display = 'none';
+      }, 3000);
+    }
+
+    // 履歴追加（デモ用）
+    function addToHistory(score, memo) {
+      const historyContainer = document.getElementById('historyCompact');
+      const timestamp = new Date().toLocaleString('ja-JP', {
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+      
+      const historyItem = document.createElement('div');
+      historyItem.className = 'history-item-compact';
+      historyItem.innerHTML = `
+        ${timestamp}:
+        新規評価
+        <span class="history-score-compact ${score.replace('+', '-plus')}">${score}</span>
+        ${memo || '理由なし'}
+      `;
+      
+      historyContainer.insertBefore(historyItem, historyContainer.firstChild);
+      
+      // 5個以上は削除
+      while (historyContainer.children.length > 5) {
+        historyContainer.removeChild(historyContainer.lastChild);
+      }
+    }
+
+    // 初期化
+    document.addEventListener('DOMContentLoaded', () => {
+      updateSaveButtonState();
+    });
+  </script>
+</body>
+</html>

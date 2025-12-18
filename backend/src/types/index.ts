@@ -35,6 +35,7 @@ export interface StockData {
   volume: number;
   marketCap?: number;
   signals: TechnicalSignals;
+  manualEvaluation?: ManualScoreEvaluation;
 }
 
 export interface TechnicalSignals {
@@ -193,6 +194,45 @@ export interface ChartDisplayConfig {
   indicators: string[];
 }
 
+// チャートデータ関連
+export interface ChartOHLCData {
+  date: string;
+  timestamp: number;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+export interface ChartCurrentPrice {
+  price: number;
+  change: number;
+  changeRate: number;
+  volume: number;
+}
+
+export interface ChartPriceRange {
+  min: number;
+  max: number;
+  period: string;
+}
+
+export interface ChartData {
+  success: boolean;
+  stockCode: string;
+  symbol: string;
+  stockName: string;
+  timeframe: string;
+  period: string;
+  dataCount: number;
+  lastUpdated: string;
+  ohlcData: ChartOHLCData[];
+  technicalIndicators: Record<string, unknown>;
+  currentPrice: ChartCurrentPrice;
+  priceRange: ChartPriceRange;
+}
+
 // 手動決済シグナル実行結果
 export interface SignalExecutionResult {
   success: boolean;
@@ -200,6 +240,282 @@ export interface SignalExecutionResult {
   executedAt: string;
   message: string;
   affectedPositions?: number;
+}
+
+// 決済シグナル履歴関連
+export interface SignalHistoryItem {
+  id: string;
+  signalType: 'stop_loss' | 'take_profit';
+  stockCode?: string;
+  reason?: string;
+  status: 'pending' | 'executed' | 'failed';
+  createdAt: string;
+  executedAt?: string;
+  affectedPositions?: number;
+  executionResult?: Record<string, unknown>;
+  errorMessage?: string;
+}
+
+export interface SignalHistoryResponse {
+  success: boolean;
+  signals: SignalHistoryItem[];
+  total: number;
+}
+
+// 手動スコア評価関連
+export type ManualScoreValue = 'S' | 'A+' | 'A' | 'B' | 'C';
+
+export interface ManualScoreEvaluation {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  score: ManualScoreValue;
+  reason: string;
+  evaluatedBy: string;
+  evaluatedAt: string;
+  logicType: 'logic_a' | 'logic_b';
+  scanResultId?: string;
+  aiScoreCalculating?: boolean;
+}
+
+export interface ScoreChangeHistory {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  oldScore: ManualScoreValue | null;
+  newScore: ManualScoreValue;
+  changeReason: string;
+  changedBy: string;
+  changedAt: string;
+  logicType: 'logic_a' | 'logic_b';
+  scanResultId?: string;
+}
+
+export interface ScoreEvaluationRequest {
+  stockCode: string;
+  score: ManualScoreValue;
+  reason: string;
+  logicType: 'logic_a' | 'logic_b';
+  scanResultId?: string;
+}
+
+export interface ScoreEvaluationFormData {
+  selectedScore: ManualScoreValue | null;
+  evaluationReason: string;
+  isSubmitting: boolean;
+}
+
+export interface ScoreHistoryCompact {
+  stockCode: string;
+  items: ScoreChangeHistory[];
+  maxDisplayCount: number;
+}
+
+// AI スコア計算状態
+export interface AIScoreCalculationStatus {
+  isCalculating: boolean;
+  stockCode?: string;
+  startedAt?: string;
+  estimatedCompletion?: string;
+}
+
+// 🆕 決算スケジュール関連
+export interface EarningsSchedule {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  fiscalYear: number;
+  fiscalQuarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FY';
+  scheduledDate?: string;
+  actualDate?: string;
+  announcementTime?: 'pre_market' | 'after_market' | 'trading_hours';
+  earningsStatus: 'scheduled' | 'announced' | 'delayed' | 'cancelled';
+  revenueEstimate?: number;
+  profitEstimate?: number;
+  revenueActual?: number;
+  profitActual?: number;
+  profitPrevious?: number;
+  isBlackInkConversion: boolean;
+  forecastRevision?: Record<string, unknown>;
+  earningsSummary?: string;
+  dataSource: 'irbank' | 'kabutan' | 'manual' | 'api';
+  lastUpdatedFromSource?: string;
+  nextEarningsDate?: string;
+  isTargetForLogicB: boolean;
+  createdAt: string;
+  updatedAt: string;
+  metadataInfo?: Record<string, unknown>;
+}
+
+export interface EarningsScheduleFormData {
+  stockCode: string;
+  fiscalYear: number;
+  fiscalQuarter: 'Q1' | 'Q2' | 'Q3' | 'Q4' | 'FY';
+  scheduledDate?: string;
+  revenueEstimate?: number;
+  profitEstimate?: number;
+}
+
+// 🆕 売買履歴関連
+export interface TradingHistory {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  tradeType: 'BUY' | 'SELL';
+  logicType?: 'logic_a' | 'logic_b' | 'manual';
+  entryPrice: number;
+  exitPrice?: number;
+  quantity: number;
+  totalCost: number;
+  commission: number;
+  profitLoss?: number;
+  profitLossRate?: number;
+  holdingPeriod?: number;
+  tradeDate: string;
+  settlementDate?: string;
+  orderMethod: 'market' | 'limit' | 'stop' | 'ifdoco';
+  targetProfit?: number;
+  stopLoss?: number;
+  riskRewardRatio?: number;
+  signalId?: string;
+  scanResultId?: string;
+  entryReason?: string;
+  exitReason?: 'profit_target' | 'stop_loss' | 'manual' | 'time_limit';
+  marketConditions?: Record<string, unknown>;
+  performanceAnalysis?: Record<string, unknown>;
+  status: 'open' | 'closed' | 'cancelled';
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TradingHistoryFormData {
+  stockCode: string;
+  tradeType: 'BUY' | 'SELL';
+  entryPrice: number;
+  quantity: number;
+  orderMethod: 'market' | 'limit' | 'stop' | 'ifdoco';
+  targetProfit?: number;
+  stopLoss?: number;
+  entryReason?: string;
+}
+
+// 🆕 銘柄アーカイブ関連
+export interface StockArchive {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  logicType: 'logic_a' | 'logic_b';
+  detectionDate: string;
+  scanId: string;
+  priceAtDetection: number;
+  volumeAtDetection: number;
+  marketCapAtDetection?: number;
+  technicalSignalsSnapshot?: Record<string, unknown>;
+  logicSpecificData?: Record<string, unknown>;
+  performanceAfter1d?: number;
+  performanceAfter1w?: number;
+  performanceAfter1m?: number;
+  maxGain?: number;
+  maxLoss?: number;
+  outcomeClassification?: 'success' | 'failure' | 'neutral' | 'pending';
+  manualScore?: ManualScoreValue;
+  manualScoreReason?: string;
+  tradeExecution?: Record<string, unknown>;
+  lessonsLearned?: string;
+  marketConditionsSnapshot?: Record<string, unknown>;
+  followUpNotes?: string;
+  archiveStatus: 'active' | 'archived' | 'deleted';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ArchiveSearchRequest {
+  stockCode?: string;
+  logicType?: 'logic_a' | 'logic_b';
+  dateFrom?: string;
+  dateTo?: string;
+  outcomeClassification?: 'success' | 'failure' | 'neutral' | 'pending';
+  manualScore?: ManualScoreValue;
+  page?: number;
+  limit?: number;
+}
+
+export interface ArchiveSearchResponse {
+  success: boolean;
+  archives: StockArchive[];
+  total: number;
+  page: number;
+  limit: number;
+  hasNext: boolean;
+}
+
+// 🆕 拡張された手動スコア評価（データベース対応）
+export interface ManualScoreWithHistory {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  score: ManualScoreValue;
+  logicType: 'logic_a' | 'logic_b';
+  scanResultId?: string;
+  evaluationReason: string;
+  evaluatedBy: string;
+  evaluatedAt: string;
+  confidenceLevel?: 'high' | 'medium' | 'low';
+  priceAtEvaluation?: number;
+  marketContext?: Record<string, unknown>;
+  aiScoreBefore?: ManualScoreValue;
+  aiScoreAfter?: ManualScoreValue;
+  scoreChangeHistory?: Record<string, unknown>;
+  followUpRequired: boolean;
+  followUpDate?: string;
+  performanceValidation?: Record<string, unknown>;
+  tags?: string[];
+  isLearningCase: boolean;
+  status: 'active' | 'archived' | 'superseded';
+  createdAt: string;
+  updatedAt: string;
+}
+
+// 🆕 Discord通知設定関連
+export interface DiscordConfig {
+  id: number;
+  webhookUrl?: string;
+  isEnabled: boolean;
+  channelName?: string;
+  serverName?: string;
+  notificationTypes: string[];
+  mentionRole?: string;
+  notificationFormat: 'standard' | 'compact' | 'detailed';
+  rateLimitPerHour: number;
+  lastNotificationAt?: string;
+  notificationCountToday: number;
+  totalNotificationsSent: number;
+  errorCount: number;
+  lastErrorMessage?: string;
+  lastErrorAt?: string;
+  connectionStatus: 'connected' | 'disconnected' | 'error';
+  webhookTestResult?: Record<string, unknown>;
+  customMessageTemplate?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface DiscordConfigFormData {
+  webhookUrl: string;
+  channelName: string;
+  serverName: string;
+  notificationTypes: string[];
+  mentionRole?: string;
+  notificationFormat: 'standard' | 'compact' | 'detailed';
+  customMessageTemplate?: string;
+}
+
+export interface DiscordNotificationTest {
+  success: boolean;
+  message?: string;
+  error?: string;
+  response?: Record<string, unknown>;
 }
 
 // APIパス定数
@@ -215,6 +531,8 @@ export const API_PATHS = {
     LINE_CONFIG: '/api/notifications/line',
     LINE_CONNECT: '/api/notifications/line/connect',
     LINE_STATUS: '/api/notifications/line/status',
+    DISCORD_CONFIG: '/api/notifications/discord',
+    DISCORD_TEST: '/api/notifications/discord/test',
   },
   CONTACT: {
     SUBMIT: '/api/contact/submit',
@@ -234,6 +552,33 @@ export const API_PATHS = {
     HISTORY: '/api/signals/history',
   },
   CHARTS: {
-    DATA: (stockCode: string) => `/api/charts/${stockCode}`,
+    DATA: (stockCode: string) => `/api/charts/data/${stockCode}`,
+  },
+  SCORES: {
+    CREATE_EVALUATION: '/api/scores/evaluate',
+    GET_EVALUATION: (stockCode: string) => `/api/scores/${stockCode}`,
+    UPDATE_EVALUATION: (id: string) => `/api/scores/${id}`,
+    GET_HISTORY: (stockCode: string) => `/api/scores/${stockCode}/history`,
+    GET_HISTORY_COMPACT: (stockCode: string) => `/api/scores/${stockCode}/history/compact`,
+    AI_CALCULATION_STATUS: (stockCode: string) => `/api/scores/${stockCode}/ai-status`,
+  },
+  ARCHIVE: {
+    SEARCH: '/api/archive/search',
+    GET_BY_ID: (id: string) => `/api/archive/${id}`,
+    UPDATE: (id: string) => `/api/archive/${id}`,
+    DELETE: (id: string) => `/api/archive/${id}`,
+  },
+  EARNINGS: {
+    LIST: '/api/earnings',
+    GET_BY_STOCK: (stockCode: string) => `/api/earnings/${stockCode}`,
+    CREATE: '/api/earnings',
+    UPDATE: (id: string) => `/api/earnings/${id}`,
+  },
+  TRADING: {
+    HISTORY: '/api/trading/history',
+    CREATE: '/api/trading',
+    GET_BY_ID: (id: string) => `/api/trading/${id}`,
+    UPDATE: (id: string) => `/api/trading/${id}`,
+    PERFORMANCE: '/api/trading/performance',
   },
 } as const;

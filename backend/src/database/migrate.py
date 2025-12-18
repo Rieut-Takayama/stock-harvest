@@ -8,7 +8,8 @@ from .tables import (
     system_info, faq, contact_inquiries, alerts, line_notification_config,
     scan_executions, scan_results, stock_master, manual_signals,
     listing_dates, price_limits, stock_data_cache, stock_filters,
-    trading_signals, signal_executions, signal_performance, alert_history
+    trading_signals, signal_executions, signal_performance, alert_history,
+    earnings_schedule, trading_history, stock_archive, manual_scores, discord_config
 )
 
 async def create_tables():
@@ -245,7 +246,84 @@ async def seed_initial_data():
                     filter_item
                 )
         
-        # Initial data seeded for new tables
+        # Discord通知設定の初期データ
+        discord_config_data = {
+            "id": 1,
+            "webhook_url": None,
+            "is_enabled": False,
+            "channel_name": None,
+            "server_name": None,
+            "notification_types": '["logic_a", "logic_b"]',
+            "notification_format": "standard",
+            "rate_limit_per_hour": 60,
+            "notification_count_today": 0,
+            "total_notifications_sent": 0,
+            "error_count": 0,
+            "connection_status": "disconnected"
+        }
+        
+        # 既存のDiscord設定レコードをチェック
+        existing_discord_config = await database.fetch_one("SELECT id FROM discord_config WHERE id = 1")
+        if not existing_discord_config:
+            await database.execute(
+                """INSERT INTO discord_config (id, webhook_url, is_enabled, channel_name, server_name, notification_types, notification_format, rate_limit_per_hour, notification_count_today, total_notifications_sent, error_count, connection_status) 
+                   VALUES (:id, :webhook_url, :is_enabled, :channel_name, :server_name, :notification_types, :notification_format, :rate_limit_per_hour, :notification_count_today, :total_notifications_sent, :error_count, :connection_status)""",
+                discord_config_data
+            )
+            # Discord notification config initialized
+        
+        # 決算スケジュールのサンプルデータ
+        sample_earnings_data = [
+            {
+                'id': 'earnings-7203-2024-Q3',
+                'stock_code': '7203',
+                'stock_name': 'トヨタ自動車',
+                'fiscal_year': 2024,
+                'fiscal_quarter': 'Q3',
+                'scheduled_date': '2024-02-01 15:30:00',
+                'earnings_status': 'announced',
+                'revenue_estimate': 9500000,
+                'profit_estimate': 850000,
+                'revenue_actual': 9800000,
+                'profit_actual': 920000,
+                'profit_previous': 750000,
+                'is_black_ink_conversion': False,
+                'data_source': 'sample'
+            },
+            {
+                'id': 'earnings-4477-2024-Q4',
+                'stock_code': '4477',
+                'stock_name': 'BASE',
+                'fiscal_year': 2024,
+                'fiscal_quarter': 'Q4',
+                'scheduled_date': '2024-02-15 15:30:00',
+                'earnings_status': 'announced',
+                'revenue_estimate': 12000,
+                'profit_estimate': -500,
+                'revenue_actual': 13500,
+                'profit_actual': 200,
+                'profit_previous': -800,
+                'is_black_ink_conversion': True,
+                'is_target_for_logic_b': True,
+                'data_source': 'sample'
+            }
+        ]
+        
+        # 決算データの投入
+        for earnings_item in sample_earnings_data:
+            existing_earnings = await database.fetch_one(
+                "SELECT id FROM earnings_schedule WHERE id = :id", 
+                {"id": earnings_item["id"]}
+            )
+            if not existing_earnings:
+                await database.execute(
+                    """INSERT INTO earnings_schedule 
+                       (id, stock_code, stock_name, fiscal_year, fiscal_quarter, scheduled_date, earnings_status, revenue_estimate, profit_estimate, revenue_actual, profit_actual, profit_previous, is_black_ink_conversion, is_target_for_logic_b, data_source) 
+                       VALUES (:id, :stock_code, :stock_name, :fiscal_year, :fiscal_quarter, :scheduled_date, :earnings_status, :revenue_estimate, :profit_estimate, :revenue_actual, :profit_actual, :profit_previous, :is_black_ink_conversion, :is_target_for_logic_b, :data_source)""",
+                    earnings_item
+                )
+        
+        # Initial data seeded for all new tables
         
         return True
     except Exception as e:

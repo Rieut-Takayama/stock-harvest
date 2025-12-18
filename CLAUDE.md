@@ -197,14 +197,38 @@ type:
 - 株価予測: AIの予測精度は約55-60%が現実的上限
 ```
 
+## 🔄 マイグレーション手順
+
+### 環境設定完了確認
+1. **環境変数設定**: .env.localに全必須項目設定済み
+2. **データベース接続**: DATABASE_URL設定済み(SQLite/PostgreSQL)
+3. **外部APIキー**: LINE_NOTIFY_TOKEN設定済み(必須)
+
+### データベース起動手順
+```bash
+# フロントエンド起動
+cd frontend && npm run dev  # ポート: 3247
+
+# バックエンド起動
+cd backend && python -m uvicorn src.main:app --host 0.0.0.0 --port 8432
+
+# マイグレーション実行(初回のみ)
+cd backend && python -m src.database.migrate
+```
+
+**注意**:
+- ポート番号は必ず 3247(frontend) / 8432(backend) を使用
+- 環境変数は .env.local から自動読み込み
+- PostgreSQL使用時は接続文字列を事前に設定
+
 ## 📝 作業ログ(最新5件)
 ```yaml
 # 主要な作業を記録
+- [2025-12-07] 環境構築完了: .env.local設定、データベース準備、API設定ガイド完了
 - [2025-11-08] ログイン機能修正: Unicode文字エンコーディングエラー解消、E2Eテスト全件パス
 - [2025-11-08] ビルドエラー完全解消: verbatimModuleSyntax、MUI Grid API、未使用変数修正
 - [2025-11-07] ナチュラルライトテーマのMUIテーマファイル群作成完了
 - [2025-11-07] MUI v7対応で型システムとGrid2の互換性修正
-- [2025-11-07] ナチュラルライト選択(緑ベース #38a169)で開発環境整備完了
 ```
 
 ## 13. E2Eテスト自律実行の絶対原則

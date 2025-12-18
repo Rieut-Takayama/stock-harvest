@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>手動スコア評価ページ - モックアップ</title>
+  
+  <!-- Material UI Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap"/>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons"/>
+  
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 24px;
+      background-color: #f8fffe;
+      color: #2d3748;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .card {
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 24px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      margin: 0 0 24px 0;
+      font-size: 24px;
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    .status-section {
+      margin-bottom: 32px;
+      text-align: center;
+    }
+
+    .ai-calculating {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background-color: #edf7ed;
+      border: 1px solid #c6f6d5;
+      border-radius: 6px;
+      color: #38a169;
+      font-weight: 500;
+    }
+
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid #c6f6d5;
+      border-top: 2px solid #38a169;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .evaluation-section {
+      margin-bottom: 32px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+      color: #2d3748;
+    }
+
+    .score-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .score-button {
+      flex: 1;
+      min-width: 80px;
+      padding: 12px 16px;
+      border: 2px solid #e2e8f0;
+      background: #ffffff;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .score-button:hover {
+      border-color: #38a169;
+      background-color: rgba(56, 161, 105, 0.04);
+    }
+
+    .score-button.selected {
+      border-color: #38a169;
+      background-color: #38a169;
+      color: #ffffff;
+    }
+
+    .score-s { border-color: #38a169; color: #38a169; }
+    .score-s.selected { background-color: #38a169; }
+
+    .score-a-plus { border-color: #68d391; color: #2f855a; }
+    .score-a-plus.selected { background-color: #68d391; border-color: #68d391; }
+
+    .score-a { border-color: #3182ce; color: #3182ce; }
+    .score-a.selected { background-color: #3182ce; }
+
+    .score-b { border-color: #d69e2e; color: #d69e2e; }
+    .score-b.selected { background-color: #d69e2e; }
+
+    .score-c { border-color: #e53e3e; color: #e53e3e; }
+    .score-c.selected { background-color: #e53e3e; }
+
+    .memo-textarea {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 6px;
+      font-family: 'Roboto', sans-serif;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 100px;
+      box-sizing: border-box;
+    }
+
+    .memo-textarea:focus {
+      outline: none;
+      border-color: #38a169;
+      box-shadow: 0 0 0 3px rgba(56, 161, 105, 0.12);
+    }
+
+    .save-button {
+      width: 100%;
+      padding: 14px 24px;
+      background-color: #38a169;
+      color: #ffffff;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .save-button:hover {
+      background-color: #2f855a;
+    }
+
+    .save-button:disabled {
+      background-color: #a0aec0;
+      cursor: not-allowed;
+    }
+
+    /* 履歴表示エリアのスタイル */
+    .history-section {
+      margin-top: 32px;
+    }
+
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .history-title {
+      font-size: 18px;
+      font-weight: 500;
+      color: #2d3748;
+      margin: 0;
+    }
+
+    .clear-history-button {
+      padding: 6px 12px;
+      background-color: #e53e3e;
+      color: #ffffff;
+      border: none;
+      border-radius: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background-color 0.2s ease;
+    }
+
+    .clear-history-button:hover {
+      background-color: #c53030;
+    }
+
+    .history-list {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+    }
+
+    .history-item {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      background: #ffffff;
+    }
+
+    .history-item:last-child {
+      border-bottom: none;
+    }
+
+    .history-item:nth-child(even) {
+      background: #f8fffe;
+    }
+
+    .history-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .history-datetime {
+      font-size: 12px;
+      color: #718096;
+    }
+
+    .history-change {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 500;
+    }
+
+    .history-score {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .history-score.S { background-color: #38a169; }
+    .history-score.A-plus { background-color: #68d391; }
+    .history-score.A { background-color: #3182ce; }
+    .history-score.B { background-color: #d69e2e; }
+    .history-score.C { background-color: #e53e3e; }
+
+    .history-arrow {
+      color: #718096;
+      font-size: 14px;
+    }
+
+    .history-reason {
+      color: #4a5568;
+      font-size: 14px;
+      line-height: 1.4;
+      margin-top: 4px;
+      font-style: italic;
+    }
+
+    .no-history {
+      text-align: center;
+      padding: 32px;
+      color: #718096;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>手動スコア評価</h1>
+      
+      <!-- AI計算中表示 -->
+      <div class="status-section">
+        <div class="ai-calculating">
+          <div class="spinner"></div>
+          AI計算中...
+        </div>
+      </div>
+
+      <!-- 評価フォーム -->
+      <div class="evaluation-section">
+        <label class="form-label">評価スコア</label>
+        <div class="score-buttons">
+          <button type="button" class="score-button score-s" data-score="S">S</button>
+          <button type="button" class="score-button score-a-plus" data-score="A+">A+</button>
+          <button type="button" class="score-button score-a" data-score="A">A</button>
+          <button type="button" class="score-button score-b" data-score="B">B</button>
+          <button type="button" class="score-button score-c" data-score="C">C</button>
+        </div>
+
+        <label class="form-label">評価理由メモ</label>
+        <textarea 
+          class="memo-textarea" 
+          placeholder="評価理由を入力してください..."
+          maxlength="500"
+        ></textarea>
+      </div>
+
+      <!-- 保存ボタン -->
+      <button type="button" class="save-button" disabled>
+        保存
+      </button>
+    </div>
+
+    <!-- スコア変更履歴 -->
+    <div class="card">
+      <div class="history-section">
+        <div class="history-header">
+          <h2 class="history-title">スコア変更履歴</h2>
+          <button type="button" class="clear-history-button">
+            履歴をクリア
+          </button>
+        </div>
+        <div class="history-list" id="historyList">
+          <div class="no-history">
+            まだ履歴がありません
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 要素の取得
+    const scoreButtons = document.querySelectorAll('.score-button');
+    const saveButton = document.querySelector('.save-button');
+    const clearHistoryButton = document.querySelector('.clear-history-button');
+    const historyList = document.getElementById('historyList');
+    const memoTextarea = document.querySelector('.memo-textarea');
+    
+    let selectedScore = null;
+    let currentScore = null; // 現在のスコア（変更前スコア用）
+
+    // 履歴管理
+    class ScoreHistory {
+      constructor() {
+        this.storageKey = 'scoreEvaluationHistory';
+        this.loadHistory();
+      }
+
+      loadHistory() {
+        try {
+          const stored = localStorage.getItem(this.storageKey);
+          this.history = stored ? JSON.parse(stored) : [];
+        } catch (error) {
+          console.error('履歴の読み込みに失敗しました:', error);
+          this.history = [];
+        }
+      }
+
+      saveHistory() {
+        try {
+          localStorage.setItem(this.storageKey, JSON.stringify(this.history));
+        } catch (error) {
+          console.error('履歴の保存に失敗しました:', error);
+        }
+      }
+
+      addHistory(previousScore, newScore, reason) {
+        const historyItem = {
+          id: Date.now(),
+          datetime: new Date().toLocaleString('ja-JP'),
+          previousScore: previousScore,
+          newScore: newScore,
+          reason: reason || ''
+        };
+
+        this.history.unshift(historyItem); // 最新を先頭に追加
+        this.saveHistory();
+        this.renderHistory();
+      }
+
+      clearHistory() {
+        this.history = [];
+        this.saveHistory();
+        this.renderHistory();
+      }
+
+      renderHistory() {
+        if (this.history.length === 0) {
+          historyList.innerHTML = '<div class="no-history">まだ履歴がありません</div>';
+          return;
+        }
+
+        const historyHTML = this.history.map(item => {
+          const previousScoreDisplay = item.previousScore || '未設定';
+          const previousScoreClass = item.previousScore ? item.previousScore.replace('+', '-plus') : 'none';
+          const newScoreClass = item.newScore.replace('+', '-plus');
+          
+          return `
+            <div class="history-item">
+              <div class="history-meta">
+                <span class="history-datetime">${item.datetime}</span>
+                <div class="history-change">
+                  <span class="history-score ${previousScoreClass}">${previousScoreDisplay}</span>
+                  <span class="history-arrow">→</span>
+                  <span class="history-score ${newScoreClass}">${item.newScore}</span>
+                </div>
+              </div>
+              ${item.reason ? `<div class="history-reason">${item.reason}</div>` : ''}
+            </div>
+          `;
+        }).join('');
+
+        historyList.innerHTML = historyHTML;
+      }
+    }
+
+    // 履歴管理インスタンスの作成
+    const scoreHistory = new ScoreHistory();
+
+    // 初期表示
+    scoreHistory.renderHistory();
+
+    // スコアボタンの選択機能
+    scoreButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        // 既存の選択を解除
+        scoreButtons.forEach(btn => btn.classList.remove('selected'));
+        
+        // 新しい選択を適用
+        button.classList.add('selected');
+        selectedScore = button.dataset.score;
+        
+        // 保存ボタンの状態を更新
+        updateSaveButtonState();
+      });
+    });
+
+    function updateSaveButtonState() {
+      const hasScore = selectedScore !== null;
+      saveButton.disabled = !hasScore;
+    }
+
+    // 保存ボタンのクリックイベント
+    saveButton.addEventListener('click', () => {
+      if (selectedScore) {
+        const memo = memoTextarea.value;
+        
+        // 履歴に追加
+        scoreHistory.addHistory(currentScore, selectedScore, memo);
+        
+        // 現在のスコアを更新
+        currentScore = selectedScore;
+        
+        // フォームをリセット
+        scoreButtons.forEach(btn => btn.classList.remove('selected'));
+        memoTextarea.value = '';
+        selectedScore = null;
+        updateSaveButtonState();
+        
+        alert(`評価が保存されました\nスコア: ${currentScore}\nメモ: ${memo || 'なし'}`);
+      }
+    });
+
+    // 履歴クリアボタンのクリックイベント
+    clearHistoryButton.addEventListener('click', () => {
+      if (confirm('履歴をすべて削除しますか？この操作は取り消せません。')) {
+        scoreHistory.clearHistory();
+      }
+    });
+
+    // ページ読み込み時に初期状態を設定（デモ用）
+    document.addEventListener('DOMContentLoaded', () => {
+      // AI計算中の表示を3秒後に消すデモ機能
+      setTimeout(() => {
+        const aiCalculating = document.querySelector('.ai-calculating');
+        if (aiCalculating) {
+          aiCalculating.style.display = 'none';
+        }
+      }, 3000);
+    });
+  </script>
+</body>
+</html>

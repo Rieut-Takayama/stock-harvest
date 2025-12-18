@@ -33,6 +33,12 @@ class LineNotificationConfigRequest(BaseModel):
     isConnected: bool = Field(default=None, description="接続状態")
 
 
+class LineConnectRequest(BaseModel):
+    """LINE連携リクエスト"""
+    token: str = Field(..., description="LINE Notifyトークン")
+    testNotification: bool = Field(default=True, description="テスト通知送信フラグ")
+
+
 # ルーター作成
 router = APIRouter(prefix="/api", tags=["alerts"])
 
@@ -246,4 +252,108 @@ async def update_line_notification_config(request: LineNotificationConfigRequest
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update LINE notification config"
+        )
+
+
+@router.post("/notifications/line/connect")
+async def connect_line_notification(request: LineConnectRequest) -> Dict[str, Any]:
+    """
+    LINE連携実行
+    
+    Args:
+        request: LINE連携データ（トークン + テスト通知フラグ）
+        
+    Returns:
+        LineNotificationConfig: 更新されたLINE通知設定
+    """
+    try:
+        # トークン検証（実際のLINE Notify APIでテスト）
+        test_success, test_message = await LineNotificationService.test_line_connection(request.token)
+        if not test_success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"LINE connection failed: {test_message}"
+            )
+        
+        # 成功時：LINE通知設定を更新
+        config_data = {
+            "token": request.token,
+            "isConnected": True
+        }
+        
+        updated_config, message = await LineNotificationService.update_line_config(config_data)
+        
+        if updated_config:
+            # テスト通知の送信（オプション）
+            if request.testNotification:
+                notification_success = await LineNotificationService.send_test_notification(request.token)
+                if notification_success:
+                    updated_config["testNotificationSent"] = True
+                else:
+                    updated_config["testNotificationSent"] = False
+            
+            return updated_config
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Failed to update LINE configuration: {message}"
+            )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Controller POST LINE connect error
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to connect LINE notification"
+        )
+
+
+@router.get("/notifications/line/status")
+async def get_line_notification_status() -> Dict[str, Any]:
+    """
+    LINE接続状態確認
+    
+    Returns:
+        Dict: LINE通知の詳細状態情報
+    """
+    try:
+        # 基本設定取得
+        config = await LineNotificationService.get_line_config()
+        
+        if not config:
+            # 初期状態を返却
+            return {
+                "isConnected": False,
+                "status": "not_configured",
+                "lastNotificationAt": None,
+                "notificationCount": 0,
+                "errorCount": 0,
+                "lastError": None,
+                "connectionHealth": "unknown"
+            }
+        
+        # 詳細状態情報の取得
+        detailed_status = await LineNotificationService.get_detailed_status()
+        
+        # 基本設定と詳細状態をマージ
+        status_info = {
+            "isConnected": config.get("isConnected", False),
+            "status": config.get("status", "disconnected"),
+            "lastNotificationAt": config.get("lastNotificationAt"),
+            "notificationCount": detailed_status.get("notificationCount", 0),
+            "errorCount": detailed_status.get("errorCount", 0),
+            "lastError": detailed_status.get("lastError"),
+            "connectionHealth": detailed_status.get("connectionHealth", "unknown"),
+            "rateLimitRemaining": detailed_status.get("rateLimitRemaining", 1000),
+            "tokenConfigured": config.get("token") is not None
+        }
+        
+        return status_info
+    
+    except Exception as e:
+        # Controller GET LINE status error
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to retrieve LINE notification status"
         )

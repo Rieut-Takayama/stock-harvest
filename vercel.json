@@ -1,16 +1,22 @@
 {
+  "name": "stock-harvest-ai",
+  "version": 2,
+  "buildCommand": "cd frontend && npm install && npm run build",
+  "outputDirectory": "frontend/dist",
+  "installCommand": "cd frontend && npm install",
+  "devCommand": "cd frontend && npm run dev",
   "rewrites": [
     {
-      "source": "/api/scan/logic-a-enhanced",
-      "destination": "/api/logic-a-enhanced"
+      "source": "/",
+      "destination": "/index.html"
     },
     {
-      "source": "/api/scan/logic-b-enhanced", 
-      "destination": "/api/logic-b-enhanced"
-    },
-    {
-      "source": "/api/scan/combined-analysis",
-      "destination": "/api/combined-analysis"
+      "source": "/((?!api).*)",
+      "destination": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production",
+    "VITE_API_URL": "https://stock-harvest-ai.vercel.app"
+  }
 }

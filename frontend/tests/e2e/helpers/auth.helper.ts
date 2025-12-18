@@ -8,6 +8,9 @@ import { Page } from '@playwright/test';
  * @param password - 未使用（認証なし）
  */
 export async function login(page: Page, email = 'demo@example.com', password = 'demo123') {
+  // 認証なし個人利用 - パラメータは互換性のため保持（使用しない）
+  void email; // 明示的に未使用であることを示す
+  void password; // 明示的に未使用であることを示す
   // 認証なし個人利用 - 直接ダッシュボードにアクセス
   await page.goto('/');
   

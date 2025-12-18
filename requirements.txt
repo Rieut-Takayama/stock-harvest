@@ -1,2 +1,2 @@
-# Vercel Functions用の最小限のPython依存関係
-# APIサーバーレス関数で使用
+yfinance==0.2.18
+requests==2.28.2

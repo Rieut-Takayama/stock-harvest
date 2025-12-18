@@ -8,14 +8,11 @@ import asyncio
 import uuid
 from datetime import datetime, timedelta
 from typing import Dict, List, Optional
-import logging
-
 from ..repositories.scan_repository import ScanRepository
-from .stock_data_service import StockDataService
+from .stock_data_service_enhanced import StockDataServiceEnhanced
 from .technical_analysis_service import TechnicalAnalysisService
 from .logic_detection_service import LogicDetectionService
-
-logger = logging.getLogger(__name__)
+from ..lib.logger import logger
 
 
 class ScanService:
@@ -25,7 +22,7 @@ class ScanService:
         self.scan_repository = scan_repository
         
         # 専門サービスの依存性注入
-        self.stock_data_service = StockDataService()
+        self.stock_data_service = StockDataServiceEnhanced()
         self.technical_analysis_service = TechnicalAnalysisService()
         self.logic_detection_service = LogicDetectionService()
     
@@ -121,15 +118,7 @@ class ScanService:
                         'detected': 0,
                         'stocks': []
                     },
-                    'logicAEnhanced': {
-                        'detected': 0,
-                        'stocks': []
-                    },
                     'logicB': {
-                        'detected': 0,
-                        'stocks': []
-                    },
-                    'logicBEnhanced': {
                         'detected': 0,
                         'stocks': []
                     }
@@ -137,31 +126,27 @@ class ScanService:
             
             scan_id = completed_scan['id']
             
-            # スキャン結果を取得
+            # スキャン結果を取得 (API仕様書準拠: logic_aとlogic_bのみ)
             logic_a_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_a')
             logic_a_enhanced_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_a_enhanced')
             logic_b_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_b')
             logic_b_enhanced_results = await self.scan_repository.get_scan_results_by_logic(scan_id, 'logic_b_enhanced')
+            
+            # API仕様書準拠のため、通常版と強化版をマージ
+            combined_logic_a = logic_a_results + logic_a_enhanced_results
+            combined_logic_b = logic_b_results + logic_b_enhanced_results
             
             return {
                 'scanId': scan_id,
                 'completedAt': completed_scan['completed_at'].isoformat() if completed_scan['completed_at'] else '',
                 'totalProcessed': completed_scan['processed_stocks'],
                 'logicA': {
-                    'detected': len(logic_a_results),
-                    'stocks': [self._format_stock_data(result) for result in logic_a_results]
-                },
-                'logicAEnhanced': {
-                    'detected': len(logic_a_enhanced_results),
-                    'stocks': [self._format_stock_data(result) for result in logic_a_enhanced_results]
+                    'detected': len(combined_logic_a),
+                    'stocks': [self._format_stock_data(result) for result in combined_logic_a]
                 },
                 'logicB': {
-                    'detected': len(logic_b_results),
-                    'stocks': [self._format_stock_data(result) for result in logic_b_results]
-                },
-                'logicBEnhanced': {
-                    'detected': len(logic_b_enhanced_results),
-                    'stocks': [self._format_stock_data(result) for result in logic_b_enhanced_results]
+                    'detected': len(combined_logic_b),
+                    'stocks': [self._format_stock_data(result) for result in combined_logic_b]
                 }
             }
             
@@ -175,13 +160,15 @@ class ScanService:
         各専門サービスを協調させて実行
         """
         try:
-            # 銘柄リストを取得
+            # 銘柄リストを取得 (強化版: 実データソース対応)
             stock_list = self.stock_data_service.get_sample_stock_list()
             total_stocks = len(stock_list)
             logic_a_detected = []
             logic_a_enhanced_detected = []
             logic_b_detected = []
             logic_b_enhanced_detected = []
+            
+            logger.info(f"スキャン開始: 対象銘柄数 {total_stocks}件")
             
             # スキャン開始時の状態更新
             await self.scan_repository.update_scan_execution(scan_id, {
@@ -202,12 +189,13 @@ class ScanService:
                     )
                     
                     if not stock_data:
-                        logger.warning(f"銘柄 {stock['code']} のデータ取得失敗")
+                        logger.debug(f"銘柄 {stock['code']} のデータ取得失敗 - スキップ")
                         continue
                     
-                    # データ妥当性検証
-                    if not self.logic_detection_service.validate_stock_data(stock_data):
-                        logger.warning(f"銘柄 {stock['code']} のデータが不正")
+                    # データ妥当性検証 (強化版)
+                    validation_result = await self._validate_stock_data_enhanced(stock_data)
+                    if not validation_result['is_valid']:
+                        logger.debug(f"銘柄 {stock['code']} データ検証失敗: {validation_result['reason']}")
                         continue
                     
                     # テクニカル分析実行
@@ -244,11 +232,11 @@ class ScanService:
                         logic_b_enhanced_detected.append(stock_data)
                         await self._save_scan_result(scan_id, stock_data, 'logic_b_enhanced')
                     
-                    # API制限を考慮した待機
-                    await asyncio.sleep(1)
+                    # API制限を考慮した待機 (動的調整)
+                    await self._dynamic_rate_limit(i, total_stocks)
                     
                 except Exception as e:
-                    logger.warning(f"銘柄 {stock['code']} の処理でエラー: {str(e)}")
+                    logger.warning(f"銘柄 {stock['code']} の処理でエラー: {str(e)}", exc_info=True)
                     continue
             
             # スキャン完了
@@ -359,3 +347,57 @@ class ScanService:
         except Exception as e:
             logger.error(f"ロジック設定更新エラー: {str(e)}")
             raise Exception(f"設定更新に失敗しました: {str(e)}")
+    
+    # 新しいヘルパーメソッド
+    async def _validate_stock_data_enhanced(self, stock_data: Dict) -> Dict:
+        """
+        強化版データ検証 - より詳細なバリデーション
+        """
+        try:
+            # 基本フィールドの存在確認
+            required_fields = ['code', 'name', 'price', 'change', 'changeRate', 'volume']
+            missing_fields = [field for field in required_fields if field not in stock_data or stock_data[field] is None]
+            
+            if missing_fields:
+                return {
+                    'is_valid': False, 
+                    'reason': f'必須フィールド不足: {", ".join(missing_fields)}'
+                }
+            
+            # データの合理性チェック
+            price = stock_data.get('price', 0)
+            volume = stock_data.get('volume', 0)
+            change_rate = stock_data.get('changeRate', 0)
+            
+            if price <= 0:
+                return {'is_valid': False, 'reason': '価格が無効'}
+            
+            if volume < 0:
+                return {'is_valid': False, 'reason': '出来高が無効'}
+            
+            if abs(change_rate) > 50:  # 50%を超える変動は異常
+                return {'is_valid': False, 'reason': '変動率が異常'}
+            
+            return {'is_valid': True, 'reason': 'データ検証成功'}
+            
+        except Exception as e:
+            return {'is_valid': False, 'reason': f'検証処理エラー: {str(e)}'}
+    
+    async def _dynamic_rate_limit(self, current_index: int, total_stocks: int) -> None:
+        """
+        動的レート制限 - 進捗に応じて待機時間を調整
+        """
+        try:
+            # 進捗率に応じて待機時間を調整
+            progress_ratio = current_index / total_stocks
+            
+            if progress_ratio < 0.1:  # 最初の10%は慎重に
+                await asyncio.sleep(2)
+            elif progress_ratio < 0.5:  # 50%までは通常
+                await asyncio.sleep(1)
+            else:  # 後半は高速化
+                await asyncio.sleep(0.5)
+                
+        except Exception as e:
+            logger.warning(f"動的レート制限エラー: {str(e)}")
+            await asyncio.sleep(1)  # フォールバック

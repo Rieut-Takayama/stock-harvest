@@ -30,4 +30,13 @@ tests/temp/*
 !tests/temp/.gitkeep
 test-results/
 playwright-report/
+
+# Vitest outputs
+coverage/
+.vitest/
+
+# Storybook outputs
+storybook-static/
+
+# Deployment
 .vercel

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Health</title>
+</head>
+<body>
+    <script>
+        // JSON レスポンスとして返す
+        window.parent.postMessage({
+            type: 'api-response',
+            data: {"status": "ok", "service": "Stock Harvest AI"}
+        }, '*');
+        
+        // また、直接的なJSONレスポンスとして扱う
+        document.write(JSON.stringify({"status": "ok", "service": "Stock Harvest AI"}));
+    </script>
+</body>
+</html>

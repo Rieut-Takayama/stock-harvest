@@ -4,13 +4,11 @@
 上場条件・決算タイミング・履歴管理・売買シグナル機能を包含
 """
 
-import logging
-from typing import Dict, bool, List, Optional
+from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import yfinance as yf
 import math
-
-logger = logging.getLogger(__name__)
+from ..lib.logger import logger
 
 
 class LogicDetectionService:

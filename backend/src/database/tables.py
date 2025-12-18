@@ -329,3 +329,155 @@ alert_history = Table(
     Column('created_at', DateTime, server_default=func.now()),
     Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
 )
+
+# 決算スケジュールテーブル（四半期別）
+earnings_schedule = Table(
+    'earnings_schedule',
+    metadata,
+    Column('id', String(50), primary_key=True),  # "earnings-" + 銘柄コード + 決算期形式
+    Column('stock_code', String(10), nullable=False),  # 銘柄コード
+    Column('stock_name', String(100), nullable=False),  # 銘柄名
+    Column('fiscal_year', Integer, nullable=False),  # 会計年度
+    Column('fiscal_quarter', String(10), nullable=False),  # 四半期 ('Q1', 'Q2', 'Q3', 'Q4', 'FY')
+    Column('scheduled_date', DateTime, nullable=True),  # 決算発表予定日
+    Column('actual_date', DateTime, nullable=True),  # 決算発表実績日
+    Column('announcement_time', String(20), nullable=True),  # 発表時間帯 ('pre_market', 'after_market', 'trading_hours')
+    Column('earnings_status', String(20), default='scheduled'),  # "scheduled", "announced", "delayed", "cancelled"
+    Column('revenue_estimate', Numeric(20, 2), nullable=True),  # 売上予想（百万円）
+    Column('profit_estimate', Numeric(20, 2), nullable=True),  # 経常利益予想（百万円）
+    Column('revenue_actual', Numeric(20, 2), nullable=True),  # 売上実績（百万円）
+    Column('profit_actual', Numeric(20, 2), nullable=True),  # 経常利益実績（百万円）
+    Column('profit_previous', Numeric(20, 2), nullable=True),  # 前年同期経常利益（百万円）
+    Column('is_black_ink_conversion', Boolean, default=False),  # 黒字転換フラグ
+    Column('forecast_revision', JSON, nullable=True),  # 業績予想修正情報
+    Column('earnings_summary', Text, nullable=True),  # 決算要旨・コメント
+    Column('data_source', String(50), default='manual'),  # データソース ('irbank', 'kabutan', 'manual', 'api')
+    Column('last_updated_from_source', DateTime, nullable=True),  # 外部ソースから最後更新日時
+    Column('next_earnings_date', DateTime, nullable=True),  # 次回決算予定日（自動計算）
+    Column('is_target_for_logic_b', Boolean, default=False),  # ロジックB対象フラグ
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now()),
+    Column('metadata_info', JSON, nullable=True)  # 追加情報（IRバンク・カブタン連携データ等）
+)
+
+# 売買履歴管理テーブル
+trading_history = Table(
+    'trading_history',
+    metadata,
+    Column('id', String(50), primary_key=True),  # "trade-" + タイムスタンプ形式
+    Column('stock_code', String(10), nullable=False),  # 銘柄コード
+    Column('stock_name', String(100), nullable=False),  # 銘柄名
+    Column('trade_type', String(10), nullable=False),  # "BUY", "SELL"
+    Column('logic_type', String(20), nullable=True),  # "logic_a", "logic_b", "manual"
+    Column('entry_price', Numeric(10, 2), nullable=False),  # エントリー価格
+    Column('exit_price', Numeric(10, 2), nullable=True),  # 決済価格（売却時のみ）
+    Column('quantity', Integer, nullable=False),  # 取引株数
+    Column('total_cost', Numeric(15, 2), nullable=False),  # 総コスト（手数料含む）
+    Column('commission', Numeric(10, 2), default=0),  # 手数料
+    Column('profit_loss', Numeric(15, 2), nullable=True),  # 損益（決済時のみ）
+    Column('profit_loss_rate', Numeric(5, 2), nullable=True),  # 損益率（決済時のみ）
+    Column('holding_period', Integer, nullable=True),  # 保有期間（日数、決済時のみ）
+    Column('trade_date', DateTime, nullable=False),  # 取引日時
+    Column('settlement_date', DateTime, nullable=True),  # 決済日時
+    Column('order_method', String(30), nullable=False),  # "market", "limit", "stop", "ifdoco"
+    Column('target_profit', Numeric(10, 2), nullable=True),  # 利確目標価格
+    Column('stop_loss', Numeric(10, 2), nullable=True),  # 損切り価格
+    Column('risk_reward_ratio', Numeric(5, 2), nullable=True),  # リスクリワード比率
+    Column('signal_id', String(50), nullable=True),  # 関連シグナルID（trading_signals.id）
+    Column('scan_result_id', String(50), nullable=True),  # 関連スキャン結果ID（scan_results.id）
+    Column('entry_reason', Text, nullable=True),  # エントリー理由
+    Column('exit_reason', String(50), nullable=True),  # 決済理由 ("profit_target", "stop_loss", "manual", "time_limit")
+    Column('market_conditions', JSON, nullable=True),  # 取引時の市場条件
+    Column('performance_analysis', JSON, nullable=True),  # パフォーマンス分析結果
+    Column('status', String(20), default='open'),  # "open", "closed", "cancelled"
+    Column('notes', Text, nullable=True),  # 取引メモ
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
+)
+
+# 銘柄アーカイブテーブル（過去合致銘柄の履歴保存）
+stock_archive = Table(
+    'stock_archive',
+    metadata,
+    Column('id', String(50), primary_key=True),  # "archive-" + タイムスタンプ形式
+    Column('stock_code', String(10), nullable=False),  # 銘柄コード
+    Column('stock_name', String(100), nullable=False),  # 銘柄名
+    Column('logic_type', String(20), nullable=False),  # "logic_a", "logic_b"
+    Column('detection_date', DateTime, nullable=False),  # 検出日時
+    Column('scan_id', String(50), nullable=False),  # scan_executions.idへの外部キー
+    Column('price_at_detection', Numeric(10, 2), nullable=False),  # 検出時価格
+    Column('volume_at_detection', Integer, nullable=False),  # 検出時出来高
+    Column('market_cap_at_detection', Numeric(20, 2), nullable=True),  # 検出時時価総額
+    Column('technical_signals_snapshot', JSON, nullable=True),  # 検出時テクニカル指標
+    Column('logic_specific_data', JSON, nullable=True),  # ロジック固有データ（上場日、決算情報等）
+    Column('performance_after_1d', Numeric(5, 2), nullable=True),  # 1日後パフォーマンス（%）
+    Column('performance_after_1w', Numeric(5, 2), nullable=True),  # 1週間後パフォーマンス（%）
+    Column('performance_after_1m', Numeric(5, 2), nullable=True),  # 1ヶ月後パフォーマンス（%）
+    Column('max_gain', Numeric(5, 2), nullable=True),  # 最大利益（%）
+    Column('max_loss', Numeric(5, 2), nullable=True),  # 最大損失（%）
+    Column('outcome_classification', String(20), nullable=True),  # "success", "failure", "neutral", "pending"
+    Column('manual_score', String(5), nullable=True),  # 手動スコア ('S', 'A+', 'A', 'B', 'C')
+    Column('manual_score_reason', Text, nullable=True),  # 手動スコア理由
+    Column('trade_execution', JSON, nullable=True),  # 実際の売買実行情報
+    Column('lessons_learned', Text, nullable=True),  # 学習事項・改善点
+    Column('market_conditions_snapshot', JSON, nullable=True),  # 検出時の市場全体状況
+    Column('follow_up_notes', Text, nullable=True),  # フォローアップメモ
+    Column('archive_status', String(20), default='active'),  # "active", "archived", "deleted"
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
+)
+
+# 手動スコア評価テーブル（S,A+,A,B,C評価保存）
+manual_scores = Table(
+    'manual_scores',
+    metadata,
+    Column('id', String(50), primary_key=True),  # "score-" + タイムスタンプ形式
+    Column('stock_code', String(10), nullable=False),  # 銘柄コード
+    Column('stock_name', String(100), nullable=False),  # 銘柄名
+    Column('score', String(5), nullable=False),  # スコア ('S', 'A+', 'A', 'B', 'C')
+    Column('logic_type', String(20), nullable=False),  # "logic_a", "logic_b"
+    Column('scan_result_id', String(50), nullable=True),  # 関連スキャン結果ID
+    Column('evaluation_reason', Text, nullable=False),  # 評価理由
+    Column('evaluated_by', String(100), default='user'),  # 評価者
+    Column('evaluated_at', DateTime, server_default=func.now()),  # 評価日時
+    Column('confidence_level', String(20), nullable=True),  # 確信度 ('high', 'medium', 'low')
+    Column('price_at_evaluation', Numeric(10, 2), nullable=True),  # 評価時価格
+    Column('market_context', JSON, nullable=True),  # 評価時の市場状況
+    Column('ai_score_before', String(5), nullable=True),  # AI計算スコア（評価前）
+    Column('ai_score_after', String(5), nullable=True),  # AI計算スコア（評価後）
+    Column('score_change_history', JSON, nullable=True),  # スコア変更履歴
+    Column('follow_up_required', Boolean, default=False),  # フォローアップ要否
+    Column('follow_up_date', DateTime, nullable=True),  # フォローアップ予定日
+    Column('performance_validation', JSON, nullable=True),  # パフォーマンス検証結果
+    Column('tags', JSON, nullable=True),  # タグ（カテゴリ分類用）
+    Column('is_learning_case', Boolean, default=False),  # 学習事例フラグ
+    Column('status', String(20), default='active'),  # "active", "archived", "superseded"
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
+)
+
+# Discord通知設定テーブル（WebhookURL管理）
+discord_config = Table(
+    'discord_config',
+    metadata,
+    Column('id', Integer, primary_key=True),  # 単一レコード想定
+    Column('webhook_url', String(500), nullable=True),  # Discord WebhookURL
+    Column('is_enabled', Boolean, default=False),  # Discord通知有効フラグ
+    Column('channel_name', String(100), nullable=True),  # チャンネル名（表示用）
+    Column('server_name', String(100), nullable=True),  # サーバー名（表示用）
+    Column('notification_types', JSON, nullable=True),  # 通知タイプ設定 ['logic_a', 'logic_b', 'alerts', 'signals']
+    Column('mention_role', String(100), nullable=True),  # メンション対象ロール
+    Column('notification_format', String(20), default='standard'),  # "standard", "compact", "detailed"
+    Column('rate_limit_per_hour', Integer, default=60),  # 1時間あたりの通知制限数
+    Column('last_notification_at', DateTime, nullable=True),  # 最後の通知送信時刻
+    Column('notification_count_today', Integer, default=0),  # 本日の通知送信回数
+    Column('total_notifications_sent', Integer, default=0),  # 総通知送信回数
+    Column('error_count', Integer, default=0),  # エラー発生回数
+    Column('last_error_message', Text, nullable=True),  # 最後のエラーメッセージ
+    Column('last_error_at', DateTime, nullable=True),  # 最後のエラー発生時刻
+    Column('connection_status', String(20), default='disconnected'),  # "connected", "disconnected", "error"
+    Column('webhook_test_result', JSON, nullable=True),  # WebhookURL接続テスト結果
+    Column('custom_message_template', Text, nullable=True),  # カスタムメッセージテンプレート
+    Column('created_at', DateTime, server_default=func.now()),
+    Column('updated_at', DateTime, server_default=func.now(), onupdate=func.now())
+)

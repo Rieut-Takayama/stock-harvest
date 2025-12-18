@@ -26,8 +26,9 @@ export const useAlertsData = () => {
     try {
       const config = await alertsService.getLineConfig();
       setLineConfig(config);
-    } catch (err) {
-      // LINE config fetch error in hook
+    } catch {
+      // LINE設定の取得エラーは無視し、初期値nullのまま継続
+      console.warn('LINE設定取得に失敗しましたが、アプリの動作には影響しません');
     }
   };
 

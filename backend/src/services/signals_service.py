@@ -191,15 +191,41 @@ class SignalsService:
             limit: 取得件数制限
             
         Returns:
-            シグナル履歴
+            シグナル履歴 (SignalHistoryResponse format)
         """
         try:
             signals = await self.signals_repository.get_recent_signals(limit)
             
+            # データベース形式から型定義に合わせた形式に変換
+            formatted_signals = []
+            for signal in signals:
+                # execution_resultがJSON文字列の場合はパースする
+                execution_result = signal.get("execution_result")
+                if execution_result and isinstance(execution_result, str):
+                    try:
+                        import json
+                        execution_result = json.loads(execution_result)
+                    except (json.JSONDecodeError, TypeError):
+                        execution_result = None
+                
+                formatted_signal = {
+                    "id": signal["id"],
+                    "signalType": signal["signal_type"],
+                    "stockCode": signal.get("stock_code"),
+                    "reason": signal.get("reason"),
+                    "status": signal["status"],
+                    "createdAt": signal["created_at"].isoformat() if hasattr(signal["created_at"], 'isoformat') else str(signal["created_at"]),
+                    "executedAt": signal["executed_at"].isoformat() if signal.get("executed_at") and hasattr(signal["executed_at"], 'isoformat') else str(signal.get("executed_at")) if signal.get("executed_at") else None,
+                    "affectedPositions": signal.get("affected_positions"),
+                    "executionResult": execution_result,
+                    "errorMessage": signal.get("error_message")
+                }
+                formatted_signals.append(formatted_signal)
+            
             return {
                 "success": True,
-                "signals": signals,
-                "total": len(signals)
+                "signals": formatted_signals,
+                "total": len(formatted_signals)
             }
             
         except Exception as e:

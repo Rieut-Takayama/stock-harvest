@@ -255,30 +255,30 @@ def test_real_stock_service():
     # 主要銘柄のテスト
     test_tickers = ["7203", "6501", "9984"]  # トヨタ、日立、ソフトバンク
     
-    print("=== Individual Stock Test ===")
+    logger.info("=== Individual Stock Test ===")
     for ticker in test_tickers:
-        print(f"\nTesting {ticker}...")
+        logger.info(f"Testing {ticker}...")
         stock_data = service.get_stock_info(ticker)
         if stock_data:
-            print(f"Name: {stock_data['name']}")
-            print(f"Price: {stock_data['price']:,.0f}円")
-            print(f"Change: {stock_data['change']:+,.0f}円 ({stock_data['change_rate']:+.2f}%)")
-            print(f"Volume: {stock_data['volume']:,}")
+            logger.info(f"Name: {stock_data['name']}")
+            logger.info(f"Price: {stock_data['price']:,.0f}円")
+            logger.info(f"Change: {stock_data['change']:+,.0f}円 ({stock_data['change_rate']:+.2f}%)")
+            logger.info(f"Volume: {stock_data['volume']:,}")
         else:
-            print(f"Failed to get data for {ticker}")
+            logger.warning(f"Failed to get data for {ticker}")
     
-    print("\n=== Stop High Check Test ===")
+    logger.info("=== Stop High Check Test ===")
     for ticker in test_tickers:
         stop_high_info = service.check_stop_high(ticker)
-        print(f"{ticker}: Stop High = {stop_high_info.get('is_stop_high', False)}")
+        logger.info(f"{ticker}: Stop High = {stop_high_info.get('is_stop_high', False)}")
         if stop_high_info.get('is_stop_high'):
-            print(f"  Consecutive days: {stop_high_info.get('consecutive_days', 0)}")
-            print(f"  Limit price: {stop_high_info.get('limit_up_price', 0):,.0f}円")
+            logger.info(f"  Consecutive days: {stop_high_info.get('consecutive_days', 0)}")
+            logger.info(f"  Limit price: {stop_high_info.get('limit_up_price', 0):,.0f}円")
     
-    print("\n=== Moving Average Test ===")
+    logger.info("=== Moving Average Test ===")
     ma_data = service.calculate_moving_averages("7203")
     for key, value in ma_data.items():
-        print(f"  {key}: {value}")
+        logger.info(f"  {key}: {value}")
 
 if __name__ == "__main__":
     test_real_stock_service()

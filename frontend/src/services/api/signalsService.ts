@@ -7,7 +7,8 @@
 
 import type { 
   ManualSignalRequest, 
-  SignalExecutionResult 
+  SignalExecutionResult,
+  SignalHistoryResponse 
 } from '../../types';
 import { API_PATHS } from '../../types';
 
@@ -53,7 +54,40 @@ export class SignalsApiService {
         affectedPositions: data.affectedPositions
       };
     } catch (error) {
-      // Manual close signal error handled
+      // 手動シグナル実行エラー時にログ出力してから再投げ
+      console.error('手動シグナル実行に失敗:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * シグナル履歴取得
+   */
+  async getSignalHistory(limit?: number): Promise<SignalHistoryResponse> {
+    try {
+      const url = new URL(`${this.baseUrl}${API_PATHS.SIGNALS.HISTORY}`);
+      if (limit) {
+        url.searchParams.append('limit', limit.toString());
+      }
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(
+          errorData.detail || `HTTP ${response.status}: ${response.statusText}`
+        );
+      }
+
+      const data = await response.json();
+      return data as SignalHistoryResponse;
+    } catch (error) {
+      console.error('シグナル履歴取得に失敗:', error);
       throw error;
     }
   }
@@ -74,8 +108,8 @@ export class SignalsApiService {
       
       // 400エラー（バリデーションエラー）が返ってくればAPIは生きている
       return response.status === 400 || response.ok;
-    } catch (error) {
-      // Manual close API health check error handled
+    } catch {
+      // ヘルスチェックエラーはAPIが利用不可として扱う
       return false;
     }
   }

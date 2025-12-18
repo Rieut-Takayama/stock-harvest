@@ -3,13 +3,17 @@ import {
   Box,
   Typography,
   CircularProgress,
-  Alert
+  Alert,
+  Grid
 } from '@mui/material';
 import { useDashboardData } from '../hooks/useDashboardData';
 import { ScanStatusCard } from '../components/dashboard/ScanStatusCard';
 import { LogicResults } from '../components/dashboard/LogicResults';
 import { TopStocks } from '../components/dashboard/TopStocks';
 import { SystemStatus } from '../components/dashboard/SystemStatus';
+import { ScoreEvaluationSection } from '../components/dashboard/ScoreEvaluationSection';
+import { MainLayout } from '../layouts/MainLayout';
+import { logger } from '../lib/logger';
 export const DashboardPage: React.FC = () => {
   const {
     scanStatus,
@@ -21,67 +25,67 @@ export const DashboardPage: React.FC = () => {
     executeScan
   } = useDashboardData();
 
+  // 手動スコア評価用のサンプル銘柄データ（実際にはscanStatusから取得）
+  const sampleStockForEvaluation = {
+    code: '1234',
+    name: 'テクノロジー株式会社'
+  };
+
   // ローディング状態
   if (loading) {
     return (
-      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-        <CircularProgress />
-      </Box>
+      <MainLayout>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="400px">
+          <CircularProgress />
+        </Box>
+      </MainLayout>
     );
   }
 
   // エラー状態
   if (error) {
     return (
-      <Box minHeight="100vh" p={3}>
+      <MainLayout>
         <Alert severity="error">
           エラーが発生しました: {error.message}
         </Alert>
-      </Box>
+      </MainLayout>
     );
   }
 
   const handleScanClick = async () => {
     try {
+      logger.debug('Starting scan execution from dashboard');
       await executeScan();
+      logger.info('Scan execution completed successfully');
     } catch (err) {
-      // Scan execution error in dashboard
+      const error = err instanceof Error ? err : new Error(String(err));
+      logger.error('Scan execution failed', { error: error.message });
     }
+  };
+
+  // スコア評価保存後のコールバック
+  const handleEvaluationSaved = () => {
+    logger.info('Score evaluation saved, refreshing dashboard data');
+    // 必要に応じてダッシュボードデータをリフレッシュ
   };
 
 
   return (
-    <Box sx={{ 
-      minHeight: '100vh', 
-      background: 'linear-gradient(135deg, #1a202c 0%, #2d3748 50%, #4a5568 100%)',
-      p: { xs: 2, sm: 3, md: 4, lg: 6 },
-      display: 'flex',
-      justifyContent: 'center'
-    }}>
-      <Box data-testid="dashboard-container" sx={{ 
-        width: '100%', 
-        maxWidth: '1200px'
-      }}>
-        {/* ヘッダーセクション - ガラスモーフィズム */}
-        <Box sx={{ 
-          mb: { xs: 3, sm: 4 }, 
-          textAlign: 'center',
-          background: 'rgba(255, 255, 255, 0.95)',
-          borderRadius: 4,
-          p: { xs: 2, sm: 3, md: 4 },
-          border: '1px solid rgba(255, 255, 255, 0.3)',
-          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.15)'
-        }}>
+    <MainLayout>
+      <Box data-testid="dashboard-container" sx={{ maxWidth: '1200px', mx: 'auto' }}>
+        {/* ヘッダーセクション */}
+        <Box sx={{ mb: 4, textAlign: 'center' }}>
           <Typography 
             variant="h3" 
             sx={{ 
               fontSize: { xs: '1.75rem', sm: '2rem', md: '2.5rem' },
               fontWeight: 700,
-              color: '#1a202c',
+              color: '#2d3748',
               mb: 2
             }}
           >
-            🚀 Stock Harvest AI
+            🚀 ロジックスキャナーダッシュボード
           </Typography>
           <Typography 
             variant="h6" 
@@ -92,28 +96,45 @@ export const DashboardPage: React.FC = () => {
               letterSpacing: '0.5px'
             }}
           >
-            次世代AIが発見する隠れた投資機会
+            AI駆動の株式スキャニング & 手動スコア評価
           </Typography>
         </Box>
 
-        {/* スキャン実行コントロール */}
-        <ScanStatusCard
-          scanStatus={scanStatus}
-          isScanning={isScanning}
-          scanProgress={scanProgress}
-          onScanClick={handleScanClick}
-        />
+        {/* ダッシュボードグリッド */}
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          {/* スキャン実行コントロール */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <ScanStatusCard
+              scanStatus={scanStatus}
+              isScanning={isScanning}
+              scanProgress={scanProgress}
+              onScanClick={handleScanClick}
+            />
+          </Grid>
 
-        {/* ロジックセクション - 2列グリッド */}
+          {/* システム状態 */}
+          <Grid size={{ xs: 12, md: 6 }}>
+            <SystemStatus />
+          </Grid>
+        </Grid>
+
+        {/* ロジック結果表示 */}
         <LogicResults logicStatus={logicStatus} />
 
-        {/* 統計サマリー - ネオモーフィズム */}
-        <SystemStatus />
-
-        {/* 検出結果セクション */}
-        <TopStocks />
+        {/* 検出結果セクション with 手動スコア評価 */}
+        <Box sx={{ mt: 3 }}>
+          <TopStocks>
+            {/* 手動スコア評価セクションを TopStocks 内に統合 */}
+            <ScoreEvaluationSection
+              stockCode={sampleStockForEvaluation.code}
+              stockName={sampleStockForEvaluation.name}
+              logicType="logic_a"
+              onEvaluationSaved={handleEvaluationSaved}
+            />
+          </TopStocks>
+        </Box>
       </Box>
-    </Box>
+    </MainLayout>
   );
 };
 

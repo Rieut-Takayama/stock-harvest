@@ -67,14 +67,18 @@ async def execute_manual_signal(request: ManualSignalRequest) -> SignalExecution
             reason=request.reason
         )
         
-        # レスポンス作成
-        return SignalExecutionResponse(
-            success=result["success"],
-            signalId=result["signalId"],
-            executedAt=result["executedAt"],
-            message=result["message"],
-            affectedPositions=result.get("affectedPositions")
-        )
+        # レスポンス作成 - affectedPositionsはNoneの場合は除外
+        response_data = {
+            "success": result["success"],
+            "signalId": result["signalId"],
+            "executedAt": result["executedAt"],
+            "message": result["message"]
+        }
+        
+        if result.get("affectedPositions") is not None:
+            response_data["affectedPositions"] = result["affectedPositions"]
+        
+        return SignalExecutionResponse(**response_data)
         
     except HTTPException:
         # HTTPExceptionはそのまま再発生

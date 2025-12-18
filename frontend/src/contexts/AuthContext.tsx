@@ -28,7 +28,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUser(userData);
           }
         }
-      } catch (error) {
+      } catch {
         // Auth initialization error handled
         tokenService.clearTokens();
       } finally {
@@ -79,7 +79,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       setUser(response.user);
     } catch (error) {
-      // Login error handled
+      // ログイン処理でエラーが発生したためログイン状態を確実にクリア
+      setLoading(false);
       throw error;
     } finally {
       setLoading(false);
@@ -94,7 +95,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       // 無効化APIを呼び出し
       authService.logout().catch(() => {});
-    } catch (error) {
+    } catch {
       // Logout error handled
     }
   };

@@ -376,24 +376,24 @@ def test_earnings_analysis():
     
     test_tickers = ["7203", "6501", "4755"]  # トヨタ、日立、楽天
     
-    print("=== Individual Earnings Analysis ===")
+    logger.info("=== Individual Earnings Analysis ===")
     for ticker in test_tickers:
-        print(f"\nAnalyzing {ticker}...")
+        logger.info(f"Analyzing {ticker}...")
         result = service.get_earnings_data(ticker)
         if result and 'error' not in result:
-            print(f"Company: {result['ticker']}")
-            print(f"Profit change: {result['profit_change_description']}")
-            print(f"Black ink conversion: {result['is_black_ink_conversion']}")
-            print(f"Growth rate: {result.get('growth_rate', 'N/A'):.1f}%" if result.get('growth_rate') else "Growth rate: N/A")
-            print(f"Conversion type: {result.get('conversion_type', 'none')}")
+            logger.info(f"Company: {result['ticker']}")
+            logger.info(f"Profit change: {result['profit_change_description']}")
+            logger.info(f"Black ink conversion: {result['is_black_ink_conversion']}")
+            logger.info(f"Growth rate: {result.get('growth_rate', 'N/A'):.1f}%" if result.get('growth_rate') else "Growth rate: N/A")
+            logger.info(f"Conversion type: {result.get('conversion_type', 'none')}")
         else:
-            print(f"Failed to analyze {ticker}: {result}")
+            logger.warning(f"Failed to analyze {ticker}: {result}")
     
-    print("\n=== Black Ink Conversion Scan ===")
+    logger.info("=== Black Ink Conversion Scan ===")
     conversions = service.scan_for_black_ink_conversions(test_tickers)
     for conversion in conversions:
-        print(f"{conversion['ticker']}: Priority Score = {conversion['priority_score']:.1f}")
-        print(f"  {conversion['earnings_analysis']['profit_change_description']}")
+        logger.info(f"{conversion['ticker']}: Priority Score = {conversion['priority_score']:.1f}")
+        logger.info(f"  {conversion['earnings_analysis']['profit_change_description']}")
 
 if __name__ == "__main__":
     test_earnings_analysis()

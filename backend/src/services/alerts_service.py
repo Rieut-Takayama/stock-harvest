@@ -265,3 +265,79 @@ class LineNotificationService:
             # LINE connection test error handled
             await LineNotificationRepository.record_notification_error(str(e))
             return False, f"Connection test failed: {str(e)}"
+    
+    @staticmethod
+    async def send_test_notification(token: str) -> bool:
+        """テスト通知送信"""
+        try:
+            # 実際の実装では既存のnotification_service.pyを使用
+            from ..services.notification_service import NotificationService
+            
+            notification_service = NotificationService()
+            # LINE Notifyトークンを一時的に設定
+            notification_service.line_token = token
+            
+            # テスト通知送信
+            success = await notification_service.test_notification()
+            
+            if success:
+                await LineNotificationRepository.increment_notification_count()
+                return True
+            else:
+                await LineNotificationRepository.record_notification_error("Test notification failed")
+                return False
+            
+        except Exception as e:
+            await LineNotificationRepository.record_notification_error(f"Test notification error: {str(e)}")
+            return False
+    
+    @staticmethod
+    async def get_detailed_status() -> Dict[str, Any]:
+        """LINE通知の詳細状態取得"""
+        try:
+            # データベースから詳細情報を取得
+            detailed_info = await LineNotificationRepository.get_detailed_line_status()
+            
+            if not detailed_info:
+                return {
+                    "notificationCount": 0,
+                    "errorCount": 0,
+                    "lastError": None,
+                    "connectionHealth": "unknown",
+                    "rateLimitRemaining": 1000
+                }
+            
+            # 接続ヘルス状態の判定
+            error_count = detailed_info.get("errorCount", 0)
+            notification_count = detailed_info.get("notificationCount", 0)
+            
+            if error_count == 0:
+                health = "excellent"
+            elif error_count <= 2:
+                health = "good"
+            elif error_count <= 5:
+                health = "warning"
+            else:
+                health = "critical"
+            
+            # レート制限残量の計算（簡易版）
+            # 実際の実装では現在時間とlast_notification_atから計算
+            rate_limit_remaining = max(0, 1000 - notification_count)
+            
+            return {
+                "notificationCount": notification_count,
+                "errorCount": error_count,
+                "lastError": detailed_info.get("lastError"),
+                "connectionHealth": health,
+                "rateLimitRemaining": rate_limit_remaining,
+                "lastNotificationAt": detailed_info.get("lastNotificationAt")
+            }
+            
+        except Exception as e:
+            return {
+                "notificationCount": 0,
+                "errorCount": 0,
+                "lastError": f"Status check error: {str(e)}",
+                "connectionHealth": "error",
+                "rateLimitRemaining": 0
+            }

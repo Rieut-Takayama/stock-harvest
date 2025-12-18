@@ -1,10 +1,10 @@
 import React from 'react';
+import type { ReactNode } from 'react';
 import {
   Box,
-  Button,
-  Card,
   Chip,
-  Typography
+  Typography,
+  Paper
 } from '@mui/material';
 
 interface StockItem {
@@ -15,110 +15,85 @@ interface StockItem {
 
 interface TopStocksProps {
   stocks?: StockItem[];
+  children?: ReactNode;
 }
 
 export const TopStocks: React.FC<TopStocksProps> = ({
-  stocks = [
-    { code: '4819', name: 'デジタルガレージ', status: '分析中' },
-    { code: '2158', name: 'フロンテッジ', status: '分析中' },
-    { code: '4477', name: 'BASE', status: '分析中' }
-  ]
+  children
 }) => {
   return (
-    <Box sx={{ mb: 4 }}>
+    <Paper sx={{ p: 3, borderRadius: 2, backgroundColor: 'white' }}>
+      {/* ロジック検出結果ヘッダー */}
       <Typography variant="h5" sx={{ 
-        mb: { xs: 2, sm: 3 }, 
-        fontWeight: 800, 
-        color: '#ffffff', 
-        textAlign: 'center',
-        textShadow: '0 3px 8px rgba(0,0,0,0.6)',
-        fontSize: { xs: '1.2rem', sm: '1.4rem', md: '1.6rem' },
-        background: 'rgba(0, 0, 0, 0.4)',
-        borderRadius: '30px',
-        px: { xs: 3, sm: 4 },
-        py: { xs: 1.5, sm: 2 },
-        display: 'inline-block',
-        border: '1px solid rgba(255, 255, 255, 0.2)'
+        mb: 3,
+        fontWeight: 600,
+        color: '#2d3748',
+        textAlign: 'center'
       }}>
-        🎯 AI検出: ストップ高候補銘柄
+        ロジックA強化版 検出結果
       </Typography>
-      
-      <Box sx={{ 
-        display: 'grid', 
-        gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' }, 
-        gap: { xs: 2, sm: 3 },
-        maxWidth: { xs: '100%', sm: '800px' },
-        mx: 'auto',
-        px: { xs: 1, sm: 0 }
-      }}>
-        {stocks.map((stock) => (
-          <Card key={stock.code} sx={{ 
-            borderRadius: { xs: 2, sm: 3 }, 
-            background: 'rgba(255, 255, 255, 0.95)',
-            backdropFilter: 'blur(10px)',
-            border: '1px solid rgba(255, 255, 255, 0.3)',
-            p: { xs: 2.5, sm: 3 },
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            '&:hover': { 
-              transform: { xs: 'translateY(-4px)', sm: 'translateY(-8px)' },
-              boxShadow: '0 16px 48px rgba(0, 0, 0, 0.2)',
-              background: 'rgba(255, 255, 255, 1)',
-            }
-          }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="subtitle2" sx={{ 
-                fontWeight: 600,
-                fontSize: { xs: '0.8rem', sm: '0.875rem' }
-              }}>
-                {stock.code}
-              </Typography>
-              <Chip 
-                label={stock.status}
-                size="small"
-                sx={{ 
-                  fontSize: { xs: '0.65rem', sm: '0.7rem' }, 
-                  bgcolor: '#2563eb', 
-                  color: '#ffffff',
-                  fontWeight: 600,
-                  border: '1px solid rgba(255, 255, 255, 0.2)',
-                  height: { xs: '20px', sm: '24px' }
-                }}
-              />
-            </Box>
-            <Typography variant="body2" color="text.secondary" sx={{ 
-              mb: 2,
-              fontSize: { xs: '0.8rem', sm: '0.875rem' }
-            }}>
-              {stock.name}
-            </Typography>
-            <Button
-              size="small"
-              variant="contained"
-              fullWidth
-              sx={{ 
-                background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-                color: 'white',
-                fontSize: { xs: '0.7rem', sm: '0.75rem' },
-                fontWeight: 600,
-                borderRadius: '20px',
-                textTransform: 'none',
-                boxShadow: '0 4px 16px rgba(37, 99, 235, 0.3)',
-                py: { xs: 0.5, sm: 1 },
-                minHeight: { xs: '32px', sm: '36px' },
-                '&:hover': {
-                  transform: 'translateY(-2px)',
-                  boxShadow: '0 6px 24px rgba(37, 99, 235, 0.5)',
-                  background: 'linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%)'
-                }
-              }}
-            >
-              🔍 詳細分析
-            </Button>
-          </Card>
-        ))}
+
+      {/* 検出結果テーブル */}
+      <Box sx={{ mb: 3, overflowX: 'auto' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+          <thead>
+            <tr style={{ backgroundColor: '#f8fffe' }}>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>銘柄コード</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>銘柄名</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>現在価格</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>変動率</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>シグナル</th>
+              <th style={{ padding: '12px', textAlign: 'left', borderBottom: '1px solid #e2e8f0', fontWeight: 600 }}>評価</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>
+                <Typography sx={{ fontWeight: 600, color: '#38a169' }}>1234</Typography>
+              </td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>テクノロジー株式会社</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', color: '#38a169' }}>¥1,450</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', color: '#38a169' }}>+5.2%</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>
+                <Chip label="買い" size="small" sx={{ backgroundColor: '#38a169', color: 'white', fontSize: '12px', fontWeight: 600 }} />
+              </td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>-</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>
+                <Typography sx={{ fontWeight: 600, color: '#38a169' }}>5678</Typography>
+              </td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>グロース企業</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', color: '#38a169' }}>¥890</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', color: '#38a169' }}>+3.8%</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>
+                <Chip label="注視" size="small" sx={{ backgroundColor: '#d69e2e', color: 'white', fontSize: '12px', fontWeight: 600 }} />
+              </td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>A+</td>
+            </tr>
+            <tr>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>
+                <Typography sx={{ fontWeight: 600, color: '#38a169' }}>9012</Typography>
+              </td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>新興IT企業</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', color: '#e53e3e' }}>¥2,180</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0', color: '#e53e3e' }}>-1.2%</td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>
+                <Chip label="注視" size="small" sx={{ backgroundColor: '#d69e2e', color: 'white', fontSize: '12px', fontWeight: 600 }} />
+              </td>
+              <td style={{ padding: '12px', borderBottom: '1px solid #e2e8f0' }}>B</td>
+            </tr>
+          </tbody>
+        </table>
       </Box>
-    </Box>
+
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', color: '#718096', fontSize: '14px' }}>
+        最終更新: 2025-12-07 14:30
+      </Box>
+
+      {/* 子コンポーネント（手動スコア評価など）を表示 */}
+      {children}
+    </Paper>
   );
 };
 

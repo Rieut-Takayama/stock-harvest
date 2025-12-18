@@ -599,3 +599,48 @@ class StockDataService:
         except Exception as e:
             logger.error(f"キャッシュクリアエラー: {str(e)}")
             return False
+    
+    def get_sample_stock_list(self) -> List[Dict]:
+        """
+        サンプル銘柄リストを返す（スキャン用）
+        """
+        return [
+            {'code': '7203', 'name': 'トヨタ自動車'},
+            {'code': '6758', 'name': 'ソニーグループ'},
+            {'code': '9984', 'name': 'ソフトバンクグループ'},
+            {'code': '4689', 'name': 'Zホールディングス'},
+            {'code': '8306', 'name': '三菱UFJフィナンシャル・グループ'},
+            {'code': '6861', 'name': 'キーエンス'},
+            {'code': '9433', 'name': 'KDDI'},
+            {'code': '4063', 'name': '信越化学工業'},
+            {'code': '6954', 'name': 'ファナック'},
+            {'code': '8058', 'name': '三菱商事'}
+        ]
+    
+    async def fetch_stock_data(self, stock_code: str, stock_name: str = None) -> Optional[Dict]:
+        """
+        株価データを取得（スキャン用統一インターフェース）
+        """
+        try:
+            # 銘柄情報取得
+            ticker_symbol = f"{stock_code}.T"  # 日本株式の場合
+            data = await self.get_current_price(stock_code)
+            
+            if not data or 'error' in data:
+                return None
+            
+            # スキャン用フォーマットに変換
+            return {
+                'code': stock_code,
+                'name': stock_name or data.get('name', ''),
+                'price': data.get('currentPrice', 0),
+                'change': data.get('change', 0),
+                'changeRate': data.get('changeRate', 0),
+                'volume': data.get('volume', 0),
+                'signals': data.get('technicalSignals', {}),
+                'data_source': 'yfinance'
+            }
+            
+        except Exception as e:
+            logger.error(f"スキャン用データ取得エラー {stock_code}: {str(e)}")
+            return None

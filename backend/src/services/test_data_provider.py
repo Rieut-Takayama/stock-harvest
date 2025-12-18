@@ -205,13 +205,20 @@ class TestDataProvider:
             # その日の価格を計算
             day_price = current_price * (1 + price_variation / 100)
             
-            # OHLC値を計算（決定的に）
+            # OHLC値を計算（決定的に、株価の整合性を保持）
             intraday_variation = (day_hash % 6) / 100  # 0-6%の日中変動
             
-            high = day_price * (1 + intraday_variation)
-            low = day_price * (1 - intraday_variation)
+            # 始値と終値を先に決める
             open_price = day_price + (day_hash % 20 - 10) * (current_price * 0.01)
             close_price = day_price
+            
+            # 高値は始値・終値の最大値以上
+            max_oc = max(open_price, close_price)
+            high = max_oc * (1 + intraday_variation)
+            
+            # 安値は始値・終値の最小値以下
+            min_oc = min(open_price, close_price)
+            low = min_oc * (1 - intraday_variation)
             
             # 出来高も決定的に生成
             volume = 1000000 + (day_hash % 50) * 100000
@@ -304,6 +311,10 @@ class TestDataProvider:
         """
         stock_code = symbol.replace('.T', '')
         fixed_data = self.get_fixed_stock_data(stock_code)
+        
+        if fixed_data is None:
+            # 存在しない銘柄の場合は空のDataFrameを返す
+            return pd.DataFrame()
         
         # pandas DataFrameとして返す（yfinance互換）
         ohlc_data = fixed_data['ohlc_data']

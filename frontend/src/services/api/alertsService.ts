@@ -26,8 +26,8 @@ export class AlertsService {
 
       const alerts: Alert[] = await response.json();
       return alerts;
-    } catch (error) {
-      // Alert fetch error handled
+    } catch {
+      // アラート取得失敗時のエラーメッセージを統一
       throw new Error('Failed to fetch alerts');
     }
   }
@@ -49,8 +49,8 @@ export class AlertsService {
 
       const alert: Alert = await response.json();
       return alert;
-    } catch (error) {
-      // Alert creation error handled
+    } catch {
+      // アラート作成失敗時のエラーメッセージを統一
       throw new Error('Failed to create alert');
     }
   }
@@ -71,8 +71,8 @@ export class AlertsService {
 
       const alert: Alert = await response.json();
       return alert;
-    } catch (error) {
-      // Alert toggle error handled
+    } catch {
+      // アラートトグル失敗時のエラーメッセージを統一
       throw new Error('Failed to toggle alert');
     }
   }
@@ -90,8 +90,8 @@ export class AlertsService {
       if (!response.ok) {
         throw new Error(`Failed to delete alert: ${response.status}`);
       }
-    } catch (error) {
-      // Alert deletion error handled
+    } catch {
+      // アラート削除失敗時のエラーメッセージを統一
       throw new Error('Failed to delete alert');
     }
   }
@@ -112,8 +112,8 @@ export class AlertsService {
 
       const config: LineNotificationConfig = await response.json();
       return config;
-    } catch (error) {
-      // LINE config fetch error handled
+    } catch {
+      // LINE設定取得失敗時のエラーメッセージを統一
       throw new Error('Failed to fetch LINE config');
     }
   }
@@ -135,8 +135,8 @@ export class AlertsService {
 
       const config: LineNotificationConfig = await response.json();
       return config;
-    } catch (error) {
-      // LINE status update error handled
+    } catch {
+      // LINE状態更新失敗時のエラーメッセージを統一
       throw new Error('Failed to update LINE status');
     }
   }

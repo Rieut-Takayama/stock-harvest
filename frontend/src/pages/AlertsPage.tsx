@@ -140,6 +140,7 @@ export const AlertsPage: React.FC = () => {
               新規アラート作成
             </Typography>
             
+            <form data-testid="alert-form">
             <Box sx={{ mb: 2 }}>
               <Typography variant="body2" sx={{ mb: 1, fontWeight: 500, color: '#424242' }}>
                 アラートタイプ
@@ -220,6 +221,7 @@ export const AlertsPage: React.FC = () => {
             >
               アラート作成
             </Button>
+            </form>
           </CardContent>
         </Card>
 

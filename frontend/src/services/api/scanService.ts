@@ -57,7 +57,8 @@ export class ScanApiService {
         }
       };
     } catch (error) {
-      // Scan execution error handled
+      // スキャン実行エラー時にエラー詳細をログ出力してから再投げ
+      console.error('スキャン実行に失敗:', error);
       throw error;
     }
   }
@@ -102,8 +103,13 @@ export class ScanApiService {
         statusMessage: data.message
       };
     } catch (error) {
-      // Scan status error handled
-      throw error;
+      // スキャン状況取得エラー時のフォールバック処理
+      console.error('スキャン状況取得に失敗:', error);
+      return {
+        isScanning: false,
+        lastScanAt: '',
+        statusMessage: 'スキャン状況取得に失敗しました'
+      };
     }
   }
 
@@ -173,8 +179,24 @@ export class ScanApiService {
         }
       ];
     } catch (error) {
-      // Logic detection error handled
-      throw error;
+      // ロジック検出結果取得エラー時のフォールバック処理
+      console.error('ロジック検出結果取得に失敗:', error);
+      return [
+        {
+          logicType: 'logic_a',
+          name: 'ストップ高張り付き銘柄',
+          isActive: false,
+          detectedStocks: [],
+          status: 'error' as const
+        },
+        {
+          logicType: 'logic_b', 
+          name: '赤字→黒字転換銘柄',
+          isActive: false,
+          detectedStocks: [],
+          status: 'error' as const
+        }
+      ];
     }
   }
 }

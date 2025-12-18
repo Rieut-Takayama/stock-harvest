@@ -33,7 +33,7 @@ class AlertsRepository:
             "condition": row["condition"],
             "isActive": row["is_active"],
             "lineNotificationEnabled": row["line_notification_enabled"],
-            "createdAt": row["created_at"].isoformat() if row["created_at"] else None
+            "createdAt": str(row["created_at"]) if row["created_at"] else None
         }
     
     @staticmethod
@@ -114,7 +114,7 @@ class AlertsRepository:
             
             query = """
             UPDATE alerts 
-            SET is_active = :is_active, updated_at = NOW()
+            SET is_active = :is_active, updated_at = CURRENT_TIMESTAMP
             WHERE id = :id
             """
             
@@ -158,11 +158,29 @@ class LineNotificationRepository:
         if not row:
             return None
         
+        # Boolean型変換（SQLiteでは Integer として保存される）
+        is_connected = bool(row["is_connected"]) if row["is_connected"] is not None else False
+        
+        # ステータス正規化
+        raw_status = row["status"]
+        if raw_status == "error":
+            # エラー状態の場合、接続状況に基づいて適切なステータスに変換
+            if is_connected and row["token"]:
+                normalized_status = "connected"
+            elif row["token"]:
+                normalized_status = "disconnected" 
+            else:
+                normalized_status = "not_configured"
+        else:
+            # 有効なステータス値はそのまま使用
+            valid_statuses = ["connected", "disconnected", "not_configured"]
+            normalized_status = raw_status if raw_status in valid_statuses else "disconnected"
+        
         return {
-            "isConnected": row["is_connected"],
+            "isConnected": is_connected,
             "token": "***masked***" if row["token"] else None,  # トークンはマスク
-            "status": row["status"],
-            "lastNotificationAt": row["last_notification_at"].isoformat() if row["last_notification_at"] else None
+            "status": normalized_status,
+            "lastNotificationAt": str(row["last_notification_at"]) if row["last_notification_at"] else None
         }
     
     @staticmethod
@@ -222,7 +240,7 @@ class LineNotificationRepository:
                 return await LineNotificationRepository.get_line_config()
             
             # updated_at を追加
-            update_fields.append("updated_at = NOW()")
+            update_fields.append("updated_at = CURRENT_TIMESTAMP")
             
             query = f"""
             UPDATE line_notification_config 
@@ -246,8 +264,8 @@ class LineNotificationRepository:
             query = """
             UPDATE line_notification_config 
             SET notification_count = notification_count + 1,
-                last_notification_at = NOW(),
-                updated_at = NOW()
+                last_notification_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = 1
             """
             await database.execute(query)
@@ -266,7 +284,7 @@ class LineNotificationRepository:
             SET error_count = error_count + 1,
                 last_error_message = :error_message,
                 status = :status,
-                updated_at = NOW()
+                updated_at = CURRENT_TIMESTAMP
             WHERE id = 1
             """
             await database.execute(query, {
@@ -277,4 +295,71 @@ class LineNotificationRepository:
         
         except Exception as e:
             # Repository notification error record failed
+            return False
+    
+    @staticmethod
+    async def get_detailed_line_status() -> Optional[Dict[str, Any]]:
+        """LINE通知の詳細状態取得"""
+        try:
+            query = """
+            SELECT is_connected, token, status, last_notification_at, 
+                   notification_count, error_count, last_error_message
+            FROM line_notification_config 
+            WHERE id = 1
+            """
+            row = await database.fetch_one(query)
+            
+            if not row:
+                return None
+            
+            # Boolean型変換とステータス正規化
+            is_connected = bool(row["is_connected"]) if row["is_connected"] is not None else False
+            raw_status = row["status"]
+            
+            if raw_status == "error":
+                # エラー状態の場合、接続状況に基づいて適切なステータスに変換
+                if is_connected and row["token"]:
+                    normalized_status = "connected"
+                elif row["token"]:
+                    normalized_status = "disconnected" 
+                else:
+                    normalized_status = "not_configured"
+            else:
+                # 有効なステータス値はそのまま使用
+                valid_statuses = ["connected", "disconnected", "not_configured"]
+                normalized_status = raw_status if raw_status in valid_statuses else "disconnected"
+            
+            return {
+                "isConnected": is_connected,
+                "hasToken": bool(row["token"]),
+                "status": normalized_status,
+                "lastNotificationAt": str(row["last_notification_at"]) if row["last_notification_at"] else None,
+                "notificationCount": row["notification_count"] or 0,
+                "errorCount": row["error_count"] or 0,
+                "lastError": row["last_error_message"]
+            }
+        
+        except Exception as e:
+            # Repository detailed LINE status fetch error
+            return None
+    
+    @staticmethod
+    async def initialize_line_config() -> bool:
+        """LINE通知設定の初期化（レコードがない場合に作成）"""
+        try:
+            # 既存設定確認
+            existing_config = await LineNotificationRepository.get_line_config()
+            if existing_config:
+                return True
+            
+            # 初期レコード作成
+            query = """
+            INSERT INTO line_notification_config (id, is_connected, token, status, notification_count, error_count)
+            VALUES (1, FALSE, NULL, 'not_configured', 0, 0)
+            """
+            await database.execute(query)
+            return True
+        
+        except Exception as e:
+            # Repository LINE config initialization error
             return False

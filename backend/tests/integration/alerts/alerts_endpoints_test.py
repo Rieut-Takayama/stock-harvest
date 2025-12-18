@@ -186,6 +186,52 @@ class TestAlertsEndpoints:
             print(f"✅ Test 7 Passed: Updated LINE config to connected")
             return updated_config
     
+    async def test_7_5_line_connect_with_test_notification(self):
+        """テスト7.5: LINE連携（テスト通知付き）"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            connect_data = {
+                "token": "test_line_connect_token_xyz789",
+                "testNotification": True
+            }
+            
+            response = await client.post(
+                f"{BASE_URL}/api/notifications/line/connect",
+                json=connect_data,
+                headers={"Content-Type": "application/json"}
+            )
+            
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
+            
+            connection_result = response.json()
+            assert connection_result["isConnected"] == True, "Connection should be established"
+            assert connection_result["status"] == "connected", "Status should be connected"
+            assert "testNotificationSent" in connection_result, "Test notification flag should be present"
+            
+            print(f"✅ Test 7.5 Passed: LINE connected with test notification={connection_result.get('testNotificationSent', False)}")
+            return connection_result
+    
+    async def test_7_6_line_notification_status(self):
+        """テスト7.6: LINE通知状態確認"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            response = await client.get(f"{BASE_URL}/api/notifications/line/status")
+            
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+            
+            status_info = response.json()
+            required_fields = [
+                "isConnected", "status", "notificationCount", "errorCount",
+                "connectionHealth", "tokenConfigured"
+            ]
+            for field in required_fields:
+                assert field in status_info, f"Field '{field}' should be present"
+            
+            # 前のテストでLINE連携したので、connected状態のはず
+            assert status_info["isConnected"] == True, "Should be connected from previous test"
+            assert status_info["tokenConfigured"] == True, "Token should be configured"
+            
+            print(f"✅ Test 7.6 Passed: LINE status check - health={status_info['connectionHealth']}, notifications={status_info['notificationCount']}")
+            return status_info
+    
     async def test_8_delete_alert(self):
         """テスト8: アラート削除"""
         if len(self.created_alert_ids) < 2:
@@ -273,6 +319,12 @@ class TestAlertsEndpoints:
             # テスト7: LINE通知設定更新
             test_results["test_7"] = await self.test_7_update_line_notification_config()
             
+            # テスト7.5: LINE連携（テスト通知付き）
+            test_results["test_7_5"] = await self.test_7_5_line_connect_with_test_notification()
+            
+            # テスト7.6: LINE通知状態確認
+            test_results["test_7_6"] = await self.test_7_6_line_notification_status()
+            
             # テスト8: アラート削除
             test_results["test_8"] = await self.test_8_delete_alert()
             
@@ -301,9 +353,9 @@ async def main():
         results = await test_instance.run_all_tests()
         
         print("\n" + "=" * 60)
-        print("🎉 All Alerts Management Tests Completed Successfully!")
-        print(f"✅ PASSED: 10/10 tests")
-        print(f"❌ FAILED: 0/10 tests")
+        print("🎉 All LINE Notification Integration Tests Completed Successfully!")
+        print(f"✅ PASSED: 12/12 tests (including new LINE connect & status endpoints)")
+        print(f"❌ FAILED: 0/12 tests")
         
         return True
         

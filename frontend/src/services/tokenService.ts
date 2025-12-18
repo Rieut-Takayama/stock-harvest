@@ -84,8 +84,8 @@ class TokenService {
       const jsonPayload = this.base64DecodeUnicode(base64);
 
       return JSON.parse(jsonPayload);
-    } catch (error) {
-      // JWT decode error handled
+    } catch {
+      // JWTデコードエラー時のエラーメッセージを統一
       throw new Error('無効なトークン形式');
     }
   }
