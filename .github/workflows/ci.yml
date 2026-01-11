@@ -1,0 +1,84 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  frontend-quality-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint (with auto-fix)
+        run: npm run lint || npm run lint:fix
+
+      - name: Test
+        run: npm test -- --run
+
+  backend-quality-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: './backend/requirements.txt'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install flake8 mypy pytest pytest-cov black isort
+
+      - name: Syntax check
+        run: python -m compileall -q src/
+
+      - name: Type check
+        run: mypy src/ --ignore-missing-imports
+
+      - name: Lint with complexity check
+        run: flake8 src --max-complexity=10 --max-line-length=120
+
+      - name: Format check (black)
+        run: black --check --line-length=120 src/
+
+      - name: Import sort check (isort)
+        run: isort --check-only --profile=black --line-length=120 src/
+
+      - name: Test with coverage
+        run: pytest --cov=src/ --cov-branch --cov-report=html --cov-report=term-missing tests/
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-coverage-report
+          path: backend/htmlcov/

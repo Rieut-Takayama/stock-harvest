@@ -37,6 +37,20 @@ venv/
 *.db
 *.sqlite3
 
+# Environment variables (Stock Harvest specific)
+.env.staging
+*.pid
+*.seed
+*.pid.lock
+
+# Build outputs (additional)
+.next/
+.nuxt/
+
+# Temporary files
+*.tmp
+*.temp
+
 # OS
 Thumbs.db
 # Local Netlify folder

@@ -298,7 +298,7 @@ test.describe('ダッシュボード画面', () => {
 
     // ネットワークリクエスト・レスポンスの監視
     const requests: Array<{url: string, method: string, status?: number}> = [];
-    const responses: Array<{url: string, status: number, headers: any}> = [];
+    const responses: Array<{url: string, status: number, headers: Record<string, string>}> = [];
 
     page.on('request', (request) => {
       requests.push({

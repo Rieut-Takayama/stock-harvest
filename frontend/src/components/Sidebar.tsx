@@ -10,12 +10,9 @@ import {
   Box,
   Chip
 } from '@mui/material';
-import { 
-  Dashboard, 
-  NotificationsActive, 
-  ContactSupport,
+import {
+  Dashboard,
   AdminPanelSettings,
-  Assessment
 } from '@mui/icons-material';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -25,44 +22,24 @@ export const Sidebar = () => {
   // 認証なし個人利用版 - ダミーユーザー
   const user = { name: '個人利用者', role: 'user' };
 
+  // 要件定義準拠のメニュー構成
   const userMenuItems = [
-    { 
-      text: 'ロジックスキャナー', 
-      icon: <Dashboard />, 
-      path: '/', 
+    {
+      text: '検索結果',
+      icon: <Dashboard />,
+      path: '/',
       roles: ['user', 'admin'],
-      description: 'AI銘柄分析'
-    },
-    { 
-      text: 'アラート設定', 
-      icon: <NotificationsActive />, 
-      path: '/alerts', 
-      roles: ['user', 'admin'],
-      description: '価格通知・LINE連携'
-    },
-    { 
-      text: '問合せサポート', 
-      icon: <ContactSupport />, 
-      path: '/contact', 
-      roles: ['user', 'admin'],
-      description: 'FAQ・お問い合わせ'
+      description: 'ストップ高張り付き銘柄'
     },
   ];
 
   const adminMenuItems = [
-    { 
-      text: '管理画面', 
-      icon: <AdminPanelSettings />, 
-      path: '/admin', 
+    {
+      text: 'システム設定',
+      icon: <AdminPanelSettings />,
+      path: '/admin',
       roles: ['admin'],
-      description: 'システム管理'
-    },
-    { 
-      text: 'システム統計', 
-      icon: <Assessment />, 
-      path: '/admin/stats', 
-      roles: ['admin'],
-      description: '分析レポート'
+      description: 'バッチ処理・条件調整'
     },
   ];
 
