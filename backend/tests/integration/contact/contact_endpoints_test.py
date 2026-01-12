@@ -193,16 +193,18 @@ class TestContactEndpoints:
         }
         
         response = await self.api_helper.post("/api/contact/submit", invalid_data)
-        assert response["status_code"] == 400, f"Empty subject should return 400, got {response['status_code']}"
+        # FastAPIのPydanticバリデーションは422を返す
+        assert response["status_code"] in [400, 422], f"Empty subject should return 400 or 422, got {response['status_code']}"
         self.tracker.mark("空件名テスト完了")
-        
+
         # 空の内容でテスト
         self.tracker.set_operation("空内容テスト")
         invalid_data["subject"] = "テスト件名"
         invalid_data["content"] = ""  # 空の内容
-        
+
         response = await self.api_helper.post("/api/contact/submit", invalid_data)
-        assert response["status_code"] == 400, f"Empty content should return 400, got {response['status_code']}"
+        # FastAPIのPydanticバリデーションは422を返す
+        assert response["status_code"] in [400, 422], f"Empty content should return 400 or 422, got {response['status_code']}"
         self.tracker.mark("空内容テスト完了")
         
         print("✅ バリデーションエラーテスト完了")

@@ -31,6 +31,7 @@ from .controllers.simple_scan_controller import router as simple_scan_router
 from .controllers.archive_controller import router as archive_router
 from .controllers.manual_scores_controller import router as manual_scores_router
 from .controllers.data_source_controller import router as data_source_router
+from .controllers.notification_controller import router as notification_router
 
 # 売買支援API ルート
 from .routes.trading_routes import router as trading_router, history_router
@@ -111,6 +112,9 @@ app.include_router(history_router)
 
 # Discord通知 ルーター追加
 app.include_router(discord_router)
+
+# 通知設定 ルーター追加
+app.include_router(notification_router)
 
 # ルートエンドポイント
 @app.get("/")

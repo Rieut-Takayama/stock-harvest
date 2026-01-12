@@ -98,10 +98,34 @@ class AlertsService:
         return stock_names.get(stock_code, f"銘柄{stock_code}")
     
     @staticmethod
-    async def get_all_alerts() -> List[Dict[str, Any]]:
-        """全アラート取得"""
+    async def get_all_alerts(
+        status: Optional[str] = None,
+        alert_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        全アラート取得（フィルタリング・ソート対応）
+
+        Args:
+            status: フィルタ条件 - 'active' | 'inactive' | None（全件）
+            alert_type: フィルタ条件 - 'price' | 'logic' | None（全件）
+
+        Returns:
+            List[Dict[str, Any]]: アラート一覧（作成日時降順）
+        """
         try:
-            alerts = await AlertsRepository.get_all_alerts()
+            # バリデーション（オプショナル）
+            if status and status not in ["active", "inactive"]:
+                # 無効なステータスの場合は全件返却
+                status = None
+
+            if alert_type and alert_type not in ["price", "logic"]:
+                # 無効なタイプの場合は全件返却
+                alert_type = None
+
+            alerts = await AlertsRepository.get_all_alerts(
+                status=status,
+                alert_type=alert_type
+            )
             return alerts
         except Exception as e:
             # Alerts fetch error handled

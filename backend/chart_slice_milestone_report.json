@@ -2,9 +2,9 @@
   "slice_info": {
     "name": "スライス4-B（チャート表示）",
     "id": "slice_4b_charts",
-    "start_time": "2025-12-14T18:53:58.114763",
-    "current_time": "2025-12-14T18:54:02.024171",
-    "duration_minutes": 0.0651568
+    "start_time": "2026-01-12T10:32:39.965963",
+    "current_time": "2026-01-12T10:32:51.088436",
+    "duration_minutes": 0.18537455
   },
   "progress": {
     "implementation": 0.0,
@@ -45,56 +45,56 @@
       "description": "チャート機能基本動作確認",
       "status": "passed",
       "weight": 10,
-      "completed_at": "2025-12-14T18:53:58.266748"
+      "completed_at": "2026-01-12T10:32:40.958879"
     },
     "chart_data_valid_stock": {
       "name": "有効銘柄データ取得",
       "description": "正常銘柄コードでのチャートデータ取得",
       "status": "passed",
       "weight": 25,
-      "completed_at": "2025-12-14T18:53:58.702400"
+      "completed_at": "2026-01-12T10:32:41.588951"
     },
     "chart_data_with_parameters": {
       "name": "パラメータ付きデータ取得",
       "description": "期間・指標パラメータ付きデータ取得",
       "status": "passed",
       "weight": 20,
-      "completed_at": "2025-12-14T18:53:58.899009"
+      "completed_at": "2026-01-12T10:32:41.866180"
     },
     "chart_data_invalid_stock_code": {
       "name": "無効銘柄エラーハンドリング",
       "description": "不正銘柄コードでの適切なエラー処理",
       "status": "passed",
       "weight": 15,
-      "completed_at": "2025-12-14T18:53:58.923669"
+      "completed_at": "2026-01-12T10:32:41.884126"
     },
     "chart_data_nonexistent_stock_code": {
       "name": "存在しない銘柄処理",
       "description": "存在しない銘柄での空レスポンス処理",
       "status": "passed",
       "weight": 10,
-      "completed_at": "2025-12-14T18:54:00.817967"
+      "completed_at": "2026-01-12T10:32:44.626695"
     },
     "chart_data_response_performance": {
       "name": "パフォーマンステスト",
       "description": "チャートデータ取得性能確認",
       "status": "passed",
       "weight": 10,
-      "completed_at": "2025-12-14T18:54:01.034931"
+      "completed_at": "2026-01-12T10:32:47.723228"
     },
     "chart_multiple_stocks_concurrent": {
       "name": "複数銘柄同時処理",
       "description": "並行リクエスト処理確認",
       "status": "passed",
       "weight": 5,
-      "completed_at": "2025-12-14T18:54:01.639903"
+      "completed_at": "2026-01-12T10:32:48.664112"
     },
     "chart_api_integration_full_workflow": {
       "name": "統合ワークフロー",
       "description": "チャート機能統合フルワークフロー",
       "status": "passed",
       "weight": 5,
-      "completed_at": "2025-12-14T18:54:02.022877"
+      "completed_at": "2026-01-12T10:32:51.088046"
     }
   },
   "endpoints": {

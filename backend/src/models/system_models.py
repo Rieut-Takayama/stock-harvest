@@ -10,35 +10,30 @@ from datetime import datetime
 
 class SystemInfoModel(BaseModel):
     """
-    システム情報のモデル
+    システム情報のモデル（API仕様書準拠）
+    GET /api/system/info のレスポンスモデル
     """
     version: str = Field(..., description="システムバージョン", example="v1.0.0")
-    status: Literal['healthy', 'degraded', 'down'] = Field(..., description="システムステータス")
-    lastScanAt: str = Field(..., description="最後のスキャン実行時刻", example="2025-12-13T10:30:00Z")
-    activeAlerts: int = Field(..., ge=0, description="アクティブなアラート数")
-    totalUsers: int = Field(..., ge=0, description="総ユーザー数")
-    databaseStatus: Literal['connected', 'disconnected'] = Field(..., description="データベース接続状態")
-    lastUpdated: str = Field(..., description="最後の更新時刻", example="2025-12-13T10:30:00Z") 
+    lastUpdated: str = Field(..., description="最後の更新時刻", example="2025-11-07T10:00:00Z")
+    status: Literal['operational', 'degraded', 'down'] = Field(..., description="システムステータス")
     statusDisplay: str = Field(..., description="ステータスの日本語表示", example="正常稼働中")
-    
+
     @field_validator('version')
-    def validate_version(cls, v):
+    def validate_version(cls, v: str) -> str:
         """バージョン形式のバリデーション"""
         if not v.startswith('v'):
             raise ValueError('バージョンは "v" で開始する必要があります')
         return v
-    
-    @field_validator('lastScanAt', 'lastUpdated')
-    def validate_datetime_format(cls, v):
+
+    @field_validator('lastUpdated')
+    def validate_datetime_format(cls, v: str) -> str:
         """日時形式のバリデーション"""
-        if v == "未実行":
-            return v
         try:
             datetime.fromisoformat(v.replace('Z', '+00:00'))
         except ValueError:
             raise ValueError('ISO 8601形式の日時である必要があります')
         return v
-    
+
     class Config:
         """Pydanticの設定"""
         json_encoders = {
@@ -47,13 +42,9 @@ class SystemInfoModel(BaseModel):
         schema_extra = {
             "example": {
                 "version": "v1.0.0",
-                "status": "healthy",
-                "last_scan_at": "2025-12-13T10:30:00Z",
-                "active_alerts": 5,
-                "total_users": 1,
-                "database_status": "connected",
-                "last_updated": "2025-12-13T10:30:00Z",
-                "status_display": "正常稼働中"
+                "lastUpdated": "2025-11-07T10:00:00Z",
+                "status": "operational",
+                "statusDisplay": "正常稼働中"
             }
         }
 

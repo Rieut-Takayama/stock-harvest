@@ -8,9 +8,7 @@ from typing import List, Dict, Any
 import uuid
 import json
 from ..database.config import database
-import logging
-
-logger = logging.getLogger(__name__)
+from ..lib.logger import logger, PerformanceTracker
 
 class ContactRepository:
     
@@ -18,18 +16,20 @@ class ContactRepository:
         """
         FAQ一覧を取得
         """
+        tracker = PerformanceTracker("FAQ DB取得", logger)
+
         try:
-            logger.info("📚 FAQ一覧取得開始")
-            
+            logger.info("FAQ一覧取得開始")
+
             query = """
             SELECT id, category, question, answer, tags, display_order
-            FROM faq 
+            FROM faq
             WHERE is_active = true
             ORDER BY display_order ASC, created_at ASC
             """
-            
+
             results = await database.fetch_all(query)
-            
+
             faq_list = []
             for row in results:
                 # タグのJSONデコード
@@ -38,9 +38,11 @@ class ContactRepository:
                     try:
                         tags = json.loads(row["tags"])
                     except json.JSONDecodeError:
-                        logger.warning(f"⚠️ FAQ ID {row['id']}: タグのJSONデコードに失敗")
+                        logger.warning("FAQ タグJSONデコード失敗", {
+                            "faq_id": row['id']
+                        })
                         tags = []
-                
+
                 faq_item = {
                     "id": row["id"],
                     "category": row["category"],
@@ -49,32 +51,39 @@ class ContactRepository:
                     "tags": tags
                 }
                 faq_list.append(faq_item)
-            
-            logger.info(f"✅ FAQ一覧取得成功: {len(faq_list)}件")
+
+            tracker.end({"count": len(faq_list)})
+            logger.info("FAQ一覧取得成功", {"count": len(faq_list)})
+
             return faq_list
-            
+
         except Exception as e:
-            logger.error(f"❌ FAQ一覧取得エラー: {e}")
+            logger.error("FAQ一覧取得エラー", {
+                "error": str(e),
+                "error_type": type(e).__name__
+            })
             raise
     
     async def save_contact_inquiry(self, form_data: Dict[str, Any]) -> Dict[str, Any]:
         """
         お問い合わせ内容を保存
         """
+        tracker = PerformanceTracker("問合せ DB保存", logger)
+
         try:
-            logger.info("💾 お問い合わせ保存開始")
-            
+            logger.info("問合せ保存開始")
+
             # ユニークIDを生成
             inquiry_id = f"inq-{uuid.uuid4().hex[:12]}"
             current_time = datetime.now()
-            
+
             query = """
-            INSERT INTO contact_inquiries 
+            INSERT INTO contact_inquiries
             (id, type, subject, content, email, priority, status, created_at)
-            VALUES 
+            VALUES
             (:id, :type, :subject, :content, :email, :priority, :status, :created_at)
             """
-            
+
             values = {
                 "id": inquiry_id,
                 "type": form_data["type"],
@@ -85,38 +94,48 @@ class ContactRepository:
                 "status": "open",
                 "created_at": current_time
             }
-            
+
             await database.execute(query, values)
-            
+
             result = {
                 "inquiry_id": inquiry_id,
                 "submitted_at": current_time.isoformat(),
                 "status": "saved"
             }
-            
-            logger.info(f"✅ お問い合わせ保存成功: {inquiry_id}")
+
+            tracker.end({"inquiry_id": inquiry_id})
+            logger.info("問合せ保存成功", {
+                "inquiry_id": inquiry_id,
+                "type": form_data["type"]
+            })
+
             return result
-            
+
         except Exception as e:
-            logger.error(f"❌ お問い合わせ保存エラー: {e}")
+            logger.error("問合せ保存エラー", {
+                "error": str(e),
+                "error_type": type(e).__name__
+            })
             raise
     
     async def get_inquiry_by_id(self, inquiry_id: str) -> Dict[str, Any]:
         """
         お問い合わせIDで詳細を取得（将来的な管理機能用）
         """
+        tracker = PerformanceTracker("問合せ詳細取得", logger)
+
         try:
-            logger.info(f"🔍 お問い合わせ詳細取得: {inquiry_id}")
-            
+            logger.info("問合せ詳細取得開始", {"inquiry_id": inquiry_id})
+
             query = """
             SELECT id, type, subject, content, email, priority, status,
                    created_at, response_at, resolved_at
             FROM contact_inquiries
             WHERE id = :inquiry_id
             """
-            
+
             result = await database.fetch_one(query, {"inquiry_id": inquiry_id})
-            
+
             if result:
                 inquiry = {
                     "id": result["id"],
@@ -130,13 +149,21 @@ class ContactRepository:
                     "responseAt": result["response_at"].isoformat() if result["response_at"] else None,
                     "resolvedAt": result["resolved_at"].isoformat() if result["resolved_at"] else None
                 }
-                
-                logger.info(f"✅ お問い合わせ詳細取得成功: {inquiry_id}")
+
+                tracker.end({"inquiry_id": inquiry_id, "found": True})
+                logger.info("問合せ詳細取得成功", {"inquiry_id": inquiry_id})
+
                 return inquiry
             else:
-                logger.warning(f"⚠️ お問い合わせが見つかりません: {inquiry_id}")
+                tracker.end({"inquiry_id": inquiry_id, "found": False})
+                logger.warning("問合せが見つかりません", {"inquiry_id": inquiry_id})
+
                 return None
-                
+
         except Exception as e:
-            logger.error(f"❌ お問い合わせ詳細取得エラー: {e}")
+            logger.error("問合せ詳細取得エラー", {
+                "inquiry_id": inquiry_id,
+                "error": str(e),
+                "error_type": type(e).__name__
+            })
             raise

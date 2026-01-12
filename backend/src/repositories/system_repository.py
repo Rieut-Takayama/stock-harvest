@@ -12,42 +12,37 @@ class SystemRepository:
     
     async def get_system_info(self) -> Optional[Dict[str, Any]]:
         """
-        システム情報を取得
+        システム情報を取得（API仕様書準拠: 4フィールドのみ）
         """
         with track_performance("get_system_info_query"):
             try:
                 logger.info("システム情報取得開始")
-                
+
                 query = """
-                SELECT id, version, status, last_scan_at, active_alerts, 
-                       total_users, database_status, last_updated, status_display
-                FROM system_info 
+                SELECT version, status, last_updated, status_display
+                FROM system_info
                 WHERE id = 1
                 """
-                
+
                 result = await database.fetch_one(query)
-                
+
                 if result:
+                    # APIレスポンスに必要なフィールドのみ返却
                     system_info = {
                         "version": result["version"],
-                        "status": result["status"],
-                        "lastScanAt": result["last_scan_at"] if result["last_scan_at"] else "未実行",
-                        "activeAlerts": result["active_alerts"],
-                        "totalUsers": result["total_users"],
-                        "databaseStatus": result["database_status"],
                         "lastUpdated": result["last_updated"],
+                        "status": result["status"],
                         "statusDisplay": result["status_display"]
                     }
                     logger.info("システム情報取得成功", {
                         "version": system_info["version"],
-                        "status": system_info["status"],
-                        "record_id": result["id"]
+                        "status": system_info["status"]
                     })
                     return system_info
                 else:
                     logger.warning("システム情報レコードが見つかりません")
                     return None
-                    
+
             except Exception as e:
                 logger.error("システム情報取得エラー", {
                     "error": str(e),

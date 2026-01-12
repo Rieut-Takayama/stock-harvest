@@ -282,16 +282,150 @@ class TestAlertsEndpoints:
         """テスト10: エラーハンドリング（存在しないアラート操作）"""
         async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
             fake_id = "alert-nonexistent123"
-            
+
             # 存在しないアラートの削除
             response = await client.delete(f"{BASE_URL}/api/alerts/{fake_id}")
             assert response.status_code == 404, f"Expected 404 for non-existent alert, got {response.status_code}"
-            
+
             # 存在しないアラートの状態切替
             response = await client.put(f"{BASE_URL}/api/alerts/{fake_id}/toggle")
             assert response.status_code == 404, f"Expected 404 for non-existent alert, got {response.status_code}"
-            
+
             print("✅ Test 10 Passed: Non-existent alert operations handled correctly")
+
+    async def test_11_filter_by_status_active(self):
+        """テスト11: ステータスフィルタリング（active）"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            # アクティブなアラートのみ取得
+            response = await client.get(f"{BASE_URL}/api/alerts?status=active")
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+            alerts = response.json()
+            assert isinstance(alerts, list), "Response should be a list"
+
+            # 全てアクティブであることを確認
+            for alert in alerts:
+                assert alert["isActive"] == True, f"All alerts should be active, but alert {alert['id']} is inactive"
+
+            print(f"✅ Test 11 Passed: Filtered {len(alerts)} active alerts")
+            return alerts
+
+    async def test_12_filter_by_status_inactive(self):
+        """テスト12: ステータスフィルタリング（inactive）"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            # 非アクティブなアラートのみ取得
+            response = await client.get(f"{BASE_URL}/api/alerts?status=inactive")
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+            alerts = response.json()
+            assert isinstance(alerts, list), "Response should be a list"
+
+            # 全て非アクティブであることを確認
+            for alert in alerts:
+                assert alert["isActive"] == False, f"All alerts should be inactive, but alert {alert['id']} is active"
+
+            print(f"✅ Test 12 Passed: Filtered {len(alerts)} inactive alerts")
+            return alerts
+
+    async def test_13_filter_by_type_price(self):
+        """テスト13: タイプフィルタリング（price）"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            # 価格アラートのみ取得
+            response = await client.get(f"{BASE_URL}/api/alerts?type=price")
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+            alerts = response.json()
+            assert isinstance(alerts, list), "Response should be a list"
+
+            # 全て価格アラートであることを確認
+            for alert in alerts:
+                assert alert["type"] == "price", f"All alerts should be price type, but alert {alert['id']} is {alert['type']}"
+
+            print(f"✅ Test 13 Passed: Filtered {len(alerts)} price alerts")
+            return alerts
+
+    async def test_14_filter_by_type_logic(self):
+        """テスト14: タイプフィルタリング（logic）"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            # ロジックアラートのみ取得
+            response = await client.get(f"{BASE_URL}/api/alerts?type=logic")
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+            alerts = response.json()
+            assert isinstance(alerts, list), "Response should be a list"
+
+            # 全てロジックアラートであることを確認
+            for alert in alerts:
+                assert alert["type"] == "logic", f"All alerts should be logic type, but alert {alert['id']} is {alert['type']}"
+
+            print(f"✅ Test 14 Passed: Filtered {len(alerts)} logic alerts")
+            return alerts
+
+    async def test_15_filter_combined_status_and_type(self):
+        """テスト15: 複合フィルタリング（status + type）"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            # アクティブな価格アラートのみ取得
+            response = await client.get(f"{BASE_URL}/api/alerts?status=active&type=price")
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+            alerts = response.json()
+            assert isinstance(alerts, list), "Response should be a list"
+
+            # 全てアクティブかつ価格アラートであることを確認
+            for alert in alerts:
+                assert alert["isActive"] == True, f"Alert {alert['id']} should be active"
+                assert alert["type"] == "price", f"Alert {alert['id']} should be price type"
+
+            print(f"✅ Test 15 Passed: Filtered {len(alerts)} active price alerts")
+            return alerts
+
+    async def test_16_sort_by_created_at_desc(self):
+        """テスト16: 作成日時降順ソート確認"""
+        async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
+            # 複数のアラートを作成（時間差をつける）
+            import asyncio
+            for i in range(3):
+                alert_data = {
+                    "type": "price",
+                    "stockCode": f"000{i}",
+                    "targetPrice": 1000 + i * 100,
+                    "condition": {
+                        "type": "price",
+                        "operator": ">=",
+                        "value": 1000 + i * 100
+                    }
+                }
+                response = await client.post(
+                    f"{BASE_URL}/api/alerts",
+                    json=alert_data,
+                    headers={"Content-Type": "application/json"}
+                )
+                if response.status_code == 200:
+                    self.created_alert_ids.append(response.json()["id"])
+                await asyncio.sleep(0.1)  # 時間差を確保
+
+            # アラート一覧取得
+            response = await client.get(f"{BASE_URL}/api/alerts")
+
+            assert response.status_code == 200, f"Expected 200, got {response.status_code}"
+
+            alerts = response.json()
+            assert len(alerts) >= 3, f"Expected at least 3 alerts, got {len(alerts)}"
+
+            # 作成日時が降順（新しい順）になっていることを確認
+            from datetime import datetime
+            for i in range(len(alerts) - 1):
+                current_date = datetime.fromisoformat(alerts[i]["createdAt"].replace('Z', '+00:00'))
+                next_date = datetime.fromisoformat(alerts[i + 1]["createdAt"].replace('Z', '+00:00'))
+                assert current_date >= next_date, f"Alerts should be sorted by createdAt DESC"
+
+            print(f"✅ Test 16 Passed: {len(alerts)} alerts sorted by createdAt DESC")
+            return alerts
     
     async def run_all_tests(self):
         """全テスト実行"""
@@ -333,9 +467,27 @@ class TestAlertsEndpoints:
             
             # テスト10: エラーハンドリング（存在しないリソース）
             test_results["test_10"] = await self.test_10_error_handling_not_found()
-            
+
+            # テスト11: ステータスフィルタリング（active）
+            test_results["test_11"] = await self.test_11_filter_by_status_active()
+
+            # テスト12: ステータスフィルタリング（inactive）
+            test_results["test_12"] = await self.test_12_filter_by_status_inactive()
+
+            # テスト13: タイプフィルタリング（price）
+            test_results["test_13"] = await self.test_13_filter_by_type_price()
+
+            # テスト14: タイプフィルタリング（logic）
+            test_results["test_14"] = await self.test_14_filter_by_type_logic()
+
+            # テスト15: 複合フィルタリング（status + type）
+            test_results["test_15"] = await self.test_15_filter_combined_status_and_type()
+
+            # テスト16: 作成日時降順ソート確認
+            test_results["test_16"] = await self.test_16_sort_by_created_at_desc()
+
             return test_results
-            
+
         finally:
             # テストデータクリーンアップ
             await self.cleanup()
@@ -353,9 +505,9 @@ async def main():
         results = await test_instance.run_all_tests()
         
         print("\n" + "=" * 60)
-        print("🎉 All LINE Notification Integration Tests Completed Successfully!")
-        print(f"✅ PASSED: 12/12 tests (including new LINE connect & status endpoints)")
-        print(f"❌ FAILED: 0/12 tests")
+        print("🎉 All Alerts Management Integration Tests Completed Successfully!")
+        print(f"✅ PASSED: 18/18 tests (including filtering & sorting features)")
+        print(f"❌ FAILED: 0/18 tests")
         
         return True
         

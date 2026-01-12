@@ -17,76 +17,58 @@ class SystemValidator:
     @staticmethod
     def validate_system_info(data: Dict[str, Any]) -> Tuple[bool, Optional[Dict[str, str]]]:
         """
-        システム情報データのバリデーション
-        
+        システム情報データのバリデーション（API仕様書準拠）
+
         Args:
             data: バリデーション対象のデータ
-        
+
         Returns:
             Tuple[bool, Optional[Dict[str, str]]]: (有効性, エラー詳細)
         """
         errors = {}
-        
+
         try:
-            # 必須フィールドのチェック
-            required_fields = [
-                'version', 'status', 'lastScanAt', 'activeAlerts',
-                'totalUsers', 'databaseStatus', 'lastUpdated', 'statusDisplay'
-            ]
-            
+            # 必須フィールドのチェック（API仕様書準拠: 4フィールドのみ）
+            required_fields = ['version', 'lastUpdated', 'status', 'statusDisplay']
+
             for field in required_fields:
                 if field not in data:
                     errors[field] = f"{field}は必須フィールドです"
                 elif data[field] is None:
                     errors[field] = f"{field}は空にできません"
-            
+
             # バージョン形式のチェック
             if 'version' in data and data['version']:
                 if not SystemValidator._validate_version_format(data['version']):
                     errors['version'] = "バージョンは 'v' で始まる形式である必要があります (例: v1.0.0)"
-            
-            # ステータス値のチェック
+
+            # ステータス値のチェック（API仕様書: operational, degraded, down）
             if 'status' in data and data['status']:
-                valid_statuses = ['healthy', 'degraded', 'down']
+                valid_statuses = ['operational', 'degraded', 'down']
                 if data['status'] not in valid_statuses:
                     errors['status'] = f"ステータスは {valid_statuses} のいずれかである必要があります"
-            
-            # データベースステータスのチェック
-            if 'databaseStatus' in data and data['databaseStatus']:
-                valid_db_statuses = ['connected', 'disconnected']
-                if data['databaseStatus'] not in valid_db_statuses:
-                    errors['databaseStatus'] = f"データベースステータスは {valid_db_statuses} のいずれかである必要があります"
-            
-            # 数値フィールドのチェック
-            numeric_fields = ['activeAlerts', 'totalUsers']
-            for field in numeric_fields:
-                if field in data and data[field] is not None:
-                    if not isinstance(data[field], int) or data[field] < 0:
-                        errors[field] = f"{field}は0以上の整数である必要があります"
-            
+
             # 日時フィールドのチェック
-            datetime_fields = ['lastScanAt', 'lastUpdated']
-            for field in datetime_fields:
-                if field in data and data[field] and data[field] != "未実行":
-                    if not SystemValidator._validate_datetime_format(data[field]):
-                        errors[field] = f"{field}はISO 8601形式の日時である必要があります"
-            
+            if 'lastUpdated' in data and data['lastUpdated']:
+                if not SystemValidator._validate_datetime_format(data['lastUpdated']):
+                    errors['lastUpdated'] = "lastUpdatedはISO 8601形式の日時である必要があります"
+
             # ステータス表示テキストの長さチェック
             if 'statusDisplay' in data and data['statusDisplay']:
                 if len(data['statusDisplay']) > 100:
                     errors['statusDisplay'] = "ステータス表示は100文字以下である必要があります"
-            
+
             is_valid = len(errors) == 0
-            logger.debug(f"システム情報バリデーション結果", {
+            logger.debug("システム情報バリデーション結果", {
                 'is_valid': is_valid,
                 'error_count': len(errors),
                 'errors': errors if errors else None
             })
-            
+
             return is_valid, errors if errors else None
-            
+
         except Exception as e:
-            logger.error(f"システム情報バリデーション中にエラーが発生", {'error': str(e)})
+            logger.error("システム情報バリデーション中にエラーが発生", {'error': str(e)})
             return False, {'validation_error': f"バリデーション処理中にエラーが発生しました: {str(e)}"}
     
     @staticmethod

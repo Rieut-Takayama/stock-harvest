@@ -37,19 +37,57 @@ class AlertsRepository:
         }
     
     @staticmethod
-    async def get_all_alerts() -> List[Dict[str, Any]]:
-        """全アラート取得"""
+    async def get_all_alerts(
+        status: Optional[str] = None,
+        alert_type: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """
+        全アラート取得（フィルタリング・ソート対応）
+
+        Args:
+            status: フィルタ条件 - 'active' | 'inactive' | None（全件）
+            alert_type: フィルタ条件 - 'price' | 'logic' | None（全件）
+
+        Returns:
+            List[Dict[str, Any]]: アラート一覧（作成日時降順）
+        """
         try:
+            # ベースクエリ
             query = """
-            SELECT id, stock_code, stock_name, type, condition, is_active, 
+            SELECT id, stock_code, stock_name, type, condition, is_active,
                    line_notification_enabled, created_at, triggered_count, last_triggered_at
-            FROM alerts 
-            ORDER BY created_at DESC
+            FROM alerts
             """
-            rows = await database.fetch_all(query)
-            
+
+            # WHERE句の条件を構築
+            where_clauses = []
+            params = {}
+
+            # ステータスフィルタ
+            if status == "active":
+                where_clauses.append("is_active = :is_active")
+                params["is_active"] = True
+            elif status == "inactive":
+                where_clauses.append("is_active = :is_active")
+                params["is_active"] = False
+
+            # タイプフィルタ
+            if alert_type in ["price", "logic"]:
+                where_clauses.append("type = :type")
+                params["type"] = alert_type
+
+            # WHERE句を追加
+            if where_clauses:
+                query += " WHERE " + " AND ".join(where_clauses)
+
+            # ソート（作成日時降順）
+            query += " ORDER BY created_at DESC"
+
+            # クエリ実行
+            rows = await database.fetch_all(query, params)
+
             return [AlertsRepository._row_to_alert(row) for row in rows]
-        
+
         except Exception as e:
             # Repository alert fetch error
             return []

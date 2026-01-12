@@ -14,39 +14,35 @@ class SystemService:
     
     async def get_system_information(self) -> Dict[str, Any]:
         """
-        システム情報を取得（ビジネスロジック付き）
+        システム情報を取得（ビジネスロジック付き、API仕様書準拠）
         """
         with track_performance("get_system_information_service"):
             try:
                 logger.info("システム情報サービス開始")
-                
+
                 # リポジトリからシステム情報を取得
                 system_info = await self.system_repo.get_system_info()
-                
+
                 if not system_info:
-                    # デフォルトのシステム情報を返す
+                    # デフォルトのシステム情報を返す（API仕様書準拠）
                     logger.warning("システム情報が見つからないため、デフォルト値を使用")
+                    from datetime import datetime
                     system_info = {
                         "version": "v1.0.0",
-                        "status": "healthy",
-                        "lastScanAt": "未実行",
-                        "activeAlerts": 0,
-                        "totalUsers": 0,
-                        "databaseStatus": "connected",
-                        "lastUpdated": "2025-12-13T10:30:00Z",
+                        "lastUpdated": datetime.now().isoformat() + "Z",
+                        "status": "operational",
                         "statusDisplay": "正常稼働中"
                     }
-                
+
                 # ステータス表示の調整（ビジネスロジック）
                 system_info = self._apply_status_display_logic(system_info)
-                
+
                 logger.info("システム情報取得完了", {
                     "version": system_info.get("version"),
-                    "status": system_info.get("status"),
-                    "active_alerts": system_info.get("activeAlerts", 0)
+                    "status": system_info.get("status")
                 })
                 return system_info
-                
+
             except Exception as e:
                 logger.error("システム情報サービスエラー", {
                     "error": str(e),
@@ -124,20 +120,21 @@ class SystemService:
     
     def _apply_status_display_logic(self, system_info: Dict[str, Any]) -> Dict[str, Any]:
         """
-        ステータス表示のビジネスロジックを適用
+        ステータス表示のビジネスロジックを適用（API仕様書準拠）
         """
         status = system_info.get("status", "unknown")
-        
+
+        # API仕様書: operational, degraded, down
         status_mappings = {
-            "healthy": "正常稼働中",
-            "degraded": "一部機能制限中", 
+            "operational": "正常稼働中",
+            "degraded": "一部機能制限中",
             "down": "メンテナンス中"
         }
-        
+
         # デフォルトのステータス表示が設定されていない場合は自動設定
         if not system_info.get("statusDisplay"):
             system_info["statusDisplay"] = status_mappings.get(status, "ステータス不明")
-        
+
         return system_info
     
     def _apply_health_check_logic(self, health_status: Dict[str, Any]) -> Dict[str, Any]:

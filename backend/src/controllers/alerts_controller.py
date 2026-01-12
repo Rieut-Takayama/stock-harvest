@@ -44,17 +44,27 @@ router = APIRouter(prefix="/api", tags=["alerts"])
 
 
 @router.get("/alerts")
-async def get_alerts() -> List[Dict[str, Any]]:
+async def get_alerts(
+    status: str = None,
+    type: str = None
+) -> List[Dict[str, Any]]:
     """
-    アラート一覧取得
-    
+    アラート一覧取得（フィルタリング・ソート対応）
+
+    Args:
+        status (str, optional): ステータスフィルタ - 'active' | 'inactive'
+        type (str, optional): タイプフィルタ - 'price' | 'logic'
+
     Returns:
-        List[Alert]: 設定済みアラートの一覧
+        List[Alert]: 設定済みアラートの一覧（作成日時降順）
     """
     try:
-        alerts = await AlertsService.get_all_alerts()
+        alerts = await AlertsService.get_all_alerts(
+            status=status,
+            alert_type=type
+        )
         return alerts
-    
+
     except Exception as e:
         # Controller GET alerts error
         raise HTTPException(
