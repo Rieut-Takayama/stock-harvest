@@ -832,7 +832,7 @@ test.describe('問合せサポート画面', () => {
   });
 
   // E2E-SUPPORT-005: レスポンシブ表示
-  test.only('E2E-SUPPORT-005: レスポンシブ表示', async ({ page }) => {
+  test('E2E-SUPPORT-005: レスポンシブ表示', async ({ page }) => {
     // ブラウザコンソールログを収集
     const consoleLogs: Array<{type: string, text: string}> = [];
     page.on('console', (msg) => {

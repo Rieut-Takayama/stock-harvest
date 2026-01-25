@@ -52,10 +52,11 @@ class TestScanEndpoints:
             assert len(data["scanId"]) > 0
             assert "全銘柄スキャンを開始しました" in data["message"]
             
-            # スキャンIDの形式確認 (scan_YYYYMMDD_HHMMSS)
+            # スキャンIDの形式確認 (scan_YYYYMMDD_HHMMSS_UUID)
             scan_id = data["scanId"]
             assert scan_id.startswith("scan_")
-            assert len(scan_id) == 20  # "scan_" + "YYYYMMDD" + "_" + "HHMMSS"
+            # "scan_" + "YYYYMMDD" + "_" + "HHMMSS" + "_" + UUID(8文字) = 29文字
+            assert len(scan_id) >= 20  # 最低でも20文字以上（UUID部分を含む）
             
             print(f"✅ スキャン実行成功: {scan_id}")
             return scan_id

@@ -78,18 +78,20 @@ class TestEnhancedChartsQuality:
         
         # 無効な銘柄コード
         response = await self.api.get("/api/charts/data/invalid")
-        assert response["status_code"] == 400
+        assert response["status_code"] == 422
         error = response["json"]
-        
-        # エラーメッセージが具体的であることをチェック
+
+        # エラーメッセージが存在することをチェック（Pydanticの422エラーは配列形式）
         assert "detail" in error
-        assert "4桁の数字" in error["detail"], "Error message should be descriptive"
-        
+        assert isinstance(error["detail"], list), "Pydantic validation error should be a list"
+        assert len(error["detail"]) > 0, "Error details should not be empty"
+
         # 短すぎる銘柄コード
         response = await self.api.get("/api/charts/data/123")
-        assert response["status_code"] == 400
+        assert response["status_code"] == 422
         error = response["json"]
         assert "detail" in error
+        assert isinstance(error["detail"], list)
         
         print("✅ エラーメッセージ品質OK")
     

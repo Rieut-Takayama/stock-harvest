@@ -255,25 +255,26 @@ class TestScanFoundationIntegration:
             api_results = api_results_response.json()
             
             # データベースから直接結果を取得して比較
-            db_scan_executions = await self.db_helper.fetch_all(
-                "SELECT * FROM scan_executions WHERE id = ?", (scan_id,)
+            db = await self.db_helper.get_db_connection()
+            db_scan_executions = await db.fetch_all(
+                "SELECT * FROM scan_executions WHERE id = :scan_id", {"scan_id": scan_id}
             )
-            
+
             assert len(db_scan_executions) == 1
             db_execution = db_scan_executions[0]
-            
+
             # API結果とDB結果の整合性確認
             assert api_results['totalProcessed'] == db_execution['processed_stocks']
             assert api_results['scanId'] == scan_id
-            
+
             # スキャン結果の件数一致確認
-            db_results_logic_a = await self.db_helper.fetch_all(
-                "SELECT COUNT(*) as count FROM scan_results WHERE scan_id = ? AND logic_type IN ('logic_a', 'logic_a_enhanced')", 
-                (scan_id,)
+            db_results_logic_a = await db.fetch_all(
+                "SELECT COUNT(*) as count FROM scan_results WHERE scan_id = :scan_id AND logic_type IN ('logic_a', 'logic_a_enhanced')",
+                {"scan_id": scan_id}
             )
-            db_results_logic_b = await self.db_helper.fetch_all(
-                "SELECT COUNT(*) as count FROM scan_results WHERE scan_id = ? AND logic_type IN ('logic_b', 'logic_b_enhanced')", 
-                (scan_id,)
+            db_results_logic_b = await db.fetch_all(
+                "SELECT COUNT(*) as count FROM scan_results WHERE scan_id = :scan_id AND logic_type IN ('logic_b', 'logic_b_enhanced')",
+                {"scan_id": scan_id}
             )
             
             logic_a_db_count = db_results_logic_a[0]['count'] if db_results_logic_a else 0

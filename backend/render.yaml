@@ -3,18 +3,18 @@ services:
     name: stock-harvest-backend
     env: python
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main_simple:app --host 0.0.0.0 --port $PORT
+    startCommand: uvicorn src.main:app --host 0.0.0.0 --port $PORT
     plan: free
     envVars:
       - key: DATABASE_URL
-        value: postgresql://neondb_owner:npg_oVq0mDaP1xbn@ep-purple-glade-ah1ruz2b-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+        value: postgresql://neondb_owner:npg_k0uJ9vVagXip@ep-still-art-a1nepwpm-pooler.ap-southeast-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
       - key: JWT_SECRET
-        value: HeZRmIvSG1PIl/cE37I042MT3jnNmZ+yMTGiM9eq41A=
+        value: b5K8mP3qN9rL6wE2xF7vZ4tY1uI0oA5sD8gH3jM7nQ9
       - key: SESSION_SECRET
-        value: psldCEnu7DAfAp4IiAibjChaVAbxCQKUVITMKiCMwPE=
-      - key: TESTING_MODE
-        value: false
+        value: vN8mX2kL5pQ3wE7rT9yU1iO4aS6dF0gH8jK2lZ5xC7
       - key: CORS_ORIGIN
-        value: https://frontend-pbywjmuxs-rieuts-projects.vercel.app
+        value: PLACEHOLDER_VERCEL_URL
       - key: FRONTEND_URL
-        value: https://frontend-pbywjmuxs-rieuts-projects.vercel.app
+        value: PLACEHOLDER_VERCEL_URL
+      - key: NODE_ENV
+        value: production

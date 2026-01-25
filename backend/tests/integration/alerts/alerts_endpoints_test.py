@@ -130,21 +130,40 @@ class TestAlertsEndpoints:
     
     async def test_5_toggle_alert_status(self):
         """テスト5: アラート状態切替"""
-        if not self.created_alert_ids:
-            pytest.skip("No alerts available for toggle test")
-        
         async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
-            alert_id = self.created_alert_ids[0]
-            
+            # テスト専用のアラートを作成
+            alert_data = {
+                "type": "price",
+                "stockCode": "7203",
+                "targetPrice": 3000,
+                "condition": {
+                    "type": "price",
+                    "operator": ">=",
+                    "value": 3000
+                }
+            }
+
+            create_response = await client.post(
+                f"{BASE_URL}/api/alerts",
+                json=alert_data,
+                headers={"Content-Type": "application/json"}
+            )
+
+            assert create_response.status_code == 200, f"Failed to create alert for toggle test: {create_response.status_code}"
+            created_alert = create_response.json()
+            alert_id = created_alert["id"]
+            self.created_alert_ids.append(alert_id)
+
+            # アラート状態切替をテスト
             response = await client.put(f"{BASE_URL}/api/alerts/{alert_id}/toggle")
-            
+
             assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-            
+
             updated_alert = response.json()
             assert updated_alert["id"] == alert_id, "Alert ID mismatch"
             # 状態が変更されていることを確認
             assert "isActive" in updated_alert, "isActive field should be present"
-            
+
             print(f"✅ Test 5 Passed: Toggled alert {alert_id} to {updated_alert['isActive']}")
             return updated_alert
     
@@ -234,28 +253,60 @@ class TestAlertsEndpoints:
     
     async def test_8_delete_alert(self):
         """テスト8: アラート削除"""
-        if len(self.created_alert_ids) < 2:
-            pytest.skip("Not enough alerts for delete test")
-        
         async with httpx.AsyncClient(timeout=TEST_TIMEOUT) as client:
-            alert_id = self.created_alert_ids[1]  # 2番目のアラートを削除
-            
+            # テスト専用のアラートを2つ作成（削除確認用）
+            alerts_to_create = [
+                {
+                    "type": "price",
+                    "stockCode": "7203",
+                    "targetPrice": 3000,
+                    "condition": {
+                        "type": "price",
+                        "operator": ">=",
+                        "value": 3000
+                    }
+                },
+                {
+                    "type": "logic",
+                    "stockCode": "9984",
+                    "condition": {
+                        "type": "logic",
+                        "logicType": "logic_a"
+                    }
+                }
+            ]
+
+            created_ids = []
+            for alert_data in alerts_to_create:
+                create_response = await client.post(
+                    f"{BASE_URL}/api/alerts",
+                    json=alert_data,
+                    headers={"Content-Type": "application/json"}
+                )
+                assert create_response.status_code == 200, f"Failed to create alert for delete test: {create_response.status_code}"
+                created_alert = create_response.json()
+                created_ids.append(created_alert["id"])
+                self.created_alert_ids.append(created_alert["id"])
+
+            # 2番目のアラートを削除
+            alert_id = created_ids[1]
+
             response = await client.delete(f"{BASE_URL}/api/alerts/{alert_id}")
-            
+
             assert response.status_code == 200, f"Expected 200, got {response.status_code}: {response.text}"
-            
+
             delete_response = response.json()
             assert "message" in delete_response, "Delete message should be present"
-            
+
             # 削除されたことを確認
             get_response = await client.get(f"{BASE_URL}/api/alerts")
             alerts = get_response.json()
             alert_ids = [alert["id"] for alert in alerts]
             assert alert_id not in alert_ids, "Deleted alert should not be in the list"
-            
+
             # 記録から削除
             self.created_alert_ids.remove(alert_id)
-            
+
             print(f"✅ Test 8 Passed: Deleted alert {alert_id}")
             return delete_response
     
@@ -430,7 +481,8 @@ class TestAlertsEndpoints:
     async def run_all_tests(self):
         """全テスト実行"""
         test_results = {}
-        
+        self.setup_method()  # インスタンス変数を初期化
+
         try:
             # テスト1: 初期アラート一覧
             test_results["test_1"] = await self.test_1_get_alerts_empty_initial()

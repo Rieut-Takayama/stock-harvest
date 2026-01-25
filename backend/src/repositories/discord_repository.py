@@ -123,31 +123,31 @@ class DiscordRepository:
                 conn.execute("DELETE FROM discord_config")
                 
                 # 新設定を挿入
-                notification_types_str = ','.join(config_data.get('notificationTypes', []))
+                notification_types_str = ','.join(config_data.get('notification_types', []))
                 now = datetime.now().isoformat()
-                
+
                 cursor = conn.execute("""
                     INSERT INTO discord_config (
                         webhook_url, is_enabled, channel_name, server_name,
                         notification_types, mention_role, notification_format,
-                        rate_limit_per_hour, notification_count_today, 
+                        rate_limit_per_hour, notification_count_today,
                         total_notifications_sent, error_count, connection_status,
                         custom_message_template, created_at, updated_at
                     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
-                    config_data['webhookUrl'],
-                    config_data.get('isEnabled', True),
-                    config_data['channelName'],
-                    config_data['serverName'],
+                    config_data['webhook_url'],
+                    config_data.get('is_enabled', True),
+                    config_data['channel_name'],
+                    config_data['server_name'],
                     notification_types_str,
-                    config_data.get('mentionRole'),
-                    config_data.get('notificationFormat', 'standard'),
-                    config_data.get('rateLimitPerHour', 60),
+                    config_data.get('mention_role'),
+                    config_data.get('notification_format', 'standard'),
+                    config_data.get('rate_limit_per_hour', 60),
                     0,  # notification_count_today
                     0,  # total_notifications_sent
                     0,  # error_count
-                    config_data.get('connectionStatus', 'disconnected'),
-                    config_data.get('customMessageTemplate'),
+                    config_data.get('connection_status', 'disconnected'),
+                    config_data.get('custom_message_template'),
                     now,  # created_at
                     now   # updated_at
                 ))
@@ -182,34 +182,34 @@ class DiscordRepository:
                 update_values = []
                 
                 for key, value in update_data.items():
-                    if key == 'notificationTypes':
+                    if key == 'notification_types':
                         update_fields.append('notification_types = ?')
                         update_values.append(','.join(value) if value else '')
-                    elif key == 'isEnabled':
+                    elif key == 'is_enabled':
                         update_fields.append('is_enabled = ?')
                         update_values.append(value)
-                    elif key == 'webhookUrl':
+                    elif key == 'webhook_url':
                         update_fields.append('webhook_url = ?')
                         update_values.append(value)
-                    elif key == 'channelName':
+                    elif key == 'channel_name':
                         update_fields.append('channel_name = ?')
                         update_values.append(value)
-                    elif key == 'serverName':
+                    elif key == 'server_name':
                         update_fields.append('server_name = ?')
                         update_values.append(value)
-                    elif key == 'mentionRole':
+                    elif key == 'mention_role':
                         update_fields.append('mention_role = ?')
                         update_values.append(value)
-                    elif key == 'notificationFormat':
+                    elif key == 'notification_format':
                         update_fields.append('notification_format = ?')
                         update_values.append(value)
-                    elif key == 'customMessageTemplate':
+                    elif key == 'custom_message_template':
                         update_fields.append('custom_message_template = ?')
                         update_values.append(value)
-                    elif key == 'connectionStatus':
+                    elif key == 'connection_status':
                         update_fields.append('connection_status = ?')
                         update_values.append(value)
-                    elif key == 'webhookTestResult':
+                    elif key == 'webhook_test_result':
                         update_fields.append('webhook_test_result = ?')
                         update_values.append(self._serialize_json(value))
                 
@@ -349,29 +349,29 @@ class DiscordRepository:
                 row = cursor.fetchone()
                 if not row:
                     return {
-                        'todayCount': 0,
-                        'totalSent': 0,
-                        'errorCount': 0,
-                        'hourlyLimit': 60,
-                        'lastSentAt': None
+                        'today_count': 0,
+                        'total_sent': 0,
+                        'error_count': 0,
+                        'hourly_limit': 60,
+                        'last_sent_at': None
                     }
                 
                 return {
-                    'todayCount': row['notification_count_today'] or 0,
-                    'totalSent': row['total_notifications_sent'] or 0,
-                    'errorCount': row['error_count'] or 0,
-                    'hourlyLimit': row['rate_limit_per_hour'] or 60,
-                    'lastSentAt': self._parse_datetime(row['last_notification_at'])
+                    'today_count': row['notification_count_today'] or 0,
+                    'total_sent': row['total_notifications_sent'] or 0,
+                    'error_count': row['error_count'] or 0,
+                    'hourly_limit': row['rate_limit_per_hour'] or 60,
+                    'last_sent_at': self._parse_datetime(row['last_notification_at'])
                 }
-                
+
         except Exception as e:
             logger.error(f'Discord通知統計取得エラー: {e}')
             return {
-                'todayCount': 0,
-                'totalSent': 0,
-                'errorCount': 0,
-                'hourlyLimit': 60,
-                'lastSentAt': None
+                'today_count': 0,
+                'total_sent': 0,
+                'error_count': 0,
+                'hourly_limit': 60,
+                'last_sent_at': None
             }
     
     def _parse_datetime(self, dt_str: Optional[str]) -> Optional[datetime]:

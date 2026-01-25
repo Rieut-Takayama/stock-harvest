@@ -79,20 +79,23 @@ async def submit_contact_form(form_data: ContactFormValidator) -> ContactFormRes
                 "priority": form_data.priority
             })
 
+            inquiry_id = result.get("inquiry_id")
+            submitted_at = result.get("submitted_at")
+
             tracker.end({
-                "inquiry_id": result.get("inquiry_id"),
+                "inquiry_id": inquiry_id,
                 "type": form_data.type
             })
 
             logger.info("問合せフォーム送信完了", {
-                "inquiry_id": result.get("inquiry_id")
+                "inquiry_id": inquiry_id
             })
 
             return ContactFormResponse(
                 success=True,
                 message="お問い合わせを受け付けました。2営業日以内にご返信いたします。",
-                inquiryId=result.get("inquiry_id"),
-                submittedAt=result.get("submitted_at")
+                inquiryId=inquiry_id,
+                submittedAt=submitted_at
             )
 
         except ValidationError as e:

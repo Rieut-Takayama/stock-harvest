@@ -1,10 +1,11 @@
-import type { 
+import type {
   ScanResult,
   ScanStatus,
   LogicDetectionStatus
 } from '../../types';
+import { API_BASE_URL } from '@/config/api';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8432';
+const API_BASE = API_BASE_URL;
 
 export class ScanApiService {
   /**

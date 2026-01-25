@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Typography,
   Box,
@@ -28,38 +28,8 @@ import {
   CheckCircle
 } from '@mui/icons-material';
 import { MainLayout } from '../layouts/MainLayout';
-
-// FAQ データ
-const faqData = [
-  {
-    id: '1',
-    category: 'スキャン機能',
-    question: 'AIスキャンはどのくらいの頻度で実行すべきですか？',
-    answer: '市場開場中は5分に1回、開場前後は30分に1回の実行を推奨します。ただし、Yahoo Finance APIの制限を考慮し、過度な実行は避けてください。',
-    tags: ['スキャン', 'API制限']
-  },
-  {
-    id: '2',
-    category: 'ロジック',
-    question: 'ロジックAとロジックBの違いは何ですか？',
-    answer: 'ロジックA（ストップ高張り付き）は急激な値上がりを検出し、ロジックB（赤字→黒字転換）は業績改善による株価上昇を検出します。',
-    tags: ['ロジックA', 'ロジックB']
-  },
-  {
-    id: '3',
-    category: 'アラート',
-    question: 'LINE通知が届かない場合の対処法は？',
-    answer: 'LINE Notifyのトークンが正しく設定されているか確認してください。また、LINEアプリの通知設定も確認してください。',
-    tags: ['LINE通知', 'トラブル']
-  },
-  {
-    id: '4',
-    category: 'システム',
-    question: 'データの取得遅延はなぜ発生しますか？',
-    answer: '無料のYahoo Finance APIを使用しているため、20分程度の遅延が発生します。リアルタイムデータには有料APIが必要です。',
-    tags: ['データ遅延', 'API']
-  }
-];
+import { ContactSupportService } from '../services/api/contactSupportService';
+import type { FAQ, ContactForm } from '@/types';
 
 // システム情報
 const systemInfo = {
@@ -71,8 +41,10 @@ const systemInfo = {
   databaseStatus: 'connected'
 };
 
+const contactService = new ContactSupportService();
+
 export const ContactPage = () => {
-  const [contactForm, setContactForm] = useState({
+  const [contactForm, setContactForm] = useState<ContactForm>({
     type: 'technical',
     subject: '',
     content: '',
@@ -80,13 +52,51 @@ export const ContactPage = () => {
     priority: 'medium'
   });
   const [submitted, setSubmitted] = useState(false);
+  const [expandedFaq, setExpandedFaq] = useState<string | false>(false);
+  const [faqData, setFaqData] = useState<FAQ[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchFAQ = async () => {
+      try {
+        const data = await contactService.getFAQList();
+        setFaqData(data);
+      } catch (error) {
+        console.error('FAQ取得エラー:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFAQ();
+  }, []);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // ここで実際のフォーム送信処理を行う
-    // Contact form submitted
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 5000);
+    setSubmitting(true);
+
+    try {
+      // API呼び出し: POST /api/contact/submit
+      await contactService.submitContactForm(contactForm);
+
+      // 送信成功: フォームリセット
+      setContactForm({
+        type: 'technical',
+        subject: '',
+        content: '',
+        email: '',
+        priority: 'medium'
+      });
+
+      // 成功メッセージ表示 (5秒後自動消失)
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      console.error('お問い合わせ送信エラー:', error);
+      // エラーハンドリング（必要に応じて追加）
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusColor = (status: string) => {
@@ -106,6 +116,10 @@ export const ContactPage = () => {
       case 'システム': return <Help />;
       default: return <Help />;
     }
+  };
+
+  const handleFaqChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
+    setExpandedFaq(isExpanded ? panel : false);
   };
 
   return (
@@ -139,8 +153,16 @@ export const ContactPage = () => {
                   よくある質問 (FAQ)
                 </Typography>
 
-                {faqData.map((faq) => (
-                  <Accordion key={faq.id} sx={{ mb: 1 }}>
+                {loading ? (
+                  <Typography>読み込み中...</Typography>
+                ) : (
+                  faqData.map((faq) => (
+                  <Accordion
+                    key={faq.id}
+                    expanded={expandedFaq === faq.id}
+                    onChange={handleFaqChange(faq.id)}
+                    sx={{ mb: 1 }}
+                  >
                     <AccordionSummary expandIcon={<ExpandMore />}>
                       <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
                         {getCategoryIcon(faq.category)}
@@ -174,7 +196,8 @@ export const ContactPage = () => {
                       </Typography>
                     </AccordionDetails>
                   </Accordion>
-                ))}
+                  ))
+                )}
               </CardContent>
             </Card>
 
@@ -259,6 +282,7 @@ export const ContactPage = () => {
                         variant="contained"
                         size="large"
                         startIcon={<Send />}
+                        disabled={submitting}
                         sx={{
                           background: 'linear-gradient(45deg, #38a169, #4caf50)',
                           '&:hover': {
@@ -266,7 +290,7 @@ export const ContactPage = () => {
                           },
                         }}
                       >
-                        送信
+                        {submitting ? '送信中...' : '送信'}
                       </Button>
                     </Grid>
                   </Grid>

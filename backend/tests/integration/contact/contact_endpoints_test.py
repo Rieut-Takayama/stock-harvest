@@ -169,44 +169,54 @@ class TestContactEndpoints:
         
         print(f"✅ お問い合わせ送信成功: {inquiry_id}")
     
-    @pytest.mark.asyncio  
+    @pytest.mark.asyncio
     async def test_contact_submit_validation_errors(self):
         """
         POST /api/contact/submit - バリデーションエラーケース
         """
         self.tracker.set_operation("バリデーションエラーテスト開始")
         self.tracker.mark("テスト開始")
-        
+
         # データベース準備
         self.tracker.set_operation("データベース準備")
         self.db = await self.db_helper.setup_test_environment()
         self.tracker.mark("データベース準備完了")
-        
+
         # 空の件名でテスト
         self.tracker.set_operation("空件名テスト")
         invalid_data = {
             "type": "technical",
             "subject": "",  # 空の件名
-            "content": "テスト内容",
+            "content": "これは10文字以上のテスト内容です",
             "email": "test@example.com",
             "priority": "medium"
         }
-        
+
         response = await self.api_helper.post("/api/contact/submit", invalid_data)
         # FastAPIのPydanticバリデーションは422を返す
         assert response["status_code"] in [400, 422], f"Empty subject should return 400 or 422, got {response['status_code']}"
         self.tracker.mark("空件名テスト完了")
 
-        # 空の内容でテスト
-        self.tracker.set_operation("空内容テスト")
+        # 短すぎる内容でテスト
+        self.tracker.set_operation("短内容テスト")
         invalid_data["subject"] = "テスト件名"
-        invalid_data["content"] = ""  # 空の内容
+        invalid_data["content"] = "短い"  # 10文字未満
 
         response = await self.api_helper.post("/api/contact/submit", invalid_data)
         # FastAPIのPydanticバリデーションは422を返す
-        assert response["status_code"] in [400, 422], f"Empty content should return 400 or 422, got {response['status_code']}"
-        self.tracker.mark("空内容テスト完了")
-        
+        assert response["status_code"] in [400, 422], f"Short content should return 400 or 422, got {response['status_code']}"
+        self.tracker.mark("短内容テスト完了")
+
+        # 不正なメールアドレスでテスト
+        self.tracker.set_operation("不正メールテスト")
+        invalid_data["content"] = "これは10文字以上のテスト内容です"
+        invalid_data["email"] = "invalid-email"  # 不正なメールアドレス
+
+        response = await self.api_helper.post("/api/contact/submit", invalid_data)
+        # EmailStrバリデーションは422を返す
+        assert response["status_code"] == 422, f"Invalid email should return 422, got {response['status_code']}"
+        self.tracker.mark("不正メールテスト完了")
+
         print("✅ バリデーションエラーテスト完了")
     
     @pytest.mark.asyncio

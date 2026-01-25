@@ -28,7 +28,6 @@ export const useAlertsData = () => {
       setLineConfig(config);
     } catch {
       // LINE設定の取得エラーは無視し、初期値nullのまま継続
-      console.warn('LINE設定取得に失敗しましたが、アプリの動作には影響しません');
     }
   };
 

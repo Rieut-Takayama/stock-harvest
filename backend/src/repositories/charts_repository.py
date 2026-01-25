@@ -15,7 +15,7 @@ from concurrent.futures import ThreadPoolExecutor
 import hashlib
 
 from ..lib.logger import logger, PerformanceTracker
-from ..services.test_data_provider import test_data_provider
+from ..lib.test_data_provider import test_data_provider
 
 class ChartsRepository:
     """チャートデータ取得リポジトリ"""

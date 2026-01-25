@@ -12,6 +12,7 @@ from ..repositories.scan_repository import ScanRepository
 from .stock_data_service_enhanced import StockDataServiceEnhanced
 from .technical_analysis_service import TechnicalAnalysisService
 from .logic_detection_service import LogicDetectionService
+from .logic_a_strict_service import LogicAStrictService
 from ..lib.logger import logger
 
 
@@ -20,19 +21,22 @@ class ScanService:
     
     def __init__(self, scan_repository: ScanRepository):
         self.scan_repository = scan_repository
-        
+
         # 専門サービスの依存性注入
         self.stock_data_service = StockDataServiceEnhanced()
         self.technical_analysis_service = TechnicalAnalysisService()
         self.logic_detection_service = LogicDetectionService()
+        self.logic_a_strict_service = LogicAStrictService()
     
     async def start_scan(self) -> Dict:
         """
         全銘柄スキャンを開始する
         """
         try:
-            # スキャンIDを生成
-            scan_id = f"scan_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            # スキャンIDを生成（マイクロ秒とUUID一部を追加して一意性を保証）
+            now = datetime.now()
+            unique_suffix = str(uuid.uuid4())[:8]
+            scan_id = f"scan_{now.strftime('%Y%m%d_%H%M%S')}_{unique_suffix}"
             
             # スキャン実行記録をデータベースに保存
             scan_execution = {
@@ -67,13 +71,26 @@ class ScanService:
     
     async def get_scan_status(self) -> Dict:
         """
-        現在のスキャン状況を取得する
+        現在のスキャン状況を取得する（API仕様書準拠）
+
+        戻り値:
+            isRunning: スキャン実行中フラグ
+            progress: 進捗率（0-100）
+            totalStocks: 対象銘柄総数
+            processedStocks: 処理済み銘柄数
+            currentStock: 現在処理中の銘柄コード
+            estimatedTime: 推定残り時間（秒）
+            message: ステータスメッセージ
         """
         try:
+            logger.debug("スキャン状態取得開始")
+
             # 最新のスキャン実行を取得
             latest_scan = await self.scan_repository.get_latest_scan_execution()
-            
+
+            # スキャン実行履歴が存在しない場合（アイドル状態）
             if not latest_scan:
+                logger.info("スキャン履歴なし - アイドル状態")
                 return {
                     'isRunning': False,
                     'progress': 0,
@@ -83,22 +100,36 @@ class ScanService:
                     'estimatedTime': None,
                     'message': 'スキャンが実行されていません'
                 }
-            
+
             # 進行中のスキャンがある場合のステータス変換
-            is_running = latest_scan['status'] == 'running'
-            
-            return {
+            scan_status = latest_scan.get('status', 'unknown')
+            is_running = scan_status == 'running'
+
+            # API仕様書準拠のレスポンス形式
+            response = {
                 'isRunning': is_running,
-                'progress': latest_scan['progress'],
-                'totalStocks': latest_scan['total_stocks'],
-                'processedStocks': latest_scan['processed_stocks'],
-                'currentStock': latest_scan['current_stock'],
-                'estimatedTime': latest_scan['estimated_time'],
-                'message': latest_scan['message']
+                'progress': latest_scan.get('progress', 0),
+                'totalStocks': latest_scan.get('total_stocks', 0),
+                'processedStocks': latest_scan.get('processed_stocks', 0),
+                'currentStock': latest_scan.get('current_stock'),
+                'estimatedTime': latest_scan.get('estimated_time'),
+                'message': latest_scan.get('message', 'ステータス不明')
             }
-            
+
+            # ステータスに応じたログ出力
+            if is_running:
+                logger.info(f"スキャン実行中: 進捗 {response['progress']}%, {response['processedStocks']}/{response['totalStocks']} 銘柄処理済み")
+            elif scan_status == 'completed':
+                logger.info(f"スキャン完了: {response['processedStocks']} 銘柄処理済み")
+            elif scan_status == 'failed':
+                logger.warning(f"スキャン失敗: エラーメッセージ={latest_scan.get('error_message', '不明')}")
+            else:
+                logger.info(f"スキャン状態: {scan_status}")
+
+            return response
+
         except Exception as e:
-            logger.error(f"スキャン状況取得エラー: {str(e)}")
+            logger.error(f"スキャン状況取得エラー: {str(e)}", exc_info=True)
             raise Exception(f"スキャン状況の取得に失敗しました: {str(e)}")
     
     async def get_scan_results(self) -> Dict:
@@ -136,9 +167,17 @@ class ScanService:
             combined_logic_a = logic_a_results + logic_a_enhanced_results
             combined_logic_b = logic_b_results + logic_b_enhanced_results
             
+            # completed_atの形式を統一（datetime → str）
+            completed_at_str = ''
+            if completed_scan['completed_at']:
+                if isinstance(completed_scan['completed_at'], str):
+                    completed_at_str = completed_scan['completed_at']
+                else:
+                    completed_at_str = completed_scan['completed_at'].isoformat()
+
             return {
                 'scanId': scan_id,
-                'completedAt': completed_scan['completed_at'].isoformat() if completed_scan['completed_at'] else '',
+                'completedAt': completed_at_str,
                 'totalProcessed': completed_scan['processed_stocks'],
                 'logicA': {
                     'detected': len(combined_logic_a),
@@ -212,8 +251,17 @@ class ScanService:
                     if await self.logic_detection_service.detect_logic_a(stock_data):
                         logic_a_detected.append(stock_data)
                         await self._save_scan_result(scan_id, stock_data, 'logic_a')
-                    
-                    # ロジックA強化版検出
+
+                    # ロジックA厳密版検出（5つの条件判定）
+                    logic_a_strict_result = await self.logic_a_strict_service.detect_strict_stop_high_sticking(stock_data)
+                    if logic_a_strict_result['detected']:
+                        stock_data['strict_logic_result'] = logic_a_strict_result
+                        logger.info(f"🎯 ロジックA厳密版検出: {stock_data['code']} {stock_data['name']}")
+                        # 厳密版は強化版として扱う
+                        logic_a_enhanced_detected.append(stock_data)
+                        await self._save_scan_result(scan_id, stock_data, 'logic_a_enhanced')
+
+                    # ロジックA強化版検出（既存の強化版も残す）
                     logic_a_enhanced_result = await self.logic_detection_service.detect_logic_a_enhanced(stock_data)
                     if logic_a_enhanced_result['detected']:
                         stock_data['enhanced_signals'] = logic_a_enhanced_result

@@ -5,9 +5,9 @@
 
 import pytest
 import asyncio
-from backend.src.services.logic_detection_service import LogicDetectionService
-from backend.src.services.stock_data_service import StockDataService
-from backend.src.services.technical_analysis_service import TechnicalAnalysisService
+from src.services.logic_detection_service import LogicDetectionService
+from src.services.stock_data_service_enhanced import StockDataServiceEnhanced
+from src.services.technical_analysis_service import TechnicalAnalysisService
 
 
 class TestLogicAEnhanced:
@@ -17,7 +17,7 @@ class TestLogicAEnhanced:
     def setup_method(self):
         """テストセットアップ"""
         self.logic_service = LogicDetectionService()
-        self.stock_data_service = StockDataService()
+        self.stock_data_service = StockDataServiceEnhanced()
         self.tech_analysis_service = TechnicalAnalysisService()
         
         # テストデータ

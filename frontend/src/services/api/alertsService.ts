@@ -1,12 +1,62 @@
 // Stock Harvest AI - Alerts API Service
 import { API_PATHS } from '../../types';
-import type { 
-  Alert, 
-  AlertFormData, 
-  LineNotificationConfig
+import type {
+  Alert,
+  AlertFormData,
+  LineNotificationConfig,
+  AlertCondition
 } from '../../types';
+import { API_BASE_URL } from '@/config/api';
 
-const API_BASE_URL = 'http://localhost:8432';
+// APIレスポンス型（バックエンドの実際の型）
+interface AlertApiResponse {
+  id: string;
+  stockCode: string;
+  stockName: string;
+  type: 'price' | 'logic';
+  condition: string; // JSON文字列
+  isActive: number; // 0/1
+  createdAt: string;
+  lineNotificationEnabled: number; // 0/1
+}
+
+// APIレスポンス → フロントエンド型変換
+function transformAlertResponse(apiAlert: AlertApiResponse): Alert {
+  let conditionObj: AlertCondition;
+
+  try {
+    const parsed = JSON.parse(apiAlert.condition);
+
+    // API構造 → フロントエンド構造に変換
+    if (parsed.type === 'price') {
+      conditionObj = {
+        targetPrice: parsed.value,
+        priceDirection: parsed.operator === '>=' ? 'above' : 'below'
+      };
+    } else if (parsed.type === 'logic') {
+      conditionObj = {
+        logic: parsed.logicType,
+        logicName: parsed.logicType === 'logic_a' ? 'ストップ高張り付き' : '赤字→黒字転換'
+      };
+    } else {
+      conditionObj = {};
+    }
+  } catch {
+    // パースエラー時はデフォルト値
+    conditionObj = {};
+  }
+
+  return {
+    id: apiAlert.id,
+    stockCode: apiAlert.stockCode,
+    stockName: apiAlert.stockName,
+    type: apiAlert.type,
+    condition: conditionObj,
+    isActive: apiAlert.isActive === 1,
+    createdAt: apiAlert.createdAt,
+    lineNotificationEnabled: apiAlert.lineNotificationEnabled === 1
+  };
+}
 
 export class AlertsService {
   
@@ -24,7 +74,8 @@ export class AlertsService {
         throw new Error(`Failed to fetch alerts: ${response.status}`);
       }
 
-      const alerts: Alert[] = await response.json();
+      const apiAlerts: AlertApiResponse[] = await response.json();
+      const alerts: Alert[] = apiAlerts.map(transformAlertResponse);
       return alerts;
     } catch {
       // アラート取得失敗時のエラーメッセージを統一
@@ -35,19 +86,34 @@ export class AlertsService {
   async createAlert(formData: AlertFormData): Promise<Alert> {
     // 実API統合: POST /api/alerts
     try {
+      // フロントエンド型 → バックエンドAPI型に変換
+      const apiRequest = {
+        type: formData.alertType,
+        stockCode: formData.stockCode,
+        condition: formData.alertType === 'price' ? {
+          type: 'price',
+          operator: '>=',
+          value: formData.targetPrice || 0
+        } : {
+          type: 'logic',
+          logicType: 'logic_a'
+        }
+      };
+
       const response = await fetch(`${API_BASE_URL}${API_PATHS.ALERTS.CREATE}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(apiRequest),
       });
 
       if (!response.ok) {
         throw new Error(`Failed to create alert: ${response.status}`);
       }
 
-      const alert: Alert = await response.json();
+      const apiAlert: AlertApiResponse = await response.json();
+      const alert: Alert = transformAlertResponse(apiAlert);
       return alert;
     } catch {
       // アラート作成失敗時のエラーメッセージを統一
@@ -69,7 +135,8 @@ export class AlertsService {
         throw new Error(`Failed to toggle alert: ${response.status}`);
       }
 
-      const alert: Alert = await response.json();
+      const apiAlert: AlertApiResponse = await response.json();
+      const alert: Alert = transformAlertResponse(apiAlert);
       return alert;
     } catch {
       // アラートトグル失敗時のエラーメッセージを統一

@@ -1,210 +1,490 @@
-# リファクタリング設計書 - Stock Harvest AI
+# リファクタリング設計書
 
-## 概要
+Phase 1調査結果に基づく具体的リファクタリング実行計画
 
-本設計書は5つの包括的調査レポートに基づき、Stock Harvest AIプロジェクトの品質向上とコード最適化を目的とした戦略的リファクタリング計画を定義します。
+作成日: 2026-01-21
+実行予定: Phase 3（並列実行）
 
-### 評価サマリー
-- **フロントエンド**: A+ (極めて良好)
-- **バックエンド**: 85/100 (優秀な3層アーキテクチャ)
-- **技術的負債**: 7.0/10 (良好だが改善の余地あり)
+---
 
-## 1. 即座に削除するファイル(刹那性の原則)
+## 1. 即座に削除するファイル（刹那性の原則）
 
-### 削除対象リスト
+### 1.1 重複バックエンド削除（最優先）
 
-#### 1.1 重複コンテンツ(約160KB)
-- `netlify-deploy/` - 完全重複ディレクトリ
-- `simple-version/` - 開発初期の試作版
-- `mockups/` - 完成版では不要なモックアップ
+#### 削除対象
+```
+/api/                          # 252KB, 12ファイル（backend/src/と重複）
+├── __pycache__/
+├── alerts.py
+├── batch.py
+├── contact.py
+├── db.py
+├── notifications.py
+├── scan.py
+├── system.py
+└── その他設定ファイル
 
-#### 1.2 ログファイル(約500KB)
-- `backend-type-check.log`
-- `build-output.log`
-- `ts-errors-frontend.log`
-- `backend/server*.log` (14ファイル)
-- `frontend/client.log`
-- `frontend/dev.log`
-- `frontend/build-output.log`
+/api-server/                   # 20KB, 5ファイル（モックサーバー）
+├── server.js
+├── package.json
+└── その他
+```
 
-#### 1.3 テスト結果ファイル(約200KB)
-- `frontend/test-results/` 全体(305件の蓄積ファイル)
-- `backend/*.json` (milestone_report等)
-- `backend/final_e2e_test_report.md`
+**削除による影響**:
+- ディスク容量削減: 272KB
+- ビルドエラー: なし（全て未使用、backend/src/のみ使用）
+- **単一真実源の原則**: バックエンドはbackend/src/のみに集約 ✓
 
-#### 1.4 一時ファイル・不要設定
-- `app.js` (ルート直下の孤立ファイル)
-- `package.json` (ルート直下、不適切配置)
-- `backend/package.json` (Python プロジェクトで不適切)
-- `history.html`, `simple.html`, `ultra-*.html`
-- `index.html` (ルート直下の孤立ファイル)
-
-### 削除コマンド
-
+**削除コマンド**:
 ```bash
-# Phase 1: 重複ディレクトリの削除
-rm -rf netlify-deploy/
-rm -rf simple-version/
+rm -rf api/ api-server/
+```
+
+### 1.2 古いビルド成果物削除
+
+#### 削除対象
+```
+/assets/                       # 992KB（古いビルド成果物）
+├── index-*.js
+├── index-*.css
+└── その他バンドルファイル
+```
+
+**削除による影響**:
+- ディスク容量削減: 992KB
+- ビルドエラー: なし（最新ビルドはfrontend/dist/）
+
+**削除コマンド**:
+```bash
+rm -rf assets/
+```
+
+### 1.3 デザインモックアップ削除
+
+#### 削除対象
+```
+/mockups/                      # 36KB（デザインモックアップ）
+├── dashboard.png
+├── settings.png
+└── その他スクリーンショット
+```
+
+**削除による影響**:
+- ディスク容量削減: 36KB
+- ビルドエラー: なし（開発初期の資料、現在不要）
+
+**削除コマンド**:
+```bash
 rm -rf mockups/
+```
 
-# Phase 2: ログファイルの一括削除
-find . -name "*.log" -type f -delete
-find . -name "server*.log" -type f -delete
+### 1.4 調査スクリプト群削除
 
-# Phase 3: テスト結果の削除
+#### 削除対象
+```
+earnings_impact_analysis.py    # 12KB
+detailed_stock_analysis.py     # 15KB
+stock_analysis.py              # 18KB
+final_survey_report.py         # 10KB
+final_survey_report.txt        # 14KB
+```
+
+**削除による影響**:
+- ディスク容量削減: 69KB
+- ビルドエラー: なし（Phase 1調査用の一時スクリプト）
+
+**削除コマンド**:
+```bash
+rm -f earnings_impact_analysis.py detailed_stock_analysis.py stock_analysis.py final_survey_report.py final_survey_report.txt
+```
+
+### 1.5 ログ・一時ファイル削除
+
+#### 削除対象
+```
+stats.html                     # 5.98MB（巨大HTMLレポート）
+ts-errors-*.log                # 各100-200KB
+test_database.db               # SQLiteテストDB
+backend/*.log                  # 14ファイル
+frontend/client.log
+frontend/dev.log
+frontend/build-output.log
+```
+
+**削除による影響**:
+- ディスク容量削減: 約6MB
+- ビルドエラー: なし（全て一時ファイル）
+
+**削除コマンド**:
+```bash
+rm -f stats.html ts-errors-*.log test_database.db
+find backend -name "*.log" -type f -delete
+find frontend -name "*.log" -type f -delete
+```
+
+### 1.6 重複エントリーポイント削除
+
+#### 削除対象
+```
+backend/main.py                # 旧版エントリーポイント
+backend/main_simple.py         # 簡易版エントリーポイント
+backend/vercel_app.py          # Vercel用（Vercel未使用）
+```
+
+**削除による影響**:
+- ディスク容量削減: 約10KB
+- ビルドエラー: なし（backend/src/main.pyのみ使用）
+- **単一真実源の原則**: エントリーポイントはbackend/src/main.pyのみ ✓
+
+**削除コマンド**:
+```bash
+rm -f backend/main.py backend/main_simple.py backend/vercel_app.py
+```
+
+### 1.7 重複設定ファイル削除
+
+#### 削除対象
+```
+/requirements.txt              # ルートのPython依存関係（backend/requirements.txtと重複）
+/playwright.config.ts          # ルートのPlaywright設定（frontend/playwright.config.tsと重複）
+```
+
+**削除による影響**:
+- ディスク容量削減: 約5KB
+- ビルドエラー: なし（各ディレクトリ内の設定ファイルが優先）
+- **単一真実源の原則**: 設定ファイルは各ディレクトリ内のみ ✓
+
+**削除コマンド**:
+```bash
+rm -f requirements.txt playwright.config.ts
+```
+
+### 1.8 重複コンポーネント削除
+
+#### 削除対象
+```
+frontend/src/stories/Header.tsx   # Storybook用ヘッダー（未使用）
+```
+
+**削除による影響**:
+- ディスク容量削減: 約3KB
+- ビルドエラー: なし（Storybook未導入）
+
+**削除コマンド**:
+```bash
+rm -f frontend/src/stories/Header.tsx
+```
+
+### 1.9 空ディレクトリ削除
+
+#### 削除対象
+```
+frontend/src/utils/            # 空ディレクトリ
+```
+
+**削除コマンド**:
+```bash
+rmdir frontend/src/utils/
+```
+
+### 1.10 重複ディレクトリ削除（追加）
+
+#### 削除対象
+```
+netlify-deploy/                # 完全重複ディレクトリ
+simple-version/                # 開発初期の試作版
+```
+
+**削除による影響**:
+- ディスク容量削減: 約160KB
+- ビルドエラー: なし（全て古いバージョン）
+
+**削除コマンド**:
+```bash
+rm -rf netlify-deploy/ simple-version/
+```
+
+### 1.11 テスト結果ファイル削除（追加）
+
+#### 削除対象
+```
+frontend/test-results/         # 305件の蓄積ファイル
+backend/*.json                 # milestone_report等
+backend/final_e2e_test_report.md
+backend/chart_slice_milestone_report.json
+```
+
+**削除による影響**:
+- ディスク容量削減: 約200KB
+- ビルドエラー: なし（全て一時テストレポート）
+
+**削除コマンド**:
+```bash
 rm -rf frontend/test-results/
-rm -f backend/*_report.json
-rm -f backend/*_report.md
+rm -f backend/*_report.json backend/*_report.md
+```
 
-# Phase 4: 孤立ファイルの削除
+### 1.12 孤立ファイル削除（追加）
+
+#### 削除対象
+```
+app.js                         # ルート直下の孤立ファイル
+package.json                   # ルート直下（不適切配置）
+backend/package.json           # Pythonプロジェクトで不適切
+index.html                     # ルート直下の孤立ファイル
+history.html
+simple.html
+ultra-*.html
+```
+
+**削除による影響**:
+- ディスク容量削減: 約20KB
+- ビルドエラー: なし（全て未使用）
+
+**削除コマンド**:
+```bash
 rm -f app.js package.json index.html history.html simple.html ultra-*.html
 rm -f backend/package.json
-rm -f ts-errors-frontend.log
-
-# Phase 5: 一時テストファイルの削除
-rm -f backend/test_*.py
-rm -f backend/simple_*.py
-rm -f backend/comprehensive_*.py
-rm -f backend/quality_*.py
-rm -f backend/run_*.py
-rm -f backend/chart_*.py
 ```
 
-## 2. 設定ファイルの修正
+### 1.13 一時テストファイル削除（追加）
 
-### 2.1 CLAUDE.md の技術スタック更新
-
-#### 現在の記載vs実際の差異修正
-```yaml
-# 修正前
-frontend: 
-  - React 18        # → React 19に更新
-  - MUI v6          # → MUI v7に更新
-  - Vite 5          # → 最新版確認
-
-# 追加項目
-  - Playwright (E2Eテスト)
-  - Zustand (状態管理実装済み)
-  - React Query (データフェッチング)
+#### 削除対象
+```
+backend/test_*.py
+backend/simple_*.py
+backend/comprehensive_*.py
+backend/quality_*.py
+backend/run_*.py
+backend/chart_*.py
 ```
 
-#### ポート設定の確認
-```yaml
-# 実際の設定と一致性確認
-frontend: 3247    # vite.config.ts確認
-backend: 8432     # main.py確認
+**削除コマンド**:
+```bash
+rm -f backend/test_*.py backend/simple_*.py backend/comprehensive_*.py backend/quality_*.py backend/run_*.py backend/chart_*.py
 ```
 
-### 2.2 不適切な設定ファイル対応
-- `backend/railway.json`: Railway特化設定、汎用性確認
-- `backend/render.yaml`: Render特化設定、汎用性確認
-- `vercel.json`: Vercel特化設定、汎用性確認
+---
 
-## 3. 大型ファイル分割計画
+## 2. ディレクトリ構造の整理
 
-### 3.1 DashboardPage.tsx の分割(476行)
+### 2.1 最終ディレクトリ構造
 
-#### 分割戦略
 ```
-DashboardPage.tsx (476行) → 分割後:
-├── DashboardPage.tsx (100-120行) - メインコンポーネント
-├── components/dashboard/
-│   ├── StockScanSection.tsx (80-100行)
-│   ├── MetricsSection.tsx (60-80行)
-│   ├── ChartsSection.tsx (100-120行)
-│   └── AlertsSection.tsx (80-100行)
-└── hooks/dashboard/
-    ├── useDashboardLayout.ts
-    └── useScanControls.ts
-```
-
-#### 責任分離
-- **DashboardPage**: レイアウト・状態管理・ページ全体のオーケストレーション
-- **StockScanSection**: スキャン機能・実行状態管理
-- **MetricsSection**: 統計データ表示・KPI可視化  
-- **ChartsSection**: チャート表示・ズーム・フィルタリング
-- **AlertsSection**: アラート一覧・管理機能
-
-### 3.2 scan_service.py の分割(469行)
-
-#### 分割戦略
-```
-scan_service.py (469行) → 分割後:
-├── scan_service.py (100-120行) - 公開API・オーケストレーション
-├── services/scan/
-│   ├── stock_data_fetcher.py (100-120行)
-│   ├── technical_analyzer.py (120-140行)
-│   ├── signal_generator.py (100-120行)
-│   └── scan_executor.py (80-100行)
-└── utils/scan/
-    ├── data_validator.py
-    └── performance_tracker.py
+STOCK HARVEST/
+├── backend/
+│   ├── src/                  # バックエンド唯一の実装ディレクトリ
+│   │   ├── main.py          # 唯一のエントリーポイント
+│   │   ├── controllers/
+│   │   ├── services/
+│   │   ├── models/
+│   │   └── ...
+│   ├── tests/
+│   ├── requirements.txt      # 唯一のPython依存関係
+│   └── ...
+├── frontend/
+│   ├── src/
+│   ├── tests/
+│   │   └── e2e/
+│   ├── dist/                 # 唯一のビルド成果物ディレクトリ
+│   ├── playwright.config.ts  # 唯一のPlaywright設定
+│   ├── package.json
+│   └── ...
+├── docs/
+│   ├── SCOPE_PROGRESS.md
+│   ├── requirements.md
+│   ├── DEPLOYMENT.md
+│   ├── designsystem.md
+│   ├── api-specs/
+│   └── e2e-specs/
+├── .env.local                # 唯一の環境変数ファイル
+├── CLAUDE.md
+└── README.md
 ```
 
-#### 責任分離
-- **scan_service**: 公開API・エラーハンドリング・結果統合
-- **stock_data_fetcher**: Yahoo Finance APIアクセス・データ取得
-- **technical_analyzer**: テクニカル指標計算・トレンド分析
-- **signal_generator**: 売買シグナル生成・アラート判定
-- **scan_executor**: バッチ処理・並列実行制御
+### 2.2 削除完了後の検証
 
-### 3.3 重要な制約
+**削除対象の合計**:
+- ディスク容量削減: 約7.8MB
+- 削除ファイル数: 約400ファイル
+- 削除ディレクトリ数: 8個
 
-**⚠️ types/index.ts は分割しない（単一真実源の原則）**
-- フロントエンド: `src/types/index.ts`
-- バックエンド: `src/types/index.ts`  
-- 両ファイルは完全同期を維持
-- API契約の一貫性保証のため、分割は絶対に禁止
+**検証項目**:
+1. バックエンドが backend/src/ のみであること
+2. 環境変数が .env.local のみであること
+3. ビルドが正常に実行できること
+4. 既存テストが全てPASSすること
 
-## 4. 命名規則の統一
+---
 
-### 4.1 Pythonファイル名修正リスト
+## 3. コード品質改善
 
-#### ファイル名命名規則統一
-```python
-# 現在 → 修正後
-alerts_controller.py → alerts_controller.py ✓ (適合済み)
-charts_controller.py → charts_controller.py ✓ (適合済み)
-scan_controller.py → scan_controller.py ✓ (適合済み)
+### 3.1 エラーハンドリング追加（3ファイル）
 
-# サービス層
-alerts_service.py → alerts_service.py ✓ (適合済み)
-charts_service.py → charts_service.py ✓ (適合済み)
-scan_service.py → scan_service.py ✓ (適合済み)
-
-# リポジトリ層
-alerts_repository.py → alerts_repository.py ✓ (適合済み)
-scan_repository.py → scan_repository.py ✓ (適合済み)
+#### 対象ファイル
+```
+frontend/src/services/contactSupportService.ts
+frontend/src/services/systemService.ts
+frontend/src/services/chartsService.ts
 ```
 
-#### クラス名・関数名統一
-```python
-# snake_case → camelCase (必要に応じて)
-class ScanService:     # ✓ PascalCase適合済み
-    def execute_scan() # ✓ snake_case適合済み
-    
-# 定数名統一
-SCAN_TIMEOUT = 300     # ✓ UPPER_SNAKE_CASE適合済み
-MAX_STOCKS = 1000      # ✓ UPPER_SNAKE_CASE適合済み
-```
+**問題**: try-catch内でエラーを再スローしているが、エラーメッセージの標準化が不足
 
-### 4.2 TypeScript命名規則確認
-
-#### インターフェース・型定義
+**修正内容**:
 ```typescript
-// 既存命名の品質確認
-interface StockData { } ✓ PascalCase適合
-interface TechnicalSignals { } ✓ PascalCase適合
-type AlertType = string; ✓ PascalCase適合
+// Before
+catch (error) {
+  console.error('Error:', error);
+  throw error;
+}
 
-// 関数・変数名確認
-const fetchStockData = () => { }; ✓ camelCase適合
-const SCAN_INTERVALS = { }; ✓ UPPER_SNAKE_CASE適合
+// After
+catch (error) {
+  const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+  console.error('API Error [functionName]:', errorMessage);
+  throw new Error(`[ServiceName] ${errorMessage}`);
+}
 ```
 
-## 5. 品質向上計画
+**影響範囲**: フロントエンドのエラーメッセージが統一される
 
-### 5.1 デバッグコード削除
+### 3.2 命名規則修正（32箇所）
+
+#### 3.2.1 フロントエンドE2Eテスト（1箇所）
+
+**対象**:
+```
+frontend/tests/e2e/pages/contact-support.spec.ts → contactSupport.spec.ts
+```
+
+**修正コマンド**:
+```bash
+cd frontend/tests/e2e/pages
+mv contact-support.spec.ts contactSupport.spec.ts
+```
+
+#### 3.2.2 バックエンドPythonファイル（31箇所）
+
+**対象**: Phase 1調査で特定されたcamelCase → snake_case変換対象
+
+**修正方針**:
+- ファイル名のみ変更（関数名・変数名は既にsnake_case準拠）
+- import文の自動修正
+
+**例**:
+```python
+# Before
+from src.services.scanService import scan_stocks
+
+# After
+from src.services.scan_service import scan_stocks
+```
+
+**修正対象ファイル一覧**（Phase 1調査結果より）:
+```
+backend/src/controllers/alertsController.py → alerts_controller.py
+backend/src/controllers/batchController.py → batch_controller.py
+backend/src/controllers/contactController.py → contact_controller.py
+backend/src/controllers/notificationsController.py → notifications_controller.py
+backend/src/controllers/scanController.py → scan_controller.py
+backend/src/controllers/systemController.py → system_controller.py
+
+backend/src/services/alertsService.py → alerts_service.py
+backend/src/services/batchService.py → batch_service.py
+backend/src/services/contactService.py → contact_service.py
+backend/src/services/notificationsService.py → notifications_service.py
+backend/src/services/scanService.py → scan_service.py
+backend/src/services/systemService.py → system_service.py
+
+# 他25ファイル（Phase 1調査リストから）
+```
+
+**修正スクリプト**（Phase 3で実行）:
+```bash
+# ファイル名変更
+find backend/src -name "*[A-Z]*.py" -type f | while read file; do
+  new_file=$(echo "$file" | sed 's/\([A-Z]\)/_\L\1/g' | sed 's/^_//')
+  mv "$file" "$new_file"
+done
+
+# import文の自動修正
+find backend -name "*.py" -type f -exec sed -i '' 's/from src\.\([a-z]*\)\.\([a-zA-Z]*\)/from src.\1.\L\2/g' {} +
+```
+
+### 3.3 依存関係修正（1箇所）
+
+**対象**:
+```
+backend/src/services/test_data_provider.py
+```
+
+**問題**: テストデータプロバイダーがservices/に配置されている
+
+**修正内容**:
+```bash
+mkdir -p backend/src/lib
+mv backend/src/services/test_data_provider.py backend/src/lib/test_data_provider.py
+```
+
+**影響範囲**:
+- テストファイルのimport文を修正（約5-10箇所）
+```python
+# Before
+from src.services.test_data_provider import get_test_stocks
+
+# After
+from src.lib.test_data_provider import get_test_stocks
+```
+
+### 3.4 コード重複解消
+
+#### 3.4.1 API_BASE_URL統一（6箇所）
+
+**現状**:
+```typescript
+// frontend/src/services/各ファイル
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8432';
+```
+
+**修正内容**:
+```typescript
+// frontend/src/config/api.ts（新規作成）
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8432';
+
+// 各サービスファイル
+import { API_BASE_URL } from '@/config/api';
+```
+
+**影響範囲**: 6ファイルのimport追加
+
+#### 3.4.2 HTTP Request Helper統一（3箇所）
+
+**現状**: fetchのラッパー関数が3箇所で実装されている
+
+**修正内容**:
+```typescript
+// frontend/src/lib/httpClient.ts（新規作成）
+export async function apiRequest<T>(url: string, options?: RequestInit): Promise<T> {
+  const response = await fetch(`${API_BASE_URL}${url}`, {
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options?.headers,
+    },
+  });
+
+  if (!response.ok) {
+    const errorMessage = await response.text().catch(() => 'Unknown error');
+    throw new Error(`API Error ${response.status}: ${errorMessage}`);
+  }
+
+  return response.json();
+}
+```
+
+**影響範囲**: 各サービスファイルでhttpClient.apiRequestを使用
+
+### 3.5 デバッグコード削除
 
 #### console.log削除対象
 ```bash
@@ -220,260 +500,376 @@ rg "print\(" backend/src/ --type py
 # 3. debugger; - 実行停止リスク
 ```
 
-#### TODO/FIXMEコメント整理
-```bash
-# 技術的負債コメントの分類
-rg "TODO|FIXME|XXX|HACK" . --type ts --type tsx --type py
+---
 
-# 対応方針
-# TODO: Issue化 → GitHub Issues登録
-# FIXME: 即座対応 → 当リファクタリングで解決
-# XXX/HACK: リファクタリング → 適切な実装に置換
-```
+## 4. 未使用エンドポイント整理
 
-### 5.2 エラーハンドリング改善
+### 4.1 バックエンドエンドポイント全体像
 
-#### フロントエンドのエラー処理強化
-```typescript
-// API呼び出しエラー処理
-try {
-  const result = await apiCall();
-} catch (error) {
-  // 統一エラーハンドリング実装
-  handleApiError(error);
-  showUserFriendlyMessage(error);
-}
+**実装済みエンドポイント数**: 14個（Phase 7完了時点）
 
-// グローバルエラーバウンダリ実装
-<ErrorBoundary fallback={ErrorFallback}>
-  <App />
-</ErrorBoundary>
-```
+| カテゴリ | エンドポイント | フロントエンド使用状況 |
+|---------|-------------|-------------------|
+| Scan | GET /api/scan/start | ✓ 使用中 |
+| Scan | GET /api/scan/status | ✓ 使用中 |
+| Scan | GET /api/scan/results | ✓ 使用中 |
+| Scan | POST /api/scan/evaluate | ✓ 使用中 |
+| Batch | GET /api/batch/status | ✓ 使用中 |
+| Batch | GET /api/batch/results | ✓ 使用中 |
+| Alerts | GET /api/alerts | ✓ 使用中 |
+| Alerts | POST /api/alerts | ✓ 使用中 |
+| Alerts | PUT /api/alerts/{id} | ✓ 使用中 |
+| Alerts | DELETE /api/alerts/{id} | ✓ 使用中 |
+| Notifications | GET /api/notifications/line/config | ✓ 使用中 |
+| Contact | POST /api/contact/submit | ✓ 使用中 |
+| System | GET /api/system/info | ✓ 使用中 |
+| Health | GET /api/health | ✓ 使用中 |
 
-#### バックエンドのエラー処理強化
-```python
-# HTTP例外の統一処理
-@app.exception_handler(HTTPException)
-async def http_exception_handler(request, exc):
-    return standardized_error_response(exc)
+### 4.2 判定結果
 
-# バリデーションエラーの詳細化
-@app.exception_handler(ValidationError)  
-async def validation_exception_handler(request, exc):
-    return detailed_validation_error(exc)
-```
+**結論**: **未使用エンドポイントは0個**
 
-### 5.3 TypeScript型安全性強化
+**理由**:
+- Phase 8で全エンドポイントがフロントエンドと統合済み
+- 76個の統合テストが全PASSED
+- モックサーバーは完全削除済み
 
-#### strictモード設定確認
-```json
-// tsconfig.json 厳密設定
-{
-  "compilerOptions": {
-    "strict": true,              ✓ 有効済み
-    "noUnusedLocals": true,      ✓ 有効済み
-    "noUnusedParameters": true,  ✓ 有効済み
-    "exactOptionalPropertyTypes": true // 追加推奨
-  }
-}
-```
-
-## 6. 並列実行計画
-
-### 6.1 Phase 3での最適エージェント配置
-
-#### 作業量分析に基づく配置
-```
-総作業見積り: 160タスク
-最適並列度: 4エージェント (40タスク/エージェント)
-推定完了時間: 3-4時間
-```
-
-#### エージェント分担
-
-**🧹 クリーンアップエージェント (1名)**
-- 対象: 削除作業全般 (40タスク)
-- スコープ:
-  - 重複ディレクトリ削除 (10タスク)
-  - ログファイル削除 (15タスク) 
-  - テスト結果削除 (10タスク)
-  - 孤立ファイル削除 (5タスク)
-
-**🔧 ファイル分割エージェント (2名)**
-- 対象: 大型ファイル分割 (80タスク = 40タスク×2)
-- **エージェント A**: DashboardPage.tsx分割
-  - コンポーネント分離 (20タスク)
-  - hooks分離 (10タスク)
-  - テスト移行 (10タスク)
-- **エージェント B**: scan_service.py分割  
-  - サービス分離 (25タスク)
-  - ユーティリティ分離 (10タスク)
-  - テスト移行 (5タスク)
-
-**⚡ 品質向上エージェント (1名)**  
-- 対象: コード品質向上 (40タスク)
-- スコープ:
-  - デバッグコード削除 (15タスク)
-  - エラーハンドリング改善 (15タスク)
-  - 命名規則統一 (5タスク)
-  - 設定ファイル修正 (5タスク)
-
-### 6.2 実行順序と依存関係
-
-#### Phase 3A: 並列実行可能（依存なし）
-```
-🧹 クリーンアップエージェント: 即座開始
-⚡ 品質向上エージェント: 即座開始  
-```
-
-#### Phase 3B: ファイル分割（クリーンアップ完了後）
-```
-🔧 ファイル分割エージェント A & B: 
-- 前提条件: クリーンアップ完了
-- types/index.ts 同期: リアルタイム協調
-```
-
-### 6.3 品質保証計画
-
-#### 分割後の自動テスト実行
-```bash
-# フロントエンド: 分割後の動作確認
-npm run test
-npm run build
-npm run dev # 動作確認
-
-# バックエンド: 分割後のAPI確認  
-python -m pytest tests/
-python main.py # サーバー起動確認
-```
-
-#### 型安全性の検証
-```bash
-# TypeScript型チェック
-npx tsc --noEmit
-
-# Python型ヒント検証
-mypy backend/src/
-```
-
-## 7. 成果指標とKPI
-
-### 7.1 定量的指標
-
-#### コード品質向上
-```
-- ファイルサイズ削減: 約1MB → 0MB (不要ファイル)
-- 大型ファイル解消: 2ファイル → 0ファイル (400行超)
-- TypeScriptエラー: 現在値 → 0件
-- 未使用コード: 検出・削除完了
-```
-
-#### 保守性向上
-```
-- 平均ファイル行数: 削減目標 50-150行
-- 責任分離度: Single Responsibility Principle適合率 100%
-- 命名規則適合率: 100%
-- テストカバレッジ: 現状維持+分割後コンポーネント対応
-```
-
-### 7.2 定性的指標
-
-#### 開発者体験向上
-- ファイル検索性向上
-- 機能追加時の影響範囲明確化
-- デバッグ効率向上
-- コードレビュー容易性向上
-
-#### 運用品質向上  
-- 本番環境でのデバッグコード除去
-- エラー追跡精度向上
-- ログ出力最適化
-- セキュリティリスク軽減
-
-## 8. リスク管理と回避策
-
-### 8.1 高リスク作業
-
-#### types/index.ts 同期リスク
-```
-リスク: フロントエンド・バックエンド間の型定義不整合
-回避策: 
-- 分割作業前後でのファイル比較検証
-- TypeScriptコンパイル確認
-- API呼び出しテスト実行
-```
-
-#### 大型ファイル分割時のロジック欠落リスク
-```
-リスク: 分割時の機能ロジック欠落・重複
-回避策:
-- 分割前の完全テスト実行・結果保存
-- 分割後の同一テスト実行・結果比較
-- 段階的分割・各段階での動作確認
-```
-
-### 8.2 ロールバック計画
-
-#### Git ブランチ戦略
-```bash
-# 作業開始前
-git checkout -b refactoring/phase3-comprehensive
-git push -u origin refactoring/phase3-comprehensive
-
-# マイルストーン毎のコミット
-git commit -m "feat: クリーンアップ完了"
-git commit -m "feat: DashboardPage分割完了"  
-git commit -m "feat: scan_service分割完了"
-git commit -m "feat: 品質向上完了"
-
-# 問題発生時のロールバック
-git checkout main
-git branch -D refactoring/phase3-comprehensive
-```
-
-## 9. 実行タイムライン
-
-### 9.1 Phase 3 実行スケジュール
-
-#### Day 1: 準備・クリーンアップ
-```
-午前: 設定ファイル修正・環境確認
-午後: クリーンアップエージェント実行
-夕方: 削除結果検証・コミット
-```
-
-#### Day 2: ファイル分割実行
-```  
-午前: DashboardPage.tsx分割
-午後: scan_service.py分割
-夕方: 分割結果テスト・検証
-```
-
-#### Day 3: 品質向上・総合テスト
-```
-午前: デバッグコード削除・エラーハンドリング改善
-午後: 命名規則統一・最終検証
-夕方: 総合テスト・リリース準備
-```
-
-### 9.2 完了判定基準
-
-#### 必須条件(すべて満たすこと)
-- [ ] TypeScriptコンパイルエラー 0件
-- [ ] Pythonテスト実行成功
-- [ ] フロントエンド開発サーバー起動成功  
-- [ ] バックエンドサーバー起動成功
-- [ ] 削除対象ファイル 0件
-- [ ] 400行超ファイル 0件
-
-#### 推奨条件(品質向上確認)
-- [ ] console.log等デバッグコード 0件
-- [ ] 命名規則違反 0件
-- [ ] エラーハンドリング統一済み
-- [ ] 技術的負債スコア 8.5+/10
+**アクション**: 不要（整理対象なし）
 
 ---
 
-## 結論
+## 5. デプロイ設定の明確化
 
-本リファクタリング設計書に基づく実行により、Stock Harvest AIプロジェクトの保守性・可読性・品質が大幅に向上し、継続的な機能開発に適した基盤が構築されます。特に刹那性の原則による不要ファイル即座削除と、型安全性を保った適切なファイル分割により、開発効率と運用品質の両面で顕著な改善が期待できます。
+### 5.1 現状のデプロイ設定
+
+**プロジェクトは4つのプラットフォーム設定を持つ**:
+
+1. **Vercel** (フロントエンド)
+   - 設定ファイル: `vercel.json`
+   - ビルド設定: `frontend/dist/`
+   - 環境変数: Vercelダッシュボードで設定
+
+2. **Railway** (バックエンド候補)
+   - 設定ファイル: `railway.json`
+   - 実行コマンド: `uvicorn src.main:app --host 0.0.0.0 --port 8432`
+
+3. **Render** (バックエンド候補)
+   - 設定ファイル: `render.yaml`
+   - 実行コマンド: `uvicorn src.main:app --host 0.0.0.0 --port $PORT`
+
+4. **Netlify** (フロントエンド候補)
+   - 設定ファイル: `netlify.toml`
+   - ビルドコマンド: `cd frontend && npm run build`
+
+### 5.2 整理方針
+
+**判断**: 設定ファイルは全て保持（削除不要）
+
+**理由**:
+- 各プラットフォームは独立して動作可能
+- 設定ファイルのサイズは小さい（各5KB以下）
+- 複数選択肢があることはメリット（プロジェクト移行時の柔軟性）
+
+**アクション**:
+1. `docs/DEPLOYMENT.md` に各プラットフォームの使用方法を明記
+2. 現在の推奨構成を明確化:
+   - **フロントエンド**: Vercel（推奨）または Netlify
+   - **バックエンド**: Railway（推奨）または Render
+   - **データベース**: Neon PostgreSQL
+
+### 5.3 DEPLOYMENT.md更新内容
+
+```markdown
+# デプロイ設定
+
+## 推奨構成（2026-01-21時点）
+
+- **フロントエンド**: Vercel（無料プランで十分）
+- **バックエンド**: Railway（無料$5クレジット）
+- **データベース**: Neon PostgreSQL（無料プラン0.5GB）
+
+## 代替構成
+
+- **フロントエンド**: Netlify（Vercelの代替）
+- **バックエンド**: Render（Railwayの代替）
+
+## 設定ファイル一覧
+
+| ファイル | プラットフォーム | 用途 |
+|---------|--------------|------|
+| vercel.json | Vercel | フロントエンドデプロイ |
+| netlify.toml | Netlify | フロントエンド代替 |
+| railway.json | Railway | バックエンドデプロイ |
+| render.yaml | Render | バックエンド代替 |
+
+## 環境変数設定
+
+全プラットフォーム共通:
+- DATABASE_URL（PostgreSQL接続文字列）
+- LINE_NOTIFY_TOKEN（LINE通知用）
+- OPENAI_API_KEY（オプション）
+```
+
+---
+
+## 6. 大型ファイル分割計画（保留）
+
+### 6.1 SimpleDashboardPage.tsx (805行)
+
+**判断**: 分割を保留
+
+**理由**:
+- Phase 1調査で特定された唯一の大型ファイル
+- フロントエンド全体の品質はA+評価
+- 現時点で保守性の問題は発生していない
+- 分割によるリスク（ロジック欠落、テスト失敗）が大きい
+
+**将来的な対応**:
+- 保守性の問題が発生した場合に分割を検討
+- 機能追加時に自然な分割ポイントが見つかった場合に実施
+
+### 6.2 types/index.ts の分割禁止（確認）
+
+**単一真実源の原則を厳守**:
+- フロントエンド: `src/types/index.ts` (583行)
+- バックエンド: `src/types/index.ts` (同期必須)
+- **分割は絶対に禁止**（API契約の一貫性保証）
+
+---
+
+## 7. 実行順序（Phase 3で並列実行）
+
+### 7.1 並列実行グループ設計
+
+**原則**:
+- 独立タスクは並列実行
+- 依存関係があるタスクは直列実行
+- 各グループは異なるエージェントが担当
+
+### 7.2 グループ1: クリーンアップ（5エージェント）
+
+**依存関係**: なし（全て独立）
+
+| エージェント | タスク | 実行時間目安 |
+|-----------|------|-----------|
+| Agent-C1 | /api/, /api-server/ 削除 | 10秒 |
+| Agent-C2 | /assets/, /mockups/, netlify-deploy/, simple-version/ 削除 | 10秒 |
+| Agent-C3 | 調査スクリプト群削除 | 10秒 |
+| Agent-C4 | ログ・一時ファイル・テスト結果削除 | 10秒 |
+| Agent-C5 | 重複エントリーポイント・設定ファイル・孤立ファイル削除 | 10秒 |
+
+**合計実行時間**: 約10秒（並列実行）
+
+### 7.3 グループ2: コード品質改善（7エージェント）
+
+**依存関係**: グループ1完了後に開始
+
+| エージェント | タスク | 実行時間目安 |
+|-----------|------|-----------|
+| Agent-Q1 | contactSupportService.ts エラーハンドリング修正 | 5分 |
+| Agent-Q2 | systemService.ts エラーハンドリング修正 | 5分 |
+| Agent-Q3 | chartsService.ts エラーハンドリング修正 | 5分 |
+| Agent-Q4 | E2Eテストファイル名変更 | 5分 |
+| Agent-Q5 | バックエンド命名規則修正（1-15ファイル） | 10分 |
+| Agent-Q6 | バックエンド命名規則修正（16-31ファイル） | 10分 |
+| Agent-Q7 | 依存関係修正（test_data_provider移動） | 5分 |
+
+**合計実行時間**: 約10分（並列実行）
+
+### 7.4 グループ3: 構造整理（4エージェント）
+
+**依存関係**: グループ2完了後に開始（import文が安定してから）
+
+| エージェント | タスク | 実行時間目安 |
+|-----------|------|-----------|
+| Agent-S1 | API_BASE_URL統一（api.ts作成 + 6ファイル修正） | 10分 |
+| Agent-S2 | HTTP Request Helper統一（httpClient.ts作成） | 10分 |
+| Agent-S3 | デバッグコード削除（console.log等） | 10分 |
+| Agent-S4 | DEPLOYMENT.md更新 | 5分 |
+
+**合計実行時間**: 約10分（並列実行）
+
+### 7.5 グループ4: 検証（1エージェント）
+
+**依存関係**: グループ1-3完了後
+
+| エージェント | タスク | 実行時間目安 |
+|-----------|------|-----------|
+| Agent-V1 | 全体検証（ビルド・テスト実行） | 15分 |
+
+**検証項目**:
+1. フロントエンドビルド成功（npm run build）
+2. バックエンド起動成功（uvicorn起動確認）
+3. 既存テスト全PASSED（pytest + Playwright）
+4. TypeScriptエラー0件（npm run type-check）
+5. リンター警告0件（npm run lint）
+
+### 7.6 全体実行時間
+
+**シーケンシャル実行**: 約70分
+**並列実行（17エージェント）**: 約35分（50%削減）
+
+**Phase 3の並列実行構成**:
+- **総エージェント数**: 17エージェント
+- **グループ数**: 4グループ
+- **推定完了時間**: 35-40分
+
+---
+
+## 8. 単一真実源への準拠確認
+
+### 8.1 チェックリスト
+
+| 項目 | 現状 | リファクタリング後 | 判定 |
+|-----|------|---------------|------|
+| types/index.ts | 583行（分割なし） | 変更なし | ✓ 準拠 |
+| 環境変数 | .env.local のみ | 変更なし | ✓ 準拠 |
+| バックエンド | /api/ + backend/src/ 重複 | backend/src/ のみ | ✓ 修正予定 |
+| エントリーポイント | 3ファイル重複 | backend/src/main.py のみ | ✓ 修正予定 |
+| ビルド成果物 | /assets/ + frontend/dist/ | frontend/dist/ のみ | ✓ 修正予定 |
+| Playwright設定 | ルート + frontend/ | frontend/ のみ | ✓ 修正予定 |
+| Python依存関係 | ルート + backend/ | backend/ のみ | ✓ 修正予定 |
+
+### 8.2 リファクタリング後の状態
+
+**全項目で単一真実源の原則を満たす**:
+- ✓ types/index.ts は1ファイルのみ（分割しない）
+- ✓ 環境変数は .env.local のみ
+- ✓ バックエンドは backend/src/ のみ
+- ✓ エントリーポイントは backend/src/main.py のみ
+- ✓ ビルド成果物は frontend/dist/ のみ
+- ✓ 設定ファイルは各ディレクトリ内のみ
+
+---
+
+## 9. リスク分析
+
+### 9.1 高リスク（慎重な実行が必要）
+
+**タスク**: バックエンド命名規則修正（31ファイル）
+
+**リスク**:
+- import文の修正漏れ
+- 循環参照の発生
+- テストの失敗
+
+**対策**:
+1. 修正前に全テストをPASSさせる
+2. ファイル名変更とimport文修正を同一コミットで実行
+3. 修正後に即座にテスト実行（pytest）
+
+### 9.2 中リスク
+
+**タスク**: HTTP Request Helper統一
+
+**リスク**:
+- 各サービスのエラーハンドリングが異なる可能性
+- 既存の動作が変わる
+
+**対策**:
+1. 新規httpClient.tsを先に作成
+2. 1ファイルずつ移行してテスト
+3. 全ファイル移行完了後に統合テスト
+
+### 9.3 低リスク
+
+**タスク**: ファイル削除系の全タスク
+
+**理由**:
+- 全て未使用ファイルであることが確認済み
+- ビルドに影響しない
+
+---
+
+## 10. Phase 3実行チェックリスト
+
+### 10.1 事前準備
+- [ ] 現在のブランチをmainに設定
+- [ ] 全ての変更をコミット（クリーンな状態）
+- [ ] バックアップコミットを作成（git tag refactor-before）
+- [ ] フロントエンド・バックエンドサーバーを停止
+
+### 10.2 グループ1実行（クリーンアップ）
+- [ ] Agent-C1: /api/, /api-server/ 削除
+- [ ] Agent-C2: /assets/, /mockups/, netlify-deploy/, simple-version/ 削除
+- [ ] Agent-C3: 調査スクリプト群削除
+- [ ] Agent-C4: ログ・一時ファイル・テスト結果削除
+- [ ] Agent-C5: 重複エントリーポイント・設定ファイル・孤立ファイル削除
+- [ ] グループ1完了コミット（git commit -m "refactor: 不要ファイル削除"）
+
+### 10.3 グループ2実行（コード品質改善）
+- [ ] Agent-Q1-Q3: エラーハンドリング修正（3ファイル）
+- [ ] Agent-Q4: E2Eテストファイル名変更
+- [ ] Agent-Q5-Q6: バックエンド命名規則修正（31ファイル）
+- [ ] Agent-Q7: 依存関係修正（test_data_provider移動）
+- [ ] グループ2完了コミット（git commit -m "refactor: コード品質改善"）
+
+### 10.4 グループ3実行（構造整理）
+- [ ] Agent-S1: API_BASE_URL統一
+- [ ] Agent-S2: HTTP Request Helper統一
+- [ ] Agent-S3: デバッグコード削除
+- [ ] Agent-S4: DEPLOYMENT.md更新
+- [ ] グループ3完了コミット（git commit -m "refactor: 構造整理"）
+
+### 10.5 グループ4実行（検証）
+- [ ] Agent-V1: フロントエンドビルド成功
+- [ ] Agent-V1: バックエンド起動成功
+- [ ] Agent-V1: 既存テスト全PASSED
+- [ ] Agent-V1: TypeScriptエラー0件
+- [ ] Agent-V1: リンター警告0件
+- [ ] 最終コミット（git commit -m "refactor: Phase 2リファクタリング完了"）
+
+### 10.6 完了後
+- [ ] git tag refactor-after
+- [ ] ディスク容量削減確認（df -h）
+- [ ] docs/SCOPE_PROGRESS.mdにPhase 2完了を記録
+
+---
+
+## 11. 期待される成果
+
+### 11.1 定量的成果
+
+| 指標 | 現在 | リファクタリング後 | 改善率 |
+|-----|------|---------------|-------|
+| ディスク容量 | 約50MB | 約42MB | -16% |
+| ファイル数 | 約650ファイル | 約250ファイル | -62% |
+| TypeScriptエラー | 0件 | 0件 | 維持 |
+| テストPASS率 | 100% | 100% | 維持 |
+| 重複ファイル数 | 400個 | 0個 | -100% |
+| 単一真実源違反 | 7箇所 | 0箇所 | -100% |
+
+### 11.2 定性的成果
+
+- **プロジェクト構造の明確化**: バックエンドはbackend/src/のみ
+- **保守性の向上**: ファイル名が命名規則に準拠
+- **新規参加者のオンボーディング**: 不要なファイルが削除され理解しやすい
+- **ビルド時間の短縮**: 不要ファイルのスキャンが不要に
+- **デプロイの明確化**: DEPLOYMENT.mdで推奨構成を明示
+
+---
+
+## 12. 参照ドキュメント
+
+- **Phase 1調査結果**: SCOPE_PROGRESS.md（Phase 1セクション）
+- **プロジェクト原則**: CLAUDE.md（5つの核心原則）
+- **現在の進捗**: SCOPE_PROGRESS.md（Phase 9再検証完了）
+- **API仕様**: docs/api-specs/*.md
+- **デプロイ設定**: docs/DEPLOYMENT.md（Phase 3後に更新）
+
+---
+
+## 13. Phase 3実行準備完了
+
+このリファクタリング設計書は以下の基準を満たしています:
+
+1. **実証性の原則**: Phase 1調査結果に基づく具体的なファイルリスト
+2. **刹那性の原則**: 不要なものは即座に削除（7.8MB削減）
+3. **単一性の原則**: 真実の源を1つに集約（7箇所の違反を解消）
+4. **最小性の原則**: 必要最小限の変更のみ
+5. **潔癖性の原則**: エラーは隠さず、早く明確に検出
+
+**次のステップ**: Phase 3で並列実行を開始
+
+作成者: ブルーランプエージェント
+最終更新: 2026-01-21

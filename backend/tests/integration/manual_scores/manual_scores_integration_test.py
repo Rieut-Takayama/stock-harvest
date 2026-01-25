@@ -14,9 +14,9 @@ from typing import Dict, Any
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../'))
 sys.path.insert(0, project_root)
 
-from backend.tests.utils.MilestoneTracker import MilestoneTracker
-from backend.src.database.config import get_database_connection, connect_db
-from backend.src.services.manual_scores_service import ManualScoresService, ManualScoresServiceError
+from tests.utils.MilestoneTracker import MilestoneTracker
+from src.database.config import get_database_connection, connect_db
+from src.services.manual_scores_service import ManualScoresService, ManualScoresServiceError
 
 
 class ManualScoresIntegrationTest:

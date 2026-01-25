@@ -15,7 +15,7 @@ import random
 import aiohttp
 from ..database.config import database
 from ..database.tables import stock_data_cache
-from .test_data_provider import test_data_provider
+from ..lib.test_data_provider import test_data_provider
 
 logger = logging.getLogger(__name__)
 

@@ -32,7 +32,7 @@ class ManualScoresService:
     
     async def create_score_evaluation(self, evaluation_data: Dict[str, Any]) -> Dict[str, Any]:
         """スコア評価作成"""
-        tracker = PerformanceTracker("create_score_evaluation")
+        tracker = PerformanceTracker("create_score_evaluation", logger)
         
         try:
             # バリデーション
@@ -110,7 +110,7 @@ class ManualScoresService:
     
     async def get_score_evaluation(self, stock_code: str, logic_type: Optional[str] = None) -> Dict[str, Any]:
         """銘柄のスコア評価取得"""
-        tracker = PerformanceTracker("get_score_evaluation")
+        tracker = PerformanceTracker("get_score_evaluation", logger)
         
         try:
             # 銘柄コードのバリデーション
@@ -169,7 +169,7 @@ class ManualScoresService:
     
     async def update_score_evaluation(self, score_id: str, update_data: Dict[str, Any]) -> Dict[str, Any]:
         """スコア評価更新"""
-        tracker = PerformanceTracker("update_score_evaluation")
+        tracker = PerformanceTracker("update_score_evaluation", logger)
         
         try:
             # ID のバリデーション
@@ -239,7 +239,7 @@ class ManualScoresService:
     
     async def search_score_evaluations(self, search_params: Dict[str, Any]) -> Dict[str, Any]:
         """スコア評価検索"""
-        tracker = PerformanceTracker("search_score_evaluations")
+        tracker = PerformanceTracker("search_score_evaluations", logger)
         
         try:
             # バリデーション
@@ -298,7 +298,7 @@ class ManualScoresService:
     
     async def get_score_history(self, stock_code: str, compact: bool = True) -> Dict[str, Any]:
         """銘柄のスコア評価履歴取得"""
-        tracker = PerformanceTracker("get_score_history")
+        tracker = PerformanceTracker("get_score_history", logger)
         
         try:
             # 銘柄コードのバリデーション
@@ -353,7 +353,7 @@ class ManualScoresService:
     
     async def get_ai_calculation_status(self, stock_code: str) -> Dict[str, Any]:
         """AI スコア計算状態取得"""
-        tracker = PerformanceTracker("get_ai_calculation_status")
+        tracker = PerformanceTracker("get_ai_calculation_status", logger)
         
         try:
             # 銘柄コードのバリデーション
@@ -403,7 +403,7 @@ class ManualScoresService:
     
     async def get_evaluation_statistics(self) -> Dict[str, Any]:
         """スコア評価統計取得"""
-        tracker = PerformanceTracker("get_evaluation_statistics")
+        tracker = PerformanceTracker("get_evaluation_statistics", logger)
         
         try:
             # 統計取得

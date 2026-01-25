@@ -14,10 +14,10 @@ import asyncio
 from concurrent.futures import ThreadPoolExecutor
 
 from ..lib.logger import logger, PerformanceTracker
+from ..lib.test_data_provider import test_data_provider
 from ..repositories.charts_repository import ChartsRepository
 from ..validators.charts_validators import ChartsValidator
 from ..models.charts_models import ChartDataModel, ChartDataRequestModel
-from .test_data_provider import test_data_provider
 
 class ChartsService:
     """チャートデータ取得サービス"""

@@ -59,20 +59,35 @@ async def execute_scan(scan_service: ScanService = Depends(get_scan_service)):
 @router.get("/status")
 async def get_scan_status(scan_service: ScanService = Depends(get_scan_service)):
     """
-    現在のスキャン状況を取得
-    
-    - **戻り値**: スキャンの進捗状況 (API仕様書準拠)
-    - **情報**: 実行中フラグ、進捗率、処理銘柄数、推定残り時間等
+    現在のスキャン状況を取得（API仕様書準拠: D2）
+
+    - **戻り値**: スキャンの進捗状況
+    - **情報**:
+      - isRunning: スキャン実行中フラグ
+      - progress: 進捗率（0-100）
+      - totalStocks: 対象銘柄総数
+      - processedStocks: 処理済み銘柄数
+      - currentStock: 現在処理中の銘柄コード
+      - estimatedTime: 推定残り時間（秒）
+      - message: ステータスメッセージ
+
+    **依存関係**: D1（スキャン実行API）に依存
     """
     try:
+        logger.info("スキャン状態取得リクエスト受信")
         result = await scan_service.get_scan_status()
+        logger.debug(f"スキャン状態取得成功: isRunning={result.get('isRunning')}, progress={result.get('progress')}%")
         return result
-        
+
     except Exception as e:
-        logger.error(f"スキャン状況取得エラー: {str(e)}")
+        logger.error(f"スキャン状況取得エラー: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=f"スキャン状況の取得に失敗しました: {str(e)}"
+            detail={
+                "message": "スキャン状況の取得に失敗しました",
+                "error": str(e),
+                "endpoint": "/api/scan/status"
+            }
         )
 
 @router.get("/results")

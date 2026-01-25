@@ -63,6 +63,9 @@ export const SimpleDashboardPage: React.FC = () => {
   const [results, setResults] = useState<StockResult[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [activeLogic, setActiveLogic] = useState<'A' | 'B' | 'combined' | 'sectorTech' | 'sectorFinance' | 'sectorManufacturing' | 'sectorConsumer' | 'sectorInfra' | null>(null);
+  // Future use: Smart schedule info will be used once API endpoint is implemented
+  // @ts-expect-error - Unused variable will be used in future implementation
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [scheduleInfo, setScheduleInfo] = useState<{
     scan_recommended: boolean;
     current_status: { message: string };
@@ -70,51 +73,40 @@ export const SimpleDashboardPage: React.FC = () => {
   } | null>(null);
   
   // スマートスケジュール情報取得
-  React.useEffect(() => {
-    const checkSchedule = async () => {
-      try {
-        const response = await fetch('/api/smart-schedule-scanner');
-        if (response.ok) {
-          const data = await response.json();
-          setScheduleInfo(data);
-        } else if (response.status === 404) {
-          // エンドポイントが未実装の場合は無視
-          console.log('スケジューラー機能は未実装です');
-        } else {
-          throw new Error(`HTTP ${response.status}`);
-        }
-      } catch (err) {
-        // ネットワークエラーやJSON parseエラーの場合は無視（E2Eテストでエラーになるのを防ぐ）
-        if (err instanceof TypeError) {
-          console.log('スケジューラー機能は利用できません');
-        } else if (err instanceof SyntaxError && err.message.includes('Unexpected token')) {
-          console.log('スケジューラーAPI未実装 - HTMLが返されました');
-        } else {
-          // 真のエラーのみログ出力
-          console.log('スケジューラー確認をスキップします:', err instanceof Error ? err.message : String(err));
-        }
-      }
-    };
-    checkSchedule();
-  }, []);
+  // 注: このAPIエンドポイントは現在未実装のため、コメントアウト
+  // React.useEffect(() => {
+  //   const checkSchedule = async () => {
+  //     try {
+  //       const response = await fetch('/api/smart-schedule-scanner');
+  //       if (response.ok) {
+  //         const data = await response.json();
+  //         setScheduleInfo(data);
+  //       } else if (response.status === 404) {
+  //         // エンドポイントが未実装の場合は無視
+  //       } else {
+  //         throw new Error(`HTTP ${response.status}`);
+  //       }
+  //     } catch {
+  //       // ネットワークエラーやJSON parseエラーの場合は無視（E2Eテストでエラーになるのを防ぐ）
+  //     }
+  //   };
+  //   checkSchedule();
+  // }, []);
 
   const executeLogicA = async () => {
     setLoading(true);
     setActiveLogic('A');
     setError(null);
-    
+
     try {
-      console.log('🚀 ロジックAスキャン開始');
-      const response = await fetch('/api/real-logic-a-enhanced');
+      const response = await fetch('/api/scan/logic-a-enhanced');
       if (!response.ok) throw new Error('ロジックAスキャンに失敗しました');
-      
+
       const data = await response.json();
-      console.log('✅ ロジックAデータ取得成功:', data);
-      
+
       if (data.results && data.results.length > 0) {
         setResults(data.results);
         setError(null);
-        console.log(`📊 ロジックA結果: ${data.results.length}銘柄 (${data.total_scanned || '不明'}銘柄をスキャン)`);
       } else {
         const scanned = data.total_scanned || data.processed_count || '不明';
         const detailedMsg = data.detailed_message || `${scanned}銘柄をスキャンしましたが、条件に合致する銘柄が見つかりませんでした`;
@@ -134,19 +126,16 @@ export const SimpleDashboardPage: React.FC = () => {
     setLoading(true);
     setActiveLogic('B');
     setError(null);
-    
+
     try {
-      console.log('🚀 ロジックBスキャン開始');
-      const response = await fetch('/api/real-logic-b-enhanced');
+      const response = await fetch('/api/scan/logic-b-enhanced');
       if (!response.ok) throw new Error('ロジックBスキャンに失敗しました');
-      
+
       const data = await response.json();
-      console.log('✅ ロジックBデータ取得成功:', data);
-      
+
       if (data.results && data.results.length > 0) {
         setResults(data.results);
         setError(null);
-        console.log(`📊 ロジックB結果: ${data.results.length}銘柄 (${data.total_scanned || '不明'}銘柄をスキャン)`);
       } else {
         const scanned = data.total_scanned || data.processed_count || '不明';
         const detailedMsg = data.detailed_message || `${scanned}銘柄をスキャンしましたが、条件に合致する銘柄が見つかりませんでした`;
@@ -166,19 +155,16 @@ export const SimpleDashboardPage: React.FC = () => {
     setLoading(true);
     setActiveLogic('combined');
     setError(null);
-    
+
     try {
-      console.log('🚀 総合判断スキャン開始');
-      const response = await fetch('/api/real-combined-analysis');
+      const response = await fetch('/api/scan/combined-analysis');
       if (!response.ok) throw new Error('総合判断スキャンに失敗しました');
-      
+
       const data = await response.json();
-      console.log('✅ 総合判断データ取得成功:', data);
-      
+
       if (data.results && data.results.length > 0) {
         setResults(data.results);
         setError(null);
-        console.log(`📊 総合判断結果: ${data.results.length}銘柄 (${data.total_scanned || '不明'}銘柄をスキャン)`);
       } else {
         const scanned = data.total_scanned || data.processed_count || '不明';
         setError(`📊 総合判断スキャン結果\n\n✅ スキャン完了: ${scanned}銘柄を処理\n🚫 条件合致: 0銘柄\n\n📋 総合判断条件:\n• ロジックAまたはロジックBの全条件を満たす\n• 両ロジック合致で最優先銘柄\n• リアルタイム総合分析\n\n🔍 参考: ロジックA/B個別スキャンで詳細確認`);
@@ -199,21 +185,17 @@ export const SimpleDashboardPage: React.FC = () => {
     setError(null);
     
     try {
-      console.log(`🚀 ${sector}セクタースキャン開始:`, apiEndpoint);
-      
       // セクター別実データAPI呼び出し
       const response = await fetch(apiEndpoint);
-      console.log(`📡 ${sector}レスポンス:`, response.status, response.statusText);
-      
+
       if (!response.ok) {
         const errorText = await response.text();
         console.error(`❌ ${sector}エラー詳細:`, errorText);
         throw new Error(`${sector}セクタースキャンに失敗しました (${response.status}): ${errorText}`);
       }
-      
+
       const data = await response.json();
-      console.log(`✅ ${sector}データ取得成功:`, data);
-      
+
       if (data.results && data.results.length > 0) {
         // 通常の結果 + 惜しい銘柄をまとめて表示
         let allResults = [...data.results];
@@ -221,12 +203,9 @@ export const SimpleDashboardPage: React.FC = () => {
           allResults = [...allResults, ...data.near_miss_stocks];
         }
         setResults(allResults);
-        console.log(`📊 ${sector}結果: 候補${data.results.length}銘柄 + 惜しい${data.near_miss_stocks?.length || 0}銘柄 (${data.total_scanned || data.processed_count || '未確認'}銘柄をスキャン)`);
       } else if (data.near_miss_stocks && data.near_miss_stocks.length > 0) {
         // 条件合致なし、惜しい銘柄のみ
         setResults(data.near_miss_stocks);
-        const scanned = data.total_scanned || data.processed_count || '不明';
-        console.log(`📊 ${sector}結果: 条件合致なし、惜しい銘柄${data.near_miss_stocks.length}銘柄表示 (${scanned}銘柄をスキャン)`);
       } else {
         const scanned = data.total_scanned || data.processed_count || '不明';
         setError(`${sector}: ${scanned}銘柄をスキャンしましたが、条件に合致する銘柄が見つかりませんでした`);

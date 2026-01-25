@@ -167,6 +167,21 @@ await expect(page.locator('div[data-testid="faq-content"]')).toBeVisible();
 // Select操作
 await page.click('div[role="button"]'); // Select開く
 await page.click('li[data-value="price"]'); // オプション選択
+
+// ListItemTextのsecondaryプロパティ（Pass日時: 2026-01-21 17:30）
+// 問題: ListItemTextのsecondaryは<p>タグをレンダリングする
+// span:has-text("テキスト") → ❌ 要素が見つからない
+// 成功パターン:
+const secondaryText = page.locator('p:has-text("2026-01-11 15:35:00")');
+await expect(secondaryText).toBeVisible();
+// 重要: ListItemTextのprimaryは<span>タグ、secondaryは<p>タグ（MUI仕様）
+
+// Gridコンテナが複数存在する場合（Pass日時: 2026-01-21 17:30）
+// 問題: div.MuiGrid-container が複数マッチして strict mode violation
+// 成功パターン:
+const gridContainer = page.locator('div.MuiGrid-container').first();
+await expect(gridContainer).toBeVisible();
+// 重要: ネストしたGridレイアウトでは.first()で親要素を特定
 ```
 
 ---

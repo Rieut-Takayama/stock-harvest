@@ -54,13 +54,13 @@ async def test_get_line_notification_config_success():
         # レスポンスボディ確認
         data = response.json()
 
-        # 必須フィールドの存在確認
-        assert "is_connected" in data, "is_connected field is missing"
+        # 必須フィールドの存在確認（キャメルケース）
+        assert "isConnected" in data, "isConnected field is missing"
         assert "token" in data, "token field is missing"
         assert "status" in data, "status field is missing"
 
         # 型の確認
-        assert isinstance(data["is_connected"], bool), "is_connected must be boolean"
+        assert isinstance(data["isConnected"], bool), "isConnected must be boolean"
         assert isinstance(data["token"], str), "token must be string"
         assert isinstance(data["status"], str), "status must be string"
 
@@ -73,21 +73,21 @@ async def test_get_line_notification_config_success():
             assert "***masked***" in data["token"] or data["token"] == "", \
                 "Token must be masked or empty"
 
-        # オプショナルフィールドの型確認
-        if "last_notification" in data and data["last_notification"] is not None:
-            assert isinstance(data["last_notification"], str), \
-                "last_notification must be string (ISO format)"
+        # オプショナルフィールドの型確認（キャメルケース）
+        if "lastNotificationAt" in data and data["lastNotificationAt"] is not None:
+            assert isinstance(data["lastNotificationAt"], str), \
+                "lastNotificationAt must be string (ISO format)"
 
-        if "notification_count" in data and data["notification_count"] is not None:
-            assert isinstance(data["notification_count"], int), \
-                "notification_count must be integer"
+        if "notificationCount" in data and data["notificationCount"] is not None:
+            assert isinstance(data["notificationCount"], int), \
+                "notificationCount must be integer"
 
-        if "error_count" in data and data["error_count"] is not None:
-            assert isinstance(data["error_count"], int), \
-                "error_count must be integer"
+        if "errorCount" in data and data["errorCount"] is not None:
+            assert isinstance(data["errorCount"], int), \
+                "errorCount must be integer"
 
         print(f"✅ LINE通知設定取得APIテスト成功")
-        print(f"   - is_connected: {data['is_connected']}")
+        print(f"   - isConnected: {data['isConnected']}")
         print(f"   - status: {data['status']}")
         print(f"   - token: {data['token']}")
 
@@ -146,9 +146,9 @@ async def test_get_line_notification_config_consistency():
         assert response2.status_code == 200
         data2 = response2.json()
 
-        # 一貫性の確認
-        assert data1["is_connected"] == data2["is_connected"], \
-            "is_connected must be consistent across calls"
+        # 一貫性の確認（キャメルケース）
+        assert data1["isConnected"] == data2["isConnected"], \
+            "isConnected must be consistent across calls"
         assert data1["status"] == data2["status"], \
             "status must be consistent across calls"
         assert data1["token"] == data2["token"], \

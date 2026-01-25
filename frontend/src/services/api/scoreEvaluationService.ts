@@ -1,13 +1,12 @@
-import type { 
-  ManualScoreEvaluation, 
-  ScoreChangeHistory, 
+import type {
+  ManualScoreEvaluation,
+  ScoreChangeHistory,
   ScoreEvaluationRequest,
   ManualScoreValue,
   AIScoreCalculationStatus
 } from '@/types';
 import { logger } from '@/lib/logger';
-
-const API_BASE_URL = 'http://localhost:8432';
+import { API_BASE_URL } from '@/config/api';
 
 export class ScoreEvaluationService {
   /**
@@ -168,7 +167,7 @@ export class ScoreEvaluationService {
     logger.debug('Fetching compact score history via API', { stockCode });
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/scores/history/${stockCode}?compact=true`, {
+      const response = await fetch(`${API_BASE_URL}/api/scores/${stockCode}/history/compact`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -181,23 +180,46 @@ export class ScoreEvaluationService {
 
       const data = await response.json() as {
         success: boolean;
-        history: ScoreChangeHistory[];
+        history: Array<{
+          id: string;
+          score: ManualScoreValue;
+          evaluation_reason?: string;
+          evaluated_at: string;
+          status: string;
+        }>;
       };
 
       if (!data.success) {
         throw new Error('API response indicates failure');
       }
 
-      const history = data.history || [];
+      const evaluations = data.history || [];
 
-      logger.info('Compact score history fetched via API', { 
-        stockCode,
-        count: history.length
+      // 評価履歴を変更履歴に変換
+      const changeHistory: ScoreChangeHistory[] = evaluations.map((evaluation, index) => {
+        const previousEvaluation = index < evaluations.length - 1 ? evaluations[index + 1] : null;
+
+        return {
+          id: evaluation.id,
+          stockCode: stockCode,
+          stockName: this.getStockName(stockCode),
+          oldScore: previousEvaluation?.score || null,
+          newScore: evaluation.score,
+          changeReason: evaluation.evaluation_reason || '理由なし',
+          changedBy: 'user',
+          changedAt: evaluation.evaluated_at,
+          logicType: 'logic_a'
+        };
       });
 
-      return history;
+      logger.info('Compact score history fetched and converted via API', {
+        stockCode,
+        count: changeHistory.length
+      });
+
+      return changeHistory;
     } catch (error) {
-      logger.error('Failed to fetch compact score history via API', { 
+      logger.error('Failed to fetch compact score history via API', {
         error,
         stockCode
       });

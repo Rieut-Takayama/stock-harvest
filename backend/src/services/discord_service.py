@@ -55,7 +55,7 @@ class DiscordNotificationService:
             tracker.end({'設定存在': config is not None})
             
             if config:
-                logger.info(f'Discord設定を取得: チャンネル={config.channelName}')
+                logger.info(f'Discord設定を取得: チャンネル={config.channel_name}')
             else:
                 logger.info('Discord設定が存在しません')
             
@@ -81,19 +81,19 @@ class DiscordNotificationService:
             # バリデーション実行
             logger.debug('Discord設定バリデーション開始')
             validator = DiscordConfigValidator(
-                webhookUrl=request.webhookUrl,
-                channelName=request.channelName,
-                serverName=request.serverName,
-                notificationTypes=request.notificationTypes,
-                mentionRole=request.mentionRole,
-                notificationFormat=request.notificationFormat.value,
-                customMessageTemplate=request.customMessageTemplate
+                webhook_url=request.webhook_url,
+                channel_name=request.channel_name,
+                server_name=request.server_name,
+                notification_types=request.notification_types,
+                mention_role=request.mention_role,
+                notification_format=request.notification_format.value,
+                custom_message_template=request.custom_message_template
             )
             tracker.end({'バリデーション': '成功'})
             
             # Webhook接続テスト
             test_tracker = PerformanceTracker('Webhook接続テスト')
-            webhook_test = DiscordWebhookValidator.test_webhook_connection(request.webhookUrl)
+            webhook_test = DiscordWebhookValidator.test_webhook_connection(request.webhook_url)
             test_tracker.end({'テスト成功': webhook_test['success']})
             
             if not webhook_test['success']:
@@ -102,22 +102,22 @@ class DiscordNotificationService:
             
             # 設定データ準備
             config_data = {
-                'webhookUrl': request.webhookUrl,
-                'isEnabled': True,
-                'channelName': request.channelName,
-                'serverName': request.serverName,
-                'notificationTypes': request.notificationTypes,
-                'mentionRole': request.mentionRole,
-                'notificationFormat': request.notificationFormat.value,
-                'customMessageTemplate': request.customMessageTemplate,
-                'connectionStatus': ConnectionStatus.CONNECTED.value,
-                'webhookTestResult': webhook_test
+                'webhook_url': request.webhook_url,
+                'is_enabled': True,
+                'channel_name': request.channel_name,
+                'server_name': request.server_name,
+                'notification_types': request.notification_types,
+                'mention_role': request.mention_role,
+                'notification_format': request.notification_format.value,
+                'custom_message_template': request.custom_message_template,
+                'connection_status': ConnectionStatus.CONNECTED.value,
+                'webhook_test_result': webhook_test
             }
             
             # データベース保存
             config = await self.repository.create_discord_config(config_data)
             
-            logger.info(f'Discord設定を作成: チャンネル={config.channelName}, サーバー={config.serverName}')
+            logger.info(f'Discord設定を作成: チャンネル={config.channel_name}, サーバー={config.server_name}')
             return config
             
         except ValueError as ve:
@@ -148,38 +148,38 @@ class DiscordNotificationService:
             
             # 更新データを準備
             update_data = {}
-            
-            if update_request.webhookUrl is not None:
+
+            if update_request.webhook_url is not None:
                 # Webhook URL変更の場合は接続テスト
-                if update_request.webhookUrl != current_config.webhookUrl:
-                    test_result = DiscordWebhookValidator.test_webhook_connection(update_request.webhookUrl)
+                if update_request.webhook_url != current_config.webhook_url:
+                    test_result = DiscordWebhookValidator.test_webhook_connection(update_request.webhook_url)
                     if not test_result['success']:
                         raise ValueError(f'新しいWebhook URLへの接続に失敗しました: {test_result["message"]}')
-                    
-                    update_data['webhookUrl'] = update_request.webhookUrl
-                    update_data['connectionStatus'] = ConnectionStatus.CONNECTED.value
-                    update_data['webhookTestResult'] = test_result
-            
-            if update_request.isEnabled is not None:
-                update_data['isEnabled'] = update_request.isEnabled
-            
-            if update_request.channelName is not None:
-                update_data['channelName'] = update_request.channelName.strip()
-            
-            if update_request.serverName is not None:
-                update_data['serverName'] = update_request.serverName.strip()
-            
-            if update_request.notificationTypes is not None:
-                update_data['notificationTypes'] = update_request.notificationTypes
-            
-            if update_request.mentionRole is not None:
-                update_data['mentionRole'] = update_request.mentionRole
-            
-            if update_request.notificationFormat is not None:
-                update_data['notificationFormat'] = update_request.notificationFormat.value
-            
-            if update_request.customMessageTemplate is not None:
-                update_data['customMessageTemplate'] = update_request.customMessageTemplate
+
+                    update_data['webhook_url'] = update_request.webhook_url
+                    update_data['connection_status'] = ConnectionStatus.CONNECTED.value
+                    update_data['webhook_test_result'] = test_result
+
+            if update_request.is_enabled is not None:
+                update_data['is_enabled'] = update_request.is_enabled
+
+            if update_request.channel_name is not None:
+                update_data['channel_name'] = update_request.channel_name.strip()
+
+            if update_request.server_name is not None:
+                update_data['server_name'] = update_request.server_name.strip()
+
+            if update_request.notification_types is not None:
+                update_data['notification_types'] = update_request.notification_types
+
+            if update_request.mention_role is not None:
+                update_data['mention_role'] = update_request.mention_role
+
+            if update_request.notification_format is not None:
+                update_data['notification_format'] = update_request.notification_format.value
+
+            if update_request.custom_message_template is not None:
+                update_data['custom_message_template'] = update_request.custom_message_template
             
             # データベース更新
             updated_config = await self.repository.update_discord_config(current_config.id, update_data)
@@ -210,13 +210,13 @@ class DiscordNotificationService:
             # Webhook URL決定
             if webhook_url is None:
                 config = await self.repository.get_discord_config()
-                if not config or not config.webhookUrl:
+                if not config or not config.webhook_url:
                     return DiscordWebhookTestResult(
                         success=False,
                         message='テスト対象のWebhook URLが設定されていません',
-                        testedAt=datetime.now()
+                        tested_at=datetime.now()
                     )
-                webhook_url = config.webhookUrl
+                webhook_url = config.webhook_url
             
             # 接続テスト実行
             tracker = PerformanceTracker('Discord Webhook接続テスト')
@@ -227,19 +227,19 @@ class DiscordNotificationService:
             result = DiscordWebhookTestResult(
                 success=test_result['success'],
                 message=test_result['message'],
-                responseStatus=test_result['responseStatus'],
-                responseData=test_result['responseData'],
-                errorDetail=test_result['errorDetail'],
-                testedAt=test_result['testedAt']
+                response_status=test_result['responseStatus'],
+                response_data=test_result['responseData'],
+                error_detail=test_result['errorDetail'],
+                tested_at=test_result['testedAt']
             )
             
             # 設定が存在する場合はテスト結果を保存
             if webhook_url and await self.repository.get_discord_config():
                 await self.repository.update_discord_config(
-                    config.id, 
+                    config.id,
                     {
-                        'webhookTestResult': test_result,
-                        'connectionStatus': ConnectionStatus.CONNECTED.value if test_result['success'] 
+                        'webhook_test_result': test_result,
+                        'connection_status': ConnectionStatus.CONNECTED.value if test_result['success']
                                             else ConnectionStatus.ERROR.value
                     }
                 )
@@ -251,8 +251,8 @@ class DiscordNotificationService:
             return DiscordWebhookTestResult(
                 success=False,
                 message=f'テスト実行エラー: {str(e)}',
-                errorDetail=str(e),
-                testedAt=datetime.now()
+                error_detail=str(e),
+                tested_at=datetime.now()
             )
     
     async def send_notification(self, notification: DiscordNotificationMessage) -> Dict[str, Any]:
@@ -277,12 +277,12 @@ class DiscordNotificationService:
             
             # 設定取得
             config = await self.repository.get_discord_config()
-            if not config or not config.isEnabled:
+            if not config or not config.is_enabled:
                 result['message'] = 'Discord通知が無効または未設定です'
                 logger.warning('Discord通知送信スキップ: 設定無効')
                 return result
-            
-            if not config.webhookUrl:
+
+            if not config.webhook_url:
                 result['message'] = 'Discord Webhook URLが設定されていません'
                 logger.warning('Discord通知送信スキップ: WebhookURL未設定')
                 return result
@@ -296,21 +296,21 @@ class DiscordNotificationService:
                 return result
             
             # 通知タイプチェック
-            if notification.logicType not in config.notificationTypes:
-                result['message'] = f'通知タイプ {notification.logicType} が無効です'
-                logger.debug(f'Discord通知送信スキップ: 無効な通知タイプ {notification.logicType}')
+            if notification.logic_type not in config.notification_types:
+                result['message'] = f'通知タイプ {notification.logic_type} が無効です'
+                logger.debug(f'Discord通知送信スキップ: 無効な通知タイプ {notification.logic_type}')
                 return result
-            
+
             # メッセージフォーマット
             message_content = DiscordNotificationValidator.format_stock_notification(
-                stock_code=notification.stockCode,
-                stock_name=notification.stockName,
-                logic_type=notification.logicType,
+                stock_code=notification.stock_code,
+                stock_name=notification.stock_name,
+                logic_type=notification.logic_type,
                 price=notification.price,
-                change_rate=notification.changeRate,
+                change_rate=notification.change_rate,
                 volume=notification.volume,
-                format_type=config.notificationFormat.value,
-                custom_template=config.customMessageTemplate
+                format_type=config.notification_format.value,
+                custom_template=config.custom_message_template
             )
             
             # Discord Webhookペイロード構築
@@ -321,8 +321,8 @@ class DiscordNotificationService:
             }
             
             # メンションロール追加
-            if config.mentionRole and config.mentionRole.strip():
-                mention = config.mentionRole.strip()
+            if config.mention_role and config.mention_role.strip():
+                mention = config.mention_role.strip()
                 if mention.isdigit() and len(mention) >= 17:
                     # Discord role ID の場合
                     webhook_payload['content'] = f"<@&{mention}> {webhook_payload['content']}"
@@ -332,7 +332,7 @@ class DiscordNotificationService:
             
             # Discord API呼び出し
             response = requests.post(
-                config.webhookUrl,
+                config.webhook_url,
                 json=webhook_payload,
                 headers={'Content-Type': 'application/json'},
                 timeout=15
@@ -346,8 +346,8 @@ class DiscordNotificationService:
                 # カウンター更新
                 await self.repository.increment_notification_count(config.id)
                 
-                tracker.end({'送信成功': True, '銘柄': notification.stockCode})
-                logger.info(f'Discord通知送信成功: {notification.stockCode} - {notification.logicType}')
+                tracker.end({'送信成功': True, '銘柄': notification.stock_code})
+                logger.info(f'Discord通知送信成功: {notification.stock_code} - {notification.logic_type}')
                 
             else:
                 # 送信失敗
@@ -402,14 +402,14 @@ class DiscordNotificationService:
             Dict: 送信結果
         """
         notification = DiscordNotificationMessage(
-            stockCode=stock_code,
-            stockName=stock_name,
-            logicType=logic_type,
+            stock_code=stock_code,
+            stock_name=stock_name,
+            logic_type=logic_type,
             price=price,
-            changeRate=change_rate,
+            change_rate=change_rate,
             volume=volume,
-            detectionTime=datetime.now(),
-            additionalInfo=additional_info
+            detection_time=datetime.now(),
+            additional_info=additional_info
         )
         
         return await self.send_notification(notification)
@@ -426,41 +426,41 @@ class DiscordNotificationService:
             
             # 現在の時刻情報を追加
             now = datetime.now()
-            stats['currentTime'] = now.isoformat()
-            
+            stats['current_time'] = now.isoformat()
+
             # レート制限状況を計算
-            if stats['lastSentAt']:
-                last_sent = stats['lastSentAt']
+            if stats['last_sent_at']:
+                last_sent = stats['last_sent_at']
                 time_since_last = (now - last_sent).total_seconds()
-                stats['timeSinceLastNotification'] = time_since_last
+                stats['time_since_last_notification'] = time_since_last
             else:
-                stats['timeSinceLastNotification'] = None
-            
+                stats['time_since_last_notification'] = None
+
             # 今日の利用可能通知数を計算
             config = await self.repository.get_discord_config()
             if config:
-                remaining_today = max(0, (config.rateLimitPerHour * 24) - stats['todayCount'])
-                stats['remainingToday'] = remaining_today
-                stats['isEnabled'] = config.isEnabled
-                stats['rateLimitPerHour'] = config.rateLimitPerHour
+                remaining_today = max(0, (config.rate_limit_per_hour * 24) - stats['today_count'])
+                stats['remaining_today'] = remaining_today
+                stats['is_enabled'] = config.is_enabled
+                stats['rate_limit_per_hour'] = config.rate_limit_per_hour
             else:
-                stats['remainingToday'] = 0
-                stats['isEnabled'] = False
-                stats['rateLimitPerHour'] = 60
-            
-            logger.debug(f'Discord通知統計: 今日={stats["todayCount"]}, 総数={stats["totalSent"]}')
+                stats['remaining_today'] = 0
+                stats['is_enabled'] = False
+                stats['rate_limit_per_hour'] = 60
+
+            logger.debug(f'Discord通知統計: 今日={stats["today_count"]}, 総数={stats["total_sent"]}')
             return stats
             
         except Exception as e:
             logger.error(f'Discord通知統計取得エラー: {e}')
             return {
-                'todayCount': 0,
-                'totalSent': 0,
-                'errorCount': 0,
-                'remainingToday': 0,
-                'isEnabled': False,
-                'timeSinceLastNotification': None,
-                'lastSentAt': None
+                'today_count': 0,
+                'total_sent': 0,
+                'error_count': 0,
+                'remaining_today': 0,
+                'is_enabled': False,
+                'time_since_last_notification': None,
+                'last_sent_at': None
             }
     
     async def _check_rate_limit(self, config: DiscordConfigModel) -> Dict[str, Any]:
@@ -489,9 +489,9 @@ class DiscordNotificationService:
         # レート制限チェック
         rate_check = DiscordRateLimitValidator.check_rate_limit(
             current_count=current_hour_count,
-            hourly_limit=config.rateLimitPerHour,
-            daily_count=config.notificationCountToday,
-            daily_limit=config.rateLimitPerHour * 24
+            hourly_limit=config.rate_limit_per_hour,
+            daily_count=config.notification_count_today,
+            daily_limit=config.rate_limit_per_hour * 24
         )
         
         # 送信許可の場合はカウンターを増加
@@ -507,12 +507,12 @@ class DiscordNotificationService:
                 await self.repository.increment_error_count(config.id, error_message)
                 
                 # 連続エラーが多い場合は接続状態を更新
-                if config.errorCount >= 5:
+                if config.error_count >= 5:
                     await self.repository.update_discord_config(
                         config.id,
-                        {'connectionStatus': ConnectionStatus.ERROR.value}
+                        {'connection_status': ConnectionStatus.ERROR.value}
                     )
-                    logger.warning(f'Discord設定のステータスをERRORに変更: 連続エラー数={config.errorCount}')
+                    logger.warning(f'Discord設定のステータスをERRORに変更: 連続エラー数={config.error_count}')
         except Exception as e:
             logger.error(f'Discord通知エラーハンドリング失敗: {e}')
     
@@ -537,7 +537,7 @@ class DiscordNotificationService:
         try:
             config = await self.repository.get_discord_config()
             if config:
-                await self.repository.update_discord_config(config.id, {'isEnabled': False})
+                await self.repository.update_discord_config(config.id, {'is_enabled': False})
                 logger.info('Discord通知を無効にしました')
                 return True
             return False
@@ -555,7 +555,7 @@ class DiscordNotificationService:
         try:
             config = await self.repository.get_discord_config()
             if config:
-                await self.repository.update_discord_config(config.id, {'isEnabled': True})
+                await self.repository.update_discord_config(config.id, {'is_enabled': True})
                 logger.info('Discord通知を有効にしました')
                 return True
             return False

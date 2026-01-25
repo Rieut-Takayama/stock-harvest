@@ -103,23 +103,23 @@ class DiscordWebhookValidator:
 
 class DiscordConfigValidator(BaseModel):
     """Discord設定全体のバリデーター"""
-    
-    webhookUrl: str
-    channelName: str
-    serverName: str
-    notificationTypes: List[str]
-    mentionRole: Optional[str] = None
-    notificationFormat: str = "standard"
-    customMessageTemplate: Optional[str] = None
-    
-    @validator('webhookUrl')
+
+    webhook_url: str
+    channel_name: str
+    server_name: str
+    notification_types: List[str]
+    mention_role: Optional[str] = None
+    notification_format: str = "standard"
+    custom_message_template: Optional[str] = None
+
+    @validator('webhook_url')
     def validate_webhook_url(cls, v: str) -> str:
         """Webhook URL の形式検証"""
         if not DiscordWebhookValidator.validate_webhook_format(v):
             raise ValueError('有効なDiscord Webhook URLを入力してください')
         return v
-    
-    @validator('channelName', 'serverName')
+
+    @validator('channel_name', 'server_name')
     def validate_names(cls, v: str) -> str:
         """チャンネル名・サーバー名の検証"""
         if not v or len(v.strip()) == 0:
@@ -127,8 +127,8 @@ class DiscordConfigValidator(BaseModel):
         if len(v.strip()) > 100:
             raise ValueError('名前は100文字以内で入力してください')
         return v.strip()
-    
-    @validator('notificationTypes')
+
+    @validator('notification_types')
     def validate_notification_types(cls, v: List[str]) -> List[str]:
         """通知タイプの検証"""
         allowed_types = {
@@ -138,26 +138,26 @@ class DiscordConfigValidator(BaseModel):
             'scan_complete': 'スキャン完了',
             'system_error': 'システムエラー'
         }
-        
+
         if not v:
             raise ValueError('少なくとも1つの通知タイプを選択してください')
-        
+
         for notification_type in v:
             if notification_type not in allowed_types:
                 raise ValueError(f'無効な通知タイプ: {notification_type}')
-        
+
         return v
-    
-    @validator('mentionRole')
+
+    @validator('mention_role')
     def validate_mention_role(cls, v: Optional[str]) -> Optional[str]:
         """メンションロールの検証"""
         if v is None:
             return v
-        
+
         v = v.strip()
         if v == "":
             return None
-        
+
         # Discord role ID または role name の基本検証
         if v.startswith('<@&') and v.endswith('>'):
             # Discord role mention format
@@ -170,33 +170,33 @@ class DiscordConfigValidator(BaseModel):
             if len(v) > 100:
                 raise ValueError('ロール名は100文字以内で入力してください')
             return v
-    
-    @validator('notificationFormat')
+
+    @validator('notification_format')
     def validate_notification_format(cls, v: str) -> str:
         """通知フォーマットの検証"""
         allowed_formats = ['standard', 'compact', 'detailed']
         if v not in allowed_formats:
             raise ValueError(f'無効な通知フォーマット: {v}')
         return v
-    
-    @validator('customMessageTemplate')
+
+    @validator('custom_message_template')
     def validate_custom_template(cls, v: Optional[str]) -> Optional[str]:
         """カスタムメッセージテンプレートの検証"""
         if v is None or v.strip() == "":
             return None
-        
+
         v = v.strip()
-        
+
         # テンプレート長さ制限
         if len(v) > 2000:
             raise ValueError('カスタムメッセージテンプレートは2000文字以内で入力してください')
-        
+
         # 必須プレースホルダーの存在確認
         required_placeholders = ['{stockCode}', '{stockName}']
         for placeholder in required_placeholders:
             if placeholder not in v:
                 logger.warning(f'推奨プレースホルダー {placeholder} がテンプレートに含まれていません')
-        
+
         return v
 
 

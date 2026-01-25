@@ -36,7 +36,7 @@ class ManualScoresRepository:
     
     async def create_score_evaluation(self, evaluation_data: Dict[str, Any]) -> str:
         """スコア評価作成"""
-        tracker = PerformanceTracker("create_score_evaluation")
+        tracker = PerformanceTracker("create_score_evaluation", logger)
         
         try:
             # IDの生成
@@ -79,7 +79,6 @@ class ManualScoresRepository:
             # データ挿入
             insert_stmt = self.table.insert().values(**insert_data)
             await db.execute(insert_stmt)
-            await db.commit()
             
             logger.info(f"スコア評価作成完了: {score_id}", {
                 'score_id': score_id,
@@ -108,7 +107,7 @@ class ManualScoresRepository:
     
     async def get_score_by_stock(self, stock_code: str, logic_type: Optional[str] = None) -> Optional[Dict[str, Any]]:
         """銘柄の最新スコア評価取得"""
-        tracker = PerformanceTracker("get_score_by_stock")
+        tracker = PerformanceTracker("get_score_by_stock", logger)
         
         try:
             # データベース接続取得
@@ -127,9 +126,8 @@ class ManualScoresRepository:
             query = self.table.select().where(
                 and_(*conditions)
             ).order_by(self.table.c.evaluated_at.desc()).limit(1)
-            
-            result = await db.execute(query)
-            row = result.fetchone()
+
+            row = await db.fetch_one(query)
             
             if not row:
                 logger.debug(f"スコア評価が見つかりません: {stock_code}, {logic_type}")
@@ -175,7 +173,7 @@ class ManualScoresRepository:
     
     async def get_score_by_id(self, score_id: str) -> Optional[Dict[str, Any]]:
         """ID によるスコア評価取得"""
-        tracker = PerformanceTracker("get_score_by_id")
+        tracker = PerformanceTracker("get_score_by_id", logger)
         
         try:
             # データベース接続取得
@@ -183,8 +181,7 @@ class ManualScoresRepository:
             
             # クエリ実行
             query = self.table.select().where(self.table.c.id == score_id)
-            result = await db.execute(query)
-            row = result.fetchone()
+            row = await db.fetch_one(query)
             
             if not row:
                 logger.debug(f"スコア評価が見つかりません: {score_id}")
@@ -230,7 +227,7 @@ class ManualScoresRepository:
     
     async def update_score_evaluation(self, score_id: str, update_data: Dict[str, Any]) -> bool:
         """スコア評価更新"""
-        tracker = PerformanceTracker("update_score_evaluation")
+        tracker = PerformanceTracker("update_score_evaluation", logger)
         
         try:
             # データベース接続取得
@@ -299,12 +296,11 @@ class ManualScoresRepository:
             update_stmt = self.table.update().where(
                 self.table.c.id == score_id
             ).values(**update_values)
-            
+
             result = await db.execute(update_stmt)
-            await db.commit()
-            
+
             # 更新された行数をチェック
-            if result.rowcount == 0:
+            if result == 0:
                 logger.warning(f"更新対象のスコア評価が見つかりません: {score_id}")
                 return False
             
@@ -337,7 +333,7 @@ class ManualScoresRepository:
         search_params: Dict[str, Any]
     ) -> Tuple[List[Dict[str, Any]], int]:
         """スコア評価検索"""
-        tracker = PerformanceTracker("search_score_evaluations")
+        tracker = PerformanceTracker("search_score_evaluations", logger)
         
         try:
             # データベース接続取得
@@ -387,8 +383,7 @@ class ManualScoresRepository:
             
             # 総数取得
             count_query = f"SELECT COUNT(*) FROM ({base_query}) as count_subquery"
-            count_result = await db.execute(text(count_query))
-            total_count = count_result.scalar()
+            total_count = await db.fetch_val(text(count_query))
             
             # ページネーション
             page = search_params.get('page', 1)
@@ -397,8 +392,7 @@ class ManualScoresRepository:
             
             # データ取得（評価日時の降順）
             query = base_query.order_by(self.table.c.evaluated_at.desc()).limit(limit).offset(offset)
-            result = await db.execute(query)
-            rows = result.fetchall()
+            rows = await db.fetch_all(query)
             
             # 結果の変換
             evaluations = []
@@ -450,7 +444,7 @@ class ManualScoresRepository:
     
     async def get_score_history(self, stock_code: str, limit: int = 10) -> List[Dict[str, Any]]:
         """銘柄のスコア評価履歴取得"""
-        tracker = PerformanceTracker("get_score_history")
+        tracker = PerformanceTracker("get_score_history", logger)
         
         try:
             # データベース接続取得
@@ -460,9 +454,8 @@ class ManualScoresRepository:
             query = self.table.select().where(
                 self.table.c.stock_code == stock_code
             ).order_by(self.table.c.evaluated_at.desc()).limit(limit)
-            
-            result = await db.execute(query)
-            rows = result.fetchall()
+
+            rows = await db.fetch_all(query)
             
             # 結果の変換
             history = []
@@ -505,7 +498,7 @@ class ManualScoresRepository:
     
     async def get_evaluation_stats(self) -> Dict[str, Any]:
         """スコア評価統計取得"""
-        tracker = PerformanceTracker("get_evaluation_stats")
+        tracker = PerformanceTracker("get_evaluation_stats", logger)
         
         try:
             # データベース接続取得
@@ -516,62 +509,54 @@ class ManualScoresRepository:
             
             # 総評価件数
             total_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE status = 'active'"
-            total_result = await db.execute(text(total_query))
-            stats['total_evaluations'] = total_result.scalar() or 0
-            
+            stats['total_evaluations'] = await db.fetch_val(text(total_query)) or 0
+
             # スコア分布
             score_distribution = {}
             for score in ['S', 'A+', 'A', 'B', 'C']:
                 score_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE score = '{score}' AND status = 'active'"
-                score_result = await db.execute(text(score_query))
-                score_distribution[score] = score_result.scalar() or 0
-            
+                score_distribution[score] = await db.fetch_val(text(score_query)) or 0
+
             stats['score_distribution'] = score_distribution
-            
+
             # 確信度分布
             confidence_distribution = {}
             for level in ['high', 'medium', 'low']:
                 conf_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE confidence_level = '{level}' AND status = 'active'"
-                conf_result = await db.execute(text(conf_query))
-                confidence_distribution[level] = conf_result.scalar() or 0
-            
+                confidence_distribution[level] = await db.fetch_val(text(conf_query)) or 0
+
             # NULL値の件数も取得
             null_conf_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE confidence_level IS NULL AND status = 'active'"
-            null_conf_result = await db.execute(text(null_conf_query))
-            confidence_distribution['not_specified'] = null_conf_result.scalar() or 0
-            
+            confidence_distribution['not_specified'] = await db.fetch_val(text(null_conf_query)) or 0
+
             stats['confidence_distribution'] = confidence_distribution
-            
+
             # ロジック別分布
             logic_type_distribution = {}
             for logic in ['logic_a', 'logic_b']:
                 logic_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE logic_type = '{logic}' AND status = 'active'"
-                logic_result = await db.execute(text(logic_query))
-                logic_type_distribution[logic] = logic_result.scalar() or 0
-            
+                logic_type_distribution[logic] = await db.fetch_val(text(logic_query)) or 0
+
             stats['logic_type_distribution'] = logic_type_distribution
-            
+
             # 学習事例件数
             learning_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE is_learning_case = 1 AND status = 'active'"
-            learning_result = await db.execute(text(learning_query))
-            stats['learning_cases_count'] = learning_result.scalar() or 0
-            
+            stats['learning_cases_count'] = await db.fetch_val(text(learning_query)) or 0
+
             # フォローアップ待ち件数
             follow_up_query = f"SELECT COUNT(*) FROM {self.table.name} WHERE follow_up_required = 1 AND status = 'active'"
-            follow_up_result = await db.execute(text(follow_up_query))
-            stats['follow_up_pending_count'] = follow_up_result.scalar() or 0
-            
+            stats['follow_up_pending_count'] = await db.fetch_val(text(follow_up_query)) or 0
+
             # 最近の評価（簡易版）
             try:
                 recent_query = f"""
-                SELECT id, stock_code, stock_name, score, logic_type, evaluated_at 
-                FROM {self.table.name} 
+                SELECT id, stock_code, stock_name, score, logic_type, evaluated_at
+                FROM {self.table.name}
                 WHERE status = 'active'
-                ORDER BY evaluated_at DESC 
+                ORDER BY evaluated_at DESC
                 LIMIT 5
                 """
-                recent_result = await db.execute(text(recent_query))
-                recent_rows = recent_result.fetchall()
+                recent_rows = await db.fetch_all(text(recent_query))
                 
                 recent_evaluations = []
                 for row in recent_rows:

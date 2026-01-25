@@ -107,7 +107,6 @@ export const useDashboardData = () => {
           }
         } catch {
           // プログレス監視エラーは無視してモニタリングを停止
-          console.warn('スキャン進捗監視でエラーが発生しました');
         }
       }, 2000);
 

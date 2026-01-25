@@ -1,23 +1,30 @@
 // charts API サービス
 import type { ChartData, ChartDisplayConfig } from '../../types';
-
-const API_BASE_URL = 'http://localhost:8432';
+import { logger } from '@/lib/logger';
+import { API_BASE_URL } from '@/config/api';
 
 export class ChartsApiService {
-  private async makeRequest<T>(url: string, options: RequestInit = {}): Promise<T> {
-    const response = await fetch(`${API_BASE_URL}${url}`, {
-      headers: {
-        'Content-Type': 'application/json',
-        ...options.headers,
-      },
-      ...options,
-    });
+  private async makeRequest<T>(url: string, options?: RequestInit): Promise<T> {
+    try {
+      const response = await fetch(`${API_BASE_URL}${url}`, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+      });
 
-    if (!response.ok) {
-      throw new Error(`Chart API request failed: ${response.status} ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text().catch(() => 'Unknown error');
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      logger.error('Charts API Error:', { method: 'makeRequest', url, error: errorMessage });
+      throw new Error(`[ChartsService] ${errorMessage}`);
     }
-
-    return response.json();
   }
 
   /**
