@@ -424,23 +424,11 @@ class StockDataServiceEnhanced:
         return valid_results
     
     def get_sample_stock_list(self) -> List[Dict]:
-        """サンプル銘柄リストを返す（強化版）"""
-        return [
-            {'code': '7203', 'name': 'トヨタ自動車'},
-            {'code': '6758', 'name': 'ソニーグループ'},
-            {'code': '9984', 'name': 'ソフトバンクグループ'},
-            {'code': '4689', 'name': 'Zホールディングス'},
-            {'code': '8306', 'name': '三菱UFJフィナンシャル・グループ'},
-            {'code': '6861', 'name': 'キーエンス'},
-            {'code': '9433', 'name': 'KDDI'},
-            {'code': '4063', 'name': '信越化学工業'},
-            {'code': '6954', 'name': 'ファナック'},
-            {'code': '8058', 'name': '三菱商事'},
-            # 追加銘柄
-            {'code': '4477', 'name': 'BASE'},
-            {'code': '4490', 'name': 'ビザスク'},
-            {'code': '4475', 'name': 'HENNGE'}
-        ]
+        """全銘柄リストを返す（6600銘柄対応）"""
+        from ..data.stock_list import get_stock_list_with_names
+
+        # 本番環境: 全銘柄リスト使用
+        return get_stock_list_with_names()
     
     def get_fetch_statistics(self) -> Dict:
         """取得統計を返す"""
