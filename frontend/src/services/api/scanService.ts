@@ -200,4 +200,48 @@ export class ScanApiService {
       ];
     }
   }
+
+  /**
+   * ロジックA Phase 1スキャンを実行（馬場さんノウハウ準拠）
+   */
+  async executeLogicAPhase1(force: boolean = false): Promise<{
+    success: boolean;
+    detected_count: number;
+    stocks: Array<{
+      code: string;
+      name: string;
+      market: string;
+      open: number;
+      close: number;
+      low: number;
+      years_since_listing: number;
+      avg_volume: number;
+      market_cap: number;
+    }>;
+    scan_date: string;
+    force_mode: boolean;
+  }> {
+    try {
+      const response = await fetch(`${API_BASE}/api/scan/logic-a-phase1?force=${force}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        mode: 'cors',
+        credentials: 'omit'
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Phase 1スキャン実行に失敗しました: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error('Phase 1スキャン実行に失敗:', error);
+      throw error;
+    }
+  }
 }

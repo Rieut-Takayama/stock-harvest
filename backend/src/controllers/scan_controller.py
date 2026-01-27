@@ -416,21 +416,68 @@ async def get_logic_b_config(
 ):
     """
     ロジックBの設定を取得
-    
+
     戻り値: 現在の検出設定
     """
     try:
         configs = logic_service.get_logic_configs()
-        
+
         return {
             "success": True,
             "configs": configs,
             "enhanced_config": logic_service.logic_b_enhanced_config
         }
-        
+
     except Exception as e:
         logger.error(f"ロジックB設定取得エラー: {str(e)}")
         raise HTTPException(
             status_code=500,
             detail=f"設定の取得に失敗しました: {str(e)}"
+        )
+
+@router.post("/logic-a-phase1")
+async def execute_logic_a_phase1(force: bool = False):
+    """
+    ロジックA Phase 1スキャン実行
+
+    馬場さんノウハウに基づく事前フィルタリング:
+    - kabu.hayauma.netからストップ高銘柄を取得
+    - 上場5年以内フィルタ
+    - 株価5000円以下フィルタ
+    - 時価総額500億円以下フィルタ
+    - 出来高1000株/日以上フィルタ
+
+    実行タイミング: 毎月8-17日、28-31日のみ（force=Trueで強制実行可能）
+
+    Args:
+        force: 日付チェックをスキップして強制実行
+
+    戻り値: 検出された銘柄リスト
+    """
+    try:
+        from ..services.logic_a_phase1_service import LogicAPhase1Service
+
+        logger.info("ロジックA Phase 1 スキャン開始")
+
+        # Phase 1サービスを初期化
+        phase1_service = LogicAPhase1Service()
+
+        # スキャン実行
+        results = await phase1_service.scan_logic_a_phase1(force=force)
+
+        logger.info(f"ロジックA Phase 1 スキャン完了: {len(results)}件検出")
+
+        return {
+            "success": True,
+            "detected_count": len(results),
+            "stocks": results,
+            "scan_date": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "force_mode": force
+        }
+
+    except Exception as e:
+        logger.error(f"ロジックA Phase 1 スキャンエラー: {str(e)}", exc_info=True)
+        raise HTTPException(
+            status_code=500,
+            detail=f"スキャン実行に失敗しました: {str(e)}"
         )

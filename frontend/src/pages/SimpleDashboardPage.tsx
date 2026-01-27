@@ -122,6 +122,74 @@ export const SimpleDashboardPage: React.FC = () => {
     }
   };
 
+  const executeLogicAPhase1 = async () => {
+    setLoading(true);
+    setActiveLogic('A_Phase1' as 'A');
+    setError(null);
+
+    try {
+      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8432'}/api/scan/logic-a-phase1?force=true`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Phase 1スキャンに失敗しました: ${errorText}`);
+      }
+
+      const data = await response.json();
+
+      if (data.success && data.stocks && data.stocks.length > 0) {
+        // Phase 1の結果を表示用に変換
+        const formattedResults = data.stocks.map((stock: {
+          code: string;
+          name: string;
+          market: string;
+          open: number;
+          close: number;
+          low: number;
+          years_since_listing: number;
+          avg_volume: number;
+          market_cap: number;
+        }) => ({
+          code: stock.code,
+          name: stock.name,
+          price: stock.close,
+          change: 0,
+          changeRate: 0,
+          volume: stock.avg_volume,
+          market: stock.market,
+          logicA: {
+            score: 100,
+            listingDate: `上場${stock.years_since_listing.toFixed(1)}年`,
+            earningsDate: '要確認',
+            stopHighDate: '当日',
+            prevPrice: stock.open,
+            stopHighPrice: stock.close,
+            isFirstTime: true,
+            noConsecutive: false,
+            noLongTail: false
+          }
+        }));
+        setResults(formattedResults);
+        setError(null);
+      } else {
+        setError(`Phase 1スキャン完了: ${data.detected_count || 0}銘柄が検出されました（条件: ストップ高張り付き、上場5年以内、時価総額500億円以下、株価5000円以下、出来高1000株/日以上）`);
+        setResults([]);
+      }
+    } catch (err) {
+      console.error('🔥 Phase 1スキャンエラー:', err);
+      setError(err instanceof Error ? err.message : 'エラーが発生しました');
+      setResults([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const executeLogicB = async () => {
     setLoading(true);
     setActiveLogic('B');
@@ -392,26 +460,55 @@ export const SimpleDashboardPage: React.FC = () => {
             📋 使い方ガイド
           </Typography>
           <Typography variant="body2" sx={{ color: '#64748b', lineHeight: 1.6 }}>
-            ① <strong>リアルタイム分析:</strong> 上段3ボタンでロジック別分析<br/>
-            ② <strong>セクター分析:</strong> 下段5ボタンで業界別特化スキャン<br/>
-            ③ <strong>共通条件:</strong> ①決算絡み ②時価総額500億円以下 ③出来高1000株以上/日 ④株価5000円以下<br/>
-            ④ <strong>結果表示:</strong> ロジックは30秒、セクターは4分で上位投資候補銘柄を表示
+            ① <strong>Phase 1スキャン（推奨）:</strong> kabu.hayauma.netから実データ取得、馬場さんノウハウ完全準拠<br/>
+            ② <strong>リアルタイム分析:</strong> 3ボタンでロジック別分析<br/>
+            ③ <strong>セクター分析:</strong> 5ボタンで業界別特化スキャン<br/>
+            ④ <strong>共通条件:</strong> ①決算絡み ②時価総額500億円以下 ③出来高1000株以上/日 ④株価5000円以下<br/>
+            ⑤ <strong>結果表示:</strong> Phase 1は2分、ロジックは30秒、セクターは4分で上位投資候補銘柄を表示
           </Typography>
         </Box>
       </Box>
 
+      {/* Phase 1スキャンボタン（特別強調） */}
+      <Box sx={{
+        display: 'flex',
+        justifyContent: 'center',
+        mb: 4
+      }}>
+        <Button
+          variant="contained"
+          onClick={executeLogicAPhase1}
+          disabled={loading}
+          sx={{
+            minWidth: { xs: '280px', sm: '400px' },
+            height: '60px',
+            fontSize: { xs: '1.1rem', sm: '1.3rem' },
+            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+            color: 'white',
+            fontWeight: 'bold',
+            boxShadow: '0 4px 15px rgba(245, 158, 11, 0.4)',
+            '&:hover': {
+              background: 'linear-gradient(135deg, #d97706 0%, #b45309 100%)',
+              boxShadow: '0 6px 20px rgba(245, 158, 11, 0.6)',
+            }
+          }}
+        >
+          🎯 Phase 1スキャン（馬場さんノウハウ完全準拠）
+        </Button>
+      </Box>
+
       {/* 基本分析ボタン */}
-      <Box sx={{ 
-        display: 'flex', 
+      <Box sx={{
+        display: 'flex',
         justifyContent: 'center',
         gap: { xs: 2, sm: 3 },
         mb: 4,
         flexWrap: 'wrap'
       }}>
-        <Typography variant="h6" sx={{ 
-          width: '100%', 
-          textAlign: 'center', 
-          color: '#64748b', 
+        <Typography variant="h6" sx={{
+          width: '100%',
+          textAlign: 'center',
+          color: '#64748b',
           mb: 2,
           fontSize: { xs: '1rem', sm: '1.1rem' }
         }}>
