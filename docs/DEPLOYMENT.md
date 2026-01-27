@@ -110,5 +110,53 @@ npm run dev  # ポート: 3247
 
 ---
 
+## 本番環境デプロイ実績（2026-01-27）
+
+### デプロイ完了
+
+**本番環境URL:**
+- フロントエンド: https://frontend-kkmg5cxlo-rieuts-projects.vercel.app
+- バックエンド: https://stock-harvest-backend.onrender.com
+- データベース: Neon PostgreSQL (ap-southeast-1)
+
+**使用プラットフォーム:**
+- フロントエンド: Vercel（無料プラン）
+- バックエンド: Render（無料プラン）
+- データベース: Neon PostgreSQL（無料プラン）
+
+**完了日時:** 2026-01-27 19:15
+
+### デプロイ時の注意事項
+
+**依存関係の追加が必要:**
+以下のパッケージがrequirements.txtに不足していたため追加:
+- `aiohttp==3.9.1` (非同期HTTP通信)
+- `email-validator==2.1.0` (Pydantic EmailStr用)
+- `apscheduler==3.10.4` (バッチスケジューラ)
+
+**Python バージョン:**
+- Render free tierでは Python 3.11.9 を使用
+- `runtime.txt` で明示的に指定が必要
+- Python 3.13.x は依存関係のビルドエラーが発生
+
+**環境変数設定（Render）:**
+- `CORS_ORIGIN`: フロントエンドURL
+- `FRONTEND_URL`: フロントエンドURL
+- `DATABASE_URL`: Neon接続文字列
+- `JWT_SECRET`, `SESSION_SECRET`: 認証用シークレット
+- `PYTHON_VERSION=3.11.9`: Python バージョン指定
+
+**環境変数設定（Vercel）:**
+- `VITE_API_BASE_URL`: バックエンドURL
+
+**データベース初期化:**
+デプロイ後、以下のコマンドで初期化:
+```bash
+cd backend
+DATABASE_URL="<production_url>" python3 -m src.database.migrate
+```
+
+---
+
 作成日: 2026-01-21
-最終更新: 2026-01-21
+最終更新: 2026-01-27
