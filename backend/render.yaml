@@ -13,8 +13,8 @@ services:
       - key: SESSION_SECRET
         value: vN8mX2kL5pQ3wE7rT9yU1iO4aS6dF0gH8jK2lZ5xC7
       - key: CORS_ORIGIN
-        value: PLACEHOLDER_VERCEL_URL
+        value: https://frontend-kkmg5cxlo-rieuts-projects.vercel.app
       - key: FRONTEND_URL
-        value: PLACEHOLDER_VERCEL_URL
+        value: https://frontend-kkmg5cxlo-rieuts-projects.vercel.app
       - key: NODE_ENV
         value: production
